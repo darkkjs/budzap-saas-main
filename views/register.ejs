@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - BudZap</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        .floating { animation: float 6s ease-in-out infinite; }
+        .bg-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .form-container { backdrop-filter: blur(10px); background-color: rgba(255, 255, 255, 0.8); }
+    </style>
+</head>
+<body class="bg-gradient min-h-screen flex items-center justify-center p-4">
+    <div class="container mx-auto">
+        <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden transform hover:scale-102 transition duration-500 form-container">
+            <div class="md:flex">
+                <div class="md:w-1/3 bg-indigo-600 p-8 flex flex-col justify-center items-center">
+                    <i class="fas fa-user-plus text-8xl text-white floating mb-6"></i>
+                    <h2 class="text-3xl font-extrabold text-white text-center mb-4">Bem-vindo ao BudZap</h2>
+                    <p class="text-white text-center">Sua plataforma completa de automações</p>
+                </div>
+                <div class="md:w-2/3 p-8">
+                    <h2 class="text-4xl font-extrabold text-gray-900 mb-6">Crie sua conta</h2>
+                    <form id="registrationForm" class="space-y-4">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text"><i class="fas fa-user mr-2"></i>Nome completo</span>
+                                </label>
+                                <input type="text" id="name" name="name" required class="input input-bordered input-primary w-full">
+                            </div>
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text"><i class="fas fa-phone mr-2"></i>Telefone</span>
+                                </label>
+                                <input type="tel" id="phone" name="phone" required class="input input-bordered input-primary w-full">
+                            </div>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text"><i class="fas fa-envelope mr-2"></i>Email</span>
+                                </label>
+                                <input type="email" id="email" name="email" required class="input input-bordered input-primary w-full">
+                            </div>
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text"><i class="fas fa-at mr-2"></i>Username</span>
+                                </label>
+                                <input type="text" id="username" name="username" required class="input input-bordered input-primary w-full">
+                            </div>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text"><i class="fas fa-lock mr-2"></i>Senha</span>
+                                </label>
+                                <input type="password" id="password" name="password" required class="input input-bordered input-primary w-full">
+                            </div>
+                           
+                        </div>
+                        <div class="mt-6">
+                            <button type="submit" id="registerBtn" class="btn btn-primary w-full">
+                                <i class="fas fa-sign-in-alt mr-2"></i>Finalizar Registro
+                            </button>
+                        </div>
+                    </form>
+               
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        gsap.from(".form-container", {
+            opacity: 0,
+            y: 50,
+            duration: 1,
+            ease: "power3.out"
+        });
+
+        gsap.from("form > div", {
+            opacity: 0,
+            y: 20,
+            stagger: 0.1,
+            duration: 0.8,
+            ease: "power2.out",
+            delay: 0.5
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const registerBtn = document.getElementById('registerBtn');
+            const registrationForm = document.getElementById('registrationForm');
+
+            registrationForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const name = document.getElementById('name').value;
+                const phone = document.getElementById('phone').value;
+                const email = document.getElementById('email').value;
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+               
+
+                if (!name || !phone || !email || !username || !password ) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Campos incompletos',
+                        text: 'Por favor, preencha todos os campos.'
+                    });
+                    return;
+                }
+
+                if (password.length < 6) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Senha inválida',
+                        text: 'A senha deve ter pelo menos 6 caracteres.'
+                    });
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ name, phone, email, username, password }),
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Registro concluído!',
+                            text: 'Sua conta foi criada com sucesso. Você será redirecionado para a página de login.',
+                        }).then(() => {
+                            window.location.href = '/login';
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro no registro',
+                            text: data.message || 'Ocorreu um erro durante o registro.',
+                        });
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Ocorreu um erro ao processar sua solicitação.',
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

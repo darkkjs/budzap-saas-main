@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento Pendente - BudZap</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.51.5/dist/full.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        .animate-bounce {
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+            50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden transform transition-all hover:scale-105 duration-300">
+        <div class="p-8 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-full opacity-10">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="w-full h-full">
+                    <circle cx="0" cy="0" r="10" fill="#fff"/>
+                    <circle cx="30" cy="30" r="5" fill="#fff"/>
+                    <circle cx="70" cy="70" r="8" fill="#fff"/>
+                    <circle cx="100" cy="100" r="12" fill="#fff"/>
+                </svg>
+            </div>
+            <i class="fas fa-clock text-6xl mb-4 animate-pulse"></i>
+            <h1 class="text-3xl font-bold mb-2">Pagamento Pendente</h1>
+            <p class="text-lg opacity-75">Estamos processando sua transação</p>
+        </div>
+        <div class="p-8">
+            <div class="alert bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6" role="alert">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-triangle text-2xl mr-4"></i>
+                    <p class="font-semibold">Seu pagamento está em análise pelo Mercado Pago.</p>
+                </div>
+            </div>
+            <p class="text-gray-600 mb-6 leading-relaxed">
+                Obrigado por escolher o BudZap! Seu pagamento está sendo processado e isso geralmente leva apenas alguns minutos. Em casos excepcionais, pode demorar até 48 horas.
+            </p>
+            <div class="space-y-6">
+                <div class="flex items-center">
+                    <div class="bg-green-500 rounded-full p-2 mr-4">
+                        <i class="fas fa-check text-white"></i>
+                    </div>
+                    <span class="text-lg">Pedido recebido com sucesso</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="bg-blue-500 rounded-full p-2 mr-4 animate-spin">
+                        <i class="fas fa-spinner text-white"></i>
+                    </div>
+                    <span class="text-lg">Aguardando confirmação do pagamento</span>
+                </div>
+                <div class="flex items-center text-gray-400">
+                    <div class="border-2 border-gray-300 rounded-full p-2 mr-4">
+                        <i class="far fa-circle"></i>
+                    </div>
+                    <span class="text-lg">Ativação do plano</span>
+                </div>
+            </div>
+        </div>
+        <div class="p-8 bg-gray-50 border-t">
+            <h2 class="text-xl font-semibold mb-4 text-purple-600">Próximos passos:</h2>
+            <ul class="space-y-3">
+                <li class="flex items-center">
+                    <i class="fas fa-envelope text-purple-500 mr-3"></i>
+                    <span>Verifique seu e-mail para atualizações</span>
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-mobile-alt text-purple-500 mr-3"></i>
+                    <span>Cheque o status no app do Mercado Pago</span>
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-clock text-purple-500 mr-3"></i>
+                    <span>Aguarde a confirmação automática</span>
+                </li>
+            </ul>
+        </div>
+        <div class="p-8 text-center bg-gradient-to-r from-purple-600 to-indigo-600">
+            <a href="/dashboard" class="btn btn-lg btn-white hover:bg-opacity-90 transition-all duration-300 shadow-lg">
+                Voltar para o Dashboard
+            </a>
+            <p class="mt-6 text-white opacity-75">
+                Dúvidas? <a href="/contato" class="font-bold hover:underline">Entre em contato conosco</a>
+            </p>
+        </div>
+    </div>
+    <div class="fixed bottom-4 right-4 animate-bounce">
+        <a href="#" class="bg-white text-purple-600 rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300">
+            <i class="fas fa-question-circle text-2xl"></i>
+        </a>
+    </div>
+</body>
+</html>

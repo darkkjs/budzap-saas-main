@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout BudZap - Plano Plus</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden md:flex">
+            <div class="md:w-1/2 p-8">
+                <img src="https://hotboard.online/wp-content/uploads/2024/05/348ca653-6a73-424b-85a2-3e6db393826a-768x768.jpeg" alt="BudZap Logo" class="h-12 mb-6">
+                <h1 class="text-2xl font-bold mb-4">Plano Plus BudZap</h1>
+                <p class="text-gray-600 mb-6">Automatize seu WhatsApp e impulsione suas vendas!</p>
+                
+                <ul class="mb-6">
+                    <li class="flex items-center mb-2">
+                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        5 conexões WhatsApp
+                    </li>
+                    <li class="flex items-center mb-2">
+                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        10 funis de mensagens
+                    </li>
+                    <li class="flex items-center mb-2">
+                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Autoresposta para até 1000 leads
+                    </li>
+                </ul>
+
+                <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6" role="alert">
+                    <p class="font-bold">Oferta Especial!</p>
+                    <p>50% de desconto no primeiro mês. Aproveite agora!</p>
+                </div>
+
+                <div class="flex items-center mb-6">
+                    <img src="/path/to/security-badge.png" alt="Pagamento Seguro" class="h-10 mr-4">
+                    <p class="text-sm text-gray-600">Pagamento 100% seguro e criptografado</p>
+                </div>
+            </div>
+            <div class="md:w-1/2 p-8 bg-gray-50">
+                <h2 class="text-xl font-semibold mb-4">Resumo do Pedido</h2>
+                <div class="flex justify-between mb-2">
+                    <span>Plano Plus BudZap (Mensal)</span>
+                    <span class="font-semibold">R$ 25,00</span>
+                </div>
+                <div class="flex justify-between mb-4">
+                    <span>Desconto Primeiro Mês</span>
+                    <span class="text-green-600">-R$ 12,50</span>
+                </div>
+                <div class="border-t pt-2 mb-6">
+                    <div class="flex justify-between">
+                        <span class="font-semibold">Total Hoje</span>
+                        <span class="font-semibold">R$ 12,50</span>
+                    </div>
+                    <p class="text-sm text-gray-600">A partir do próximo mês: R$ 25,00/mês</p>
+                </div>
+                
+                <div id="mercadopago-button-container"></div>
+                
+                <p class="text-sm text-gray-600 mt-4">
+                    Ao fazer o pagamento, você concorda com nossos 
+                    <a href="#" class="text-blue-600 hover:underline">Termos de Serviço</a> e 
+                    <a href="#" class="text-blue-600 hover:underline">Política de Privacidade</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const mp = new MercadoPago('APP_USR-ff683762-7cc8-449d-84c0-0c33e59a7faf');
+        mp.checkout({
+            preference: {
+                id: ' <%- id %>'
+            },
+            render: {
+                container: '#mercadopago-button-container',
+                label: 'Pagar Agora'
+            }
+        });
+    </script>
+</body>
+</html>

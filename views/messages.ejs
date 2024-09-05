@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Web Clone</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #00a884;
+            --secondary-color: #f0f2f5;
+            --text-color: #111b21;
+            --message-out: #d9fdd3;
+            --message-in: #ffffff;
+            --chat-background: #efeae2;
+            --hover-color: #f5f6f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            max-width: 1600px;
+            margin: 0 auto;
+            box-shadow: 0 6px 18px rgba(11,20,26,.05);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar {
+            width: 30%;
+            background-color: #ffffff;
+            border-right: 1px solid #e9edef;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .main-header {
+            background-color: #f0f2f5;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+        }
+
+        .profile-picture {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .profile-picture:hover {
+            transform: scale(1.1);
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .header-icon {
+            color: #54656f;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .header-icon:hover {
+            color: var(--primary-color);
+        }
+
+        .search-bar {
+            padding: 7px 10px;
+            background-color: #f0f2f5;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 7px 32px 7px 65px;
+            border: none;
+            border-radius: 8px;
+            background-color: #ffffff;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            box-shadow: 0 0 0 2px var(--primary-color);
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .chat-item:hover {
+            background-color: var(--hover-color);
+        }
+
+        .chat-avatar {
+            width: 49px;
+            height: 49px;
+            border-radius: 50%;
+            margin-right: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .chat-item:hover .chat-avatar {
+            transform: scale(1.1);
+        }
+
+        .chat-info {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .chat-name {
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .chat-preview {
+            font-size: 13px;
+            color: #667781;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            font-size: 12px;
+            color: #667781;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--chat-background);
+            transition: all 0.3s ease;
+        }
+
+        .chat-header {
+            background-color: #f0f2f5;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-title {
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-name {
+            margin-left: 15px;
+            font-weight: 500;
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 20px;
+        }
+
+        .chat-action {
+            color: #54656f;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .chat-action:hover {
+            color: var(--primary-color);
+        }
+
+        .messages-container {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 65%;
+            padding: 6px 7px 8px 9px;
+            border-radius: 7.5px;
+            margin-bottom: 10px;
+            position: relative;
+            box-shadow: 0 1px 0.5px rgba(11,20,26,.13);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-sent {
+            background-color: var(--message-out);
+            align-self: flex-end;
+        }
+
+        .message-received {
+            background-color: var(--message-in);
+            align-self: flex-start;
+        }
+
+        .message-content {
+            font-size: 14.2px;
+            line-height: 19px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #667781;
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        .message-input-container {
+            background-color: #f0f2f5;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .message-input {
+            flex-grow: 1;
+            padding: 9px 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            background-color: #ffffff;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        .message-input:focus {
+            box-shadow: 0 0 0 2px var(--primary-color);
+        }
+
+        .send-button {
+            background-color: transparent;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .send-button:hover {
+            transform: scale(1.1);
+        }
+
+        .media-container {
+            max-width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .media-container img,
+        .media-container video {
+            max-width: 100%;
+            border-radius: 7.5px;
+            transition: transform 0.3s ease;
+        }
+
+        .media-container img:hover,
+        .media-container video:hover {
+            transform: scale(1.05);
+        }
+
+        .back-button {
+            display: none;
+            margin-right: 15px;
+            color: #54656f;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .back-button:hover {
+            color: var(--primary-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: 100%;
+            }
+
+            .main-content {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 10;
+            }
+
+            .main-content.active {
+                display: flex;
+            }
+
+            .back-button {
+                display: inline-block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="main-header">
+                <div class="profile-section">
+                    <img src="/img/logo1.jpeg" alt="Profile" class="profile-picture" id="profile-picture">
+                </div>
+                <div class="header-icons">
+                    <span class="header-icon" id="new-chat"><i class="fas fa-plus"></i></span>
+                    <span class="header-icon" id="new-group"><i class="fas fa-users"></i></span>
+                    <span class="header-icon"><i class="fas fa-ellipsis-v"></i></span>
+                </div>
+            </div>
+            <div class="search-bar">
+                <input type="text" class="search-input" placeholder="Pesquisar ou começar uma nova conversa">
+            </div>
+            <div id="chat-list" class="chat-list"></div>
+        </div>
+
+        <div id="main-content" class="main-content">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <span class="back-button"><i class="fas fa-arrow-left"></i></span>
+                    <img id="chat-avatar" src="/api/placeholder/40/40" alt="Chat Avatar" class="profile-picture">
+                    <span id="chat-name" class="chat-name"></span>
+                </div>
+                <div class="chat-actions">
+                    <span class="chat-action"><i class="fas fa-video"></i></span>
+                    <span class="chat-action"><i class="fas fa-phone"></i></span>
+                    <span class="chat-action"><i class="fas fa-search"></i></span>
+                    <span class="chat-action"><i class="fas fa-ellipsis-v"></i></span>
+                </div>
+            </div>
+            <div id="messages" class="messages-container"></div>
+            <div class="message-input-container">
+                <span class="header-icon"><i class="far fa-smile"></i></span>
+                <input id="message-input" type="text" class="message-input" placeholder="Digite uma mensagem">
+                <span class="header-icon" id="attach-file"><i class="fas fa-paperclip"></i></span>
+                <button id="send-button" class="send-button"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para criar novo grupo -->
+    <div id="new-group-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Criar Novo Grupo</h2>
+            <input type="text" id="group-name" placeholder="Nome do grupo" class="message-input">
+            <input type="text" id="group-participants" placeholder="Participantes (separados por vírgula)" class="message-input">
+            <button id="create-group-button" class="btn btn-primary">Criar Grupo</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+       const whatsappController = {
+    async sendTextMessage(recipientId, message, options = {}) {
+        try {
+            const response = await fetch('/funcao/send-text', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ recipientId, message, options })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Error sending text message:', error);
+            throw error;
+        }
+    },
+
+    async sendMediaMessage(recipientId, type, url, caption = '', options = {}) {
+        try {
+            const response = await fetch('/funcao/send-media', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ recipientId, type, url, caption, options })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Error sending media message:', error);
+            throw error;
+        }
+    },
+
+    async createGroup(name, users) {
+        try {
+            const response = await fetch('/funcao/create-group', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, users })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Error creating group:', error);
+            throw error;
+        }
+    },
+
+    async getAllGroups() {
+        try {
+            const response = await fetch('/funcao/group-info');
+            return await response.json();
+        } catch (error) {
+            console.error('Error getting all groups:', error);
+            throw error;
+        }
+    },
+
+    async getContacts() {
+        try {
+            const response = await fetch('/funcao/contacts');
+            return await response.json();
+        } catch (error) {
+            console.error('Error getting contacts:', error);
+            throw error;
+        }
+    },
+
+    async updateProfilePicture(imageUrl) {
+        try {
+            const response = await fetch('/funcao/update-profile-pic', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageUrl })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Error updating profile picture:', error);
+            throw error;
+        }
+    }
+};
+
+
+        let currentChatId = null;
+        let atualimg = null;
+
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function renderMedia(content) {
+            if (typeof content === 'string') {
+                if (content.match(/\.(jpeg|jpg|gif|png)$/) != null) {
+                    return `<div class="media-container"><img src="${content}" alt="Image"></div>`;
+                } else if (content.match(/\.(mp4|webm|ogg)$/) != null) {
+                    return `<div class="media-container"><video controls><source src="${content}" type="video/${content.split('.').pop()}">Your browser does not support the video tag.</video></div>`;
+                } else if (content.match(/\.(mp3|wav)$/) != null) {
+                    return `<div class="media-container"><audio controls><source src="${content}" type="audio/${content.split('.').pop()}">Your browser does not support the audio tag.</audio></div>`;
+                }
+            }
+            return `<p>${content}</p>`;
+        }
+
+        async function loadChats() {
+    try {
+        const response = await fetch('/app/chats/<%= instanceKey %>');
+        const chats = await response.json();
+        const chatList = document.getElementById('chat-list');
+
+        chatList.innerHTML = '';
+
+        // Filtrar e ordenar chats válidos
+        const validChats = chats.filter(chat => 
+            chat.lastMessage && 
+            chat.lastMessage.timestamp && 
+            chat.lastMessage.sender && 
+            chat.lastMessage.content
+        ).sort((a, b) => new Date(b.lastMessage.timestamp) - new Date(a.lastMessage.timestamp));
+
+        validChats.forEach(chat => {
+            const chatItem = document.createElement('div');
+            chatItem.className = 'chat-item';
+            chatItem.innerHTML = `
+                <img src="${chat.image || '/api/placeholder/49/49'}" alt="Chat Avatar" class="chat-avatar">
+                <div class="chat-info">
+                    <div class="chat-name">${escapeHTML(chat.lastMessage.sender)}</div>
+                    <div class="chat-preview">${escapeHTML(chat.lastMessage.content)}</div>
+                </div>
+                <div class="chat-meta">
+                    <div class="chat-time">${formatDate(chat.lastMessage.timestamp)}</div>
+                </div>
+            `;
+            
+            chatItem.addEventListener('click', () => {
+                atualimg = chat.image || '/api/placeholder/49/49';
+                loadMessages(chat.chatId);
+            });
+            chatList.appendChild(chatItem);
+        });
+
+        if (validChats.length === 0) {
+            const noChatsMessage = document.createElement('div');
+            noChatsMessage.className = 'no-chats-message';
+            noChatsMessage.textContent = 'Nenhum chat disponível no momento.';
+            chatList.appendChild(noChatsMessage);
+        }
+
+        removeExtraElements();
+
+        console.log(`Carregados ${validChats.length} chats válidos de ${chats.length} totais.`);
+    } catch (error) {
+        console.error('Erro ao carregar chats:', error);
+        showErrorMessage('Não foi possível carregar os chats. Por favor, tente novamente mais tarde.');
+    }
+}
+
+// Função auxiliar para escapar HTML e prevenir XSS
+function escapeHTML(str) {
+    return str.replace(/[&<>'"]/g, 
+        tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag)
+    );
+}
+
+// Função auxiliar para mostrar mensagem de erro
+function showErrorMessage(message) {
+    const chatList = document.getElementById('chat-list');
+    chatList.innerHTML = `<div class="error-message">${message}</div>`;
+}
+
+        function removeExtraElements() {
+            const footers = document.getElementsByTagName("footer");
+            for (let i = 0; i < footers.length; i++) {
+                const footer = footers[i];
+                if (footer.classList.contains("bg-white") &&
+                    footer.classList.contains("dark:bg-gray-800") &&
+                    footer.classList.contains("text-center") &&
+                    footer.classList.contains("p-4") &&
+                    footer.classList.contains("mt-8") &&
+                    footer.classList.contains("rounded-lg") &&
+                    footer.classList.contains("shadow")) {
+                    footer.remove();
+                    break;
+                }
+            }
+            
+            if (window.innerWidth >= 768) {
+                const navbar = document.querySelector(".navbar.glassmorphism.sticky.top-0.z-30");
+                if (navbar) {
+                    navbar.style.display = "none";
+                }
+
+                const nav = document.querySelector("nav.text-gray-500.dark\\:text-gray-400.text-sm.mb-4[aria-label='Breadcrumb']");
+                if (nav) {
+                    nav.remove();
+                }
+            }
+        }
+
+        async function loadMessages(chatId) {
+            currentChatId = chatId;
+            try {
+                const response = await fetch(`/app/messages/<%= instanceKey %>/${chatId}`);
+                const messages = await response.json();
+                const messagesContainer = document.getElementById('messages');
+                const mainContent = document.getElementById('main-content');
+
+                messagesContainer.innerHTML = '';
+
+                messages.forEach(message => {
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${message.fromMe ? 'message-sent' : 'message-received'}`;
+                messageElement.innerHTML = `
+                    <div class="message-content">${renderMedia(message)}</div>
+                    <div class="message-time">${formatDate(message.timestamp)}</div>
+                `;
+                addReplyOption(messageElement, message.id, message.content);
+                messagesContainer.appendChild(messageElement);
+            });
+
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                document.getElementById('chat-name').textContent = messages[0].sender;
+                document.getElementById('chat-avatar').src = atualimg || '/api/placeholder/40/40';
+
+                mainContent.classList.add('active');
+
+                if (window.innerWidth <= 768) {
+                    const navbar = document.querySelector(".navbar.glassmorphism.sticky.top-0.z-30");
+                    if (navbar) {
+                        navbar.style.display = "none";
+                    }
+                    mainContent.style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar mensagens:', error);
+            }
+        }
+
+        async function sendMessage() {
+    const input = document.getElementById('message-input');
+    const message = input.value.trim();
+    if (message && currentChatId) {
+        try {
+            const options = replyingTo ? { replyFrom: replyingTo } : {};
+            await whatsappController.sendTextMessage(currentChatId, message, options);
+            await loadMessages(currentChatId);
+            input.value = '';
+            cancelReply();
+        } catch (error) {
+            console.error('Erro ao enviar mensagem:', error);
+        }
+    }
+}
+
+document.getElementById('send-button').addEventListener('click', sendMessage);
+document.getElementById('message-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+
+        // File attachment handling
+        document.getElementById('attach-file').addEventListener('click', function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,video/*,audio/*';
+    input.onchange = async function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            try {
+                const url = URL.createObjectURL(file);
+                let type;
+                if (file.type.startsWith('image/')) {
+                    type = 'image';
+                } else if (file.type.startsWith('video/')) {
+                    type = 'video';
+                } else if (file.type.startsWith('audio/')) {
+                    type = 'audio';
+                } else {
+                    type = 'document';
+                }
+                await whatsappController.sendMediaMessage(currentChatId, type, url);
+                await loadMessages(currentChatId);
+            } catch (error) {
+                console.error('Error sending file:', error);
+            }
+        }
+    };
+    input.click();
+});
+
+        document.querySelector('.back-button').addEventListener('click', function() {
+            const mainContent = document.getElementById('main-content');
+            const sidebar = document.querySelector('.sidebar');
+            
+            mainContent.classList.remove('active');
+            sidebar.style.display = 'block';
+            
+            if (window.innerWidth <= 768) {
+                const navbar = document.querySelector(".navbar.glassmorphism.sticky.top-0.z-30");
+                if (navbar) {
+                    navbar.style.display = "block";
+                }
+                mainContent.style.display = 'none';
+            }
+        });
+
+        function searchChats() {
+    const searchInput = document.querySelector('.search-input');
+    const chatItems = document.querySelectorAll('.chat-item');
+    const searchTerm = searchInput.value.toLowerCase();
+
+    chatItems.forEach(item => {
+        const chatName = item.querySelector('.chat-name').textContent.toLowerCase();
+        const chatPreview = item.querySelector('.chat-preview').textContent.toLowerCase();
+        if (chatName.includes(searchTerm) || chatPreview.includes(searchTerm)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+        document.querySelector('.search-input').addEventListener('input', searchChats);
+
+        function checkScreenSize() {
+            const appContainer = document.querySelector('.app-container');
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.getElementById('main-content');
+
+            if (window.innerWidth <= 768) {
+                appContainer.classList.add('mobile-view');
+                sidebar.style.width = '100%';
+                if (!mainContent.classList.contains('active')) {
+                    mainContent.style.display = 'none';
+                    sidebar.style.display = 'block';
+                }
+            } else {
+                appContainer.classList.remove('mobile-view');
+                sidebar.style.width = '30%';
+                sidebar.style.display = 'block';
+                mainContent.style.display = 'flex';
+            }
+        }
+
+        window.addEventListener('load', () => {
+            loadChats();
+            checkScreenSize();
+        });
+        window.addEventListener('resize', checkScreenSize);
+
+        // Atualização periódica
+        setInterval(loadChats, 10000); // Atualiza a cada 10 segundos
+
+      
+
+
+        // New group functionality
+const newGroupModal = document.getElementById('new-group-modal');
+const newGroupBtn = document.getElementById('new-group');
+const closeBtn = document.querySelector('.close');
+const createGroupBtn = document.getElementById('create-group-button');
+
+newGroupBtn.onclick = function() {
+    newGroupModal.style.display = "block";
+}
+
+closeBtn.onclick = function() {
+    newGroupModal.style.display = "none";
+}
+
+window.onclick = function(event) {
+    if (event.target == newGroupModal) {
+        newGroupModal.style.display = "none";
+    }
+}
+
+createGroupBtn.onclick = async function() {
+    const groupName = document.getElementById('group-name').value;
+    const participants = document.getElementById('group-participants').value.split(',').map(p => p.trim());
+    
+    if (groupName && participants.length > 0) {
+        try {
+            const result = await whatsappController.createGroup(groupName, participants);
+            console.log('Grupo criado:', result);
+            newGroupModal.style.display = "none";
+            loadChats(); // Reloads the chat list to show the new group
+        } catch (error) {
+            console.error('Erro ao criar grupo:', error);
+            alert('Erro ao criar grupo. Por favor, tente novamente.');
+        }
+    } else {
+        alert('Por favor, preencha o nome do grupo e adicione pelo menos um participante.');
+    }
+}
+
+// Profile picture update functionality
+document.getElementById('profile-picture').addEventListener('click', async function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            try {
+                const url = URL.createObjectURL(file);
+                const result = await whatsappController.updateProfilePicture(url);
+                document.getElementById('profile-picture').src = result.profilePictureUrl;
+                alert('Foto de perfil atualizada com sucesso!');
+            } catch (error) {
+                console.error('Erro ao atualizar foto de perfil:', error);
+                alert('Erro ao atualizar foto de perfil. Por favor, tente novamente.');
+            }
+        }
+    };
+    input.click();
+});
+
+// Start a new chat functionality
+document.getElementById('new-chat').addEventListener('click', async function() {
+    try {
+        const contacts = await whatsappController.getContacts();
+        // Here you can implement an interface for the user to select a contact
+        // For example, you can create a modal similar to the create group one
+        console.log('Contatos disponíveis:', contacts);
+    } catch (error) {
+        console.error('Erro ao obter contatos:', error);
+        alert('Erro ao carregar contatos. Por favor, tente novamente.');
+    }
+});
+
+// Reply functionality
+let replyingTo = null;
+
+function setReplyMessage(messageId, content) {
+    replyingTo = messageId;
+    const replyPreview = document.createElement('div');
+    replyPreview.id = 'reply-preview';
+    replyPreview.innerHTML = `
+        <p>Respondendo a: ${content}</p>
+        <button id="cancel-reply">Cancelar</button>
+    `;
+    document.querySelector('.message-input-container').prepend(replyPreview);
+    document.getElementById('cancel-reply').onclick = cancelReply;
+}
+
+function cancelReply() {
+    replyingTo = null;
+    const replyPreview = document.getElementById('reply-preview');
+    if (replyPreview) {
+        replyPreview.remove();
+    }
+}
+
+function addReplyOption(messageElement, messageId, content) {
+    messageElement.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        setReplyMessage(messageId, content);
+    });
+}
+
+
+
+        // Função para renderizar mensagens de áudio
+        function renderAudioMessage(audioUrl) {
+            return `
+                <div class="audio-message">
+                    <audio controls>
+                        <source src="${audioUrl}" type="audio/mpeg">
+                        Seu navegador não suporta o elemento de áudio.
+                    </audio>
+                </div>
+            `;
+        }
+
+        // Função para renderizar mensagens de vídeo
+        function renderVideoMessage(videoUrl) {
+            return `
+                <div class="video-message">
+                    <video controls width="250">
+                        <source src="${videoUrl}" type="video/mp4">
+                        Seu navegador não suporta o elemento de vídeo.
+                    </video>
+                </div>
+            `;
+        }
+
+        // Função para renderizar mensagens de documento
+        function renderDocumentMessage(docUrl, fileName) {
+            return `
+                <div class="document-message">
+                    <a href="${docUrl}" target="_blank" download="${fileName}">
+                        <i class="fas fa-file-alt"></i> ${fileName}
+                    </a>
+                </div>
+            `;
+        }
+
+        // Atualizar a função renderMedia para incluir os novos tipos de mídia
+        function renderMedia(message) {
+            if (message.type === 'image') {
+                return `<div class="media-container"><img src="${message.content}" alt="Image"></div>`;
+            } else if (message.type === 'video') {
+                return renderVideoMessage(message.content);
+            } else if (message.type === 'audio') {
+                return renderAudioMessage(message.content);
+            } else if (message.type === 'document') {
+                return renderDocumentMessage(message.content, message.fileName);
+            }
+            return `<p>${message.content}</p>`;
+        }
+
+      
+
+        // Atualizar a função sendMessage para incluir a resposta
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            if (message && currentChatId) {
+                try {
+                    const options = replyingTo ? { replyFrom: replyingTo } : {};
+                    await whatsappController.sendTextMessage(currentChatId, message, options);
+                    await loadMessages(currentChatId);
+                    input.value = '';
+                    cancelReply();
+                } catch (error) {
+                    console.error('Erro ao enviar mensagem:', error);
+                }
+            }
+        }
+
+        // Adicionar opção de responder ao clicar na mensagem
+        function addReplyOption(messageElement, messageId, content) {
+            messageElement.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                setReplyMessage(messageId, content);
+            });
+        }
+
+
+        
+     
+
+        // Inicialização
+        loadChats();
+    </script>
+</body>
+</html>

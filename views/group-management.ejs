@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Grupos - BudZap</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .hidden {
+            display: none;
+        }
+        .swal2-styled.swal2-confirm {
+            background-color: #4CAF50 !important;
+        }
+        .swal2-styled.swal2-cancel {
+            background-color: #f44336 !important;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-r from-purple-100 to-blue-100 min-h-screen">
+    <div class="container mx-auto p-4">
+        <h1 class="text-4xl font-bold text-center text-purple-800 mb-8 animate-fade-in">
+            <i class="fas fa-users-cog mr-2"></i>Gerenciamento de Grupos
+        </h1>
+
+        <div id="instanceSelection" class="bg-white rounded-lg shadow-lg p-6 mb-8 animate-slide-in">
+            <h2 class="text-2xl font-semibold mb-4 text-purple-700">Selecione a Instância</h2>
+            <select id="instanceSelect" class="select select-bordered w-full max-w-xs">
+                <option disabled selected>Escolha uma instância</option>
+                <% user.whatsappInstances.forEach(instance => { %>
+                    <option value="<%= instance.key %>"><%= instance.name %></option>
+                <% }); %>
+            </select>
+        </div>
+
+        <div id="groupActions" class="hidden animate-fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Criar Grupo -->
+                <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                    <div class="card-body">
+                        <h2 class="card-title text-purple-700"><i class="fas fa-plus-circle mr-2"></i>Criar Grupo</h2>
+                        <input type="text" id="groupName" placeholder="Nome do Grupo" class="input input-bordered w-full max-w-xs mb-2">
+                        <input type="text" id="groupUsers" placeholder="Usuários (separados por vírgula)" class="input input-bordered w-full max-w-xs mb-2">
+                        <button onclick="createGroup()" class="btn btn-primary"><i class="fas fa-check mr-2"></i>Criar</button>
+                    </div>
+                </div>
+
+                <!-- Listar Grupos -->
+                <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                    <div class="card-body">
+                        <h2 class="card-title text-purple-700"><i class="fas fa-list mr-2"></i>Listar Grupos</h2>
+                        <button onclick="getAllGroups()" class="btn btn-primary"><i class="fas fa-sync-alt mr-2"></i>Atualizar Lista</button>
+                    </div>
+                </div>
+
+                <!-- Entrar no Grupo via URL -->
+                <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                    <div class="card-body">
+                        <h2 class="card-title text-purple-700"><i class="fas fa-sign-in-alt mr-2"></i>Entrar no Grupo</h2>
+                        <input type="text" id="joinGroupUrl" placeholder="URL do Grupo" class="input input-bordered w-full max-w-xs mb-2">
+                        <button onclick="joinGroupFromUrl()" class="btn btn-success"><i class="fas fa-door-open mr-2"></i>Entrar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área para exibir os grupos -->
+            <div id="groupListArea" class="mt-8 hidden animate-fade-in">
+                <h2 class="text-2xl font-semibold mb-4 text-purple-700"><i class="fas fa-folder-open mr-2"></i>Grupos Disponíveis</h2>
+                <div id="groupList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+
+            <!-- Modal para ações do grupo -->
+            <div id="groupActionModal" class="modal">
+                <div class="modal-box">
+                    <h3 id="modalGroupName" class="font-bold text-lg"></h3>
+                    <div id="modalContent" class="py-4"></div>
+                    <div class="modal-action">
+                        <button onclick="closeModal()" class="btn">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedInstance = '';
+        let groups = {};
+
+        document.getElementById('instanceSelect').addEventListener('change', function() {
+            selectedInstance = this.value;
+            document.getElementById('groupActions').classList.remove('hidden');
+            getAllGroups();
+        });
+
+        function showAlert(title, text, icon) {
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: icon,
+                confirmButtonColor: '#4CAF50',
+                cancelButtonColor: '#f44336'
+            });
+        }
+
+        function handleApiResponse(data) {
+            if (data.error || (data.data && data.data.error)) {
+                const errorMessage = data.message || (data.data && data.data.message) || 'Ocorreu um erro desconhecido';
+                showAlert('Erro', errorMessage, 'error');
+                return false;
+            }
+            return true;
+        }
+
+        async function createGroup() {
+            const name = document.getElementById('groupName').value;
+            const users = document.getElementById('groupUsers').value.split(',').map(user => user.trim());
+            try {
+                const response = await fetch('/group/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ instanceKey: selectedInstance, name, users })
+                });
+                const data = await response.json();
+                if (handleApiResponse(data)) {
+                    showAlert('Sucesso', 'Grupo criado com sucesso!', 'success');
+                    getAllGroups();
+                }
+            } catch (error) {
+                showAlert('Erro', error.message, 'error');
+            }
+        }
+
+        async function getAllGroups() {
+            try {
+                const response = await fetch(`/group/all?instanceKey=${selectedInstance}`);
+                const responseData = await response.json();
+                if (handleApiResponse(responseData)) {
+                    groups = responseData.data;
+                    displayGroups(groups);
+                }
+            } catch (error) {
+                console.error('Erro ao listar grupos:', error);
+                showAlert('Erro', error.message, 'error');
+            }
+        }
+
+        function displayGroups(groups) {
+            const groupList = document.getElementById('groupList');
+            groupList.innerHTML = '';
+            
+            Object.values(groups).forEach(group => {
+                const card = document.createElement('div');
+                card.className = 'card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1';
+                card.innerHTML = `
+                    <div class="card-body">
+                        <h2 class="card-title"><i class="fas fa-users mr-2"></i>${group.subject || 'Grupo sem nome'}</h2>
+                        <p><i class="fas fa-id-card mr-2"></i>ID: ${group.id}</p>
+                        <p><i class="fas fa-user-friends mr-2"></i>Membros: ${group.size}</p>
+                        <div class="card-actions justify-end mt-4">
+                            <button onclick="showGroupActions('${group.id}')" class="btn btn-primary"><i class="fas fa-cogs mr-2"></i>Ações</button>
+                        </div>
+                    </div>
+                `;
+                groupList.appendChild(card);
+            });
+
+            document.getElementById('groupListArea').classList.remove('hidden');
+        }
+
+        function showGroupActions(groupId) {
+            const group = groups[groupId];
+            const modal = document.getElementById('groupActionModal');
+            const modalGroupName = document.getElementById('modalGroupName');
+            const modalContent = document.getElementById('modalContent');
+
+            modalGroupName.textContent = group.subject || 'Grupo sem nome';
+            modalContent.innerHTML = `
+                <button onclick="leaveGroup('${groupId}')" class="btn btn-warning mb-2"><i class="fas fa-sign-out-alt mr-2"></i>Sair do Grupo</button>
+                <button onclick="inviteUser('${groupId}')" class="btn btn-info mb-2"><i class="fas fa-user-plus mr-2"></i>Convidar Usuário</button>
+                <button onclick="removeUser('${groupId}')" class="btn btn-error mb-2"><i class="fas fa-user-minus mr-2"></i>Remover Usuário</button>
+                <button onclick="makeAdmin('${groupId}')" class="btn btn-secondary mb-2"><i class="fas fa-user-shield mr-2"></i>Promover a Admin</button>
+                <button onclick="demoteAdmin('${groupId}')" class="btn btn-secondary mb-2"><i class="fas fa-user-times mr-2"></i>Rebaixar Admin</button>
+                <button onclick="getInviteCode('${groupId}')" class="btn btn-primary mb-2"><i class="fas fa-qrcode mr-2"></i>Obter Código de Convite</button>
+                <button onclick="updateGroupSettings('${groupId}')" class="btn btn-primary mb-2"><i class="fas fa-cog mr-2"></i>Atualizar Configurações</button>
+                <button onclick="updateGroupSubject('${groupId}')" class="btn btn-primary mb-2"><i class="fas fa-edit mr-2"></i>Atualizar Assunto</button>
+                <button onclick="updateGroupDescription('${groupId}')" class="btn btn-primary mb-2"><i class="fas fa-align-left mr-2"></i>Atualizar Descrição</button>
+                <button onclick="extractMembers('${groupId}', '${group.subject}')" class="btn btn-success mb-2"><i class="fas fa-download mr-2"></i>Extrair Membros</button>
+            `;
+
+            modal.classList.add('modal-open');
+        }
+
+        function closeModal() {
+            document.getElementById('groupActionModal').classList.remove('modal-open');
+        }
+
+        async function leaveGroup(groupId) {
+            try {
+                const response = await fetch('/group/leave', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ instanceKey: selectedInstance, id: groupId })
+                });
+                const data = await response.json();
+                if (handleApiResponse(data)) {
+                    showAlert('Sucesso', 'Você saiu do grupo com sucesso!', 'success');
+                    getAllGroups();
+                    closeModal();
+                }
+            } catch (error) {
+                showAlert('Erro', error.message, 'error');
+            }
+        }
+
+        async function joinGroupFromUrl() {
+            const url = document.getElementById('joinGroupUrl').value;
+            try {
+                const response = await fetch('/group/join', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ instanceKey: selectedInstance, url })
+                });
+                const data = await response.json();
+                if (handleApiResponse(data)) {
+                    showAlert('Sucesso', 'Você entrou no grupo com sucesso!', 'success');
+                    getAllGroups();
+                }
+            } catch (error) {
+                showAlert('Erro', error.message, 'error');
+            }
+        }
+
+        async function inviteUser(groupId) {
+            const { value: users } = await Swal.fire({
+                title: 'Convidar Usuários',
+                input: 'text',
+                inputLabel: 'Digite os números dos usuários separados por vírgula',
+                inputPlaceholder: '5511999999999,5511888888888',
+                confirmButtonColor: '#4CAF50',
+                cancelButtonColor: '#f44336',
+            });
+
+            if (users) {
+                try {
+                    const response = await fetch('/group/invite', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            instanceKey: selectedInstance, 
+                            id: groupId, 
+                            users: users.split(',').map(u => u.trim()) 
+                        })
+                    });
+                    const data = await response.json();
+                    if (handleApiResponse(data)) {
+                        showAlert('Sucesso', 'Usuários convidados com sucesso!', 'success');
+                    }
+                } catch (error) {
+                    showAlert('Erro', error.message, 'error');
+                }
+            }
+        }
+
+        async function removeUser(groupId) {
+            const { value: users } = await Swal.fire({
+                title: 'Remover Usuários',
+                input: 'text',
+                inputLabel: 'Digite os números dos usuários separados por vírgula',
+                inputPlaceholder: '5511999999999,5511888888888',
+                confirmButtonColor: '#4CAF50',
+                cancelButtonColor: '#f44336',
+            });
+
+            if (users) {
+                try {
+                    const response = await fetch('/group/remove', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            instanceKey: selectedInstance, 
+                            id: groupId, 
+                            users: users.split(',').map(u => u.trim()) 
+                        })
+                    });
+                    const data = await response.json();
+                    if (handleApiResponse(data)) {
+                        showAlert('Sucesso', 'Usuários removidos com sucesso!', 'success');
+                    }
+                    } catch (error) {
+                    showAlert('Erro', error.message, 'error');
+                }
+            }
+        }
+
+        async function makeAdmin(groupId) {
+            const { value: users } = await Swal.fire({
+                title: 'Promover a Admin',
+                input: 'text',
+                inputLabel: 'Digite os números dos usuários separados por vírgula',
+                inputPlaceholder: '5511999999999,5511888888888',
+                confirmButtonColor: '#4CAF50',
+                cancelButtonColor: '#f44336',
+            });
+
+            if (users) {
+                try {
+                    const response = await fetch('/group/make-admin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            instanceKey: selectedInstance, 
+                            id: groupId, 
+                            users: users.split(',').map(u => u.trim()) 
+                        })
+                    });
+                    const data = await response.json();
+                    if (handleApiResponse(data)) {
+                        showAlert('Sucesso', 'Usuários promovidos a admin com sucesso!', 'success');
+                    }
+                } catch (error) {
+                    showAlert('Erro', error.message, 'error');
+                }
+            }
+        }
+
+        async function demoteAdmin(groupId) {
+            const { value: users } = await Swal.fire({
+                title: 'Rebaixar Admin',
+                input: 'text',
+                inputLabel: 'Digite os números dos usuários separados por vírgula',
+                inputPlaceholder: '5511999999999,5511888888888',
+                confirmButtonColor: '#4CAF50',
+                cancelButtonColor: '#f44336',
+            });
+
+            if (users) {
+                try {
+                    const response = await fetch('/group/demote-admin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            instanceKey: selectedInstance, 
+                            id: groupId, 
+                            users: users.split(',').map(u => u.trim()) 
+                        })
+                    });
+                    const data = await response.json();
+                    if (handleApiResponse(data)) {
+                        showAlert('Sucesso', 'Admins rebaixados com sucesso!', 'success');
+                    }
+                } catch (error) {
+                    showAlert('Erro', error.message, 'error');
+                }
+            }
+        }
+
+        async function getInviteCode(groupId) {
+            try {
+                const response = await fetch(`/group/invite-code?instanceKey=${selectedInstance}&id=${groupId}`);
+                const data = await response.json();
+                if (handleApiResponse(data)) {
+                    Swal.fire({
+                        title: 'Código de Convite',
+                        html: `
+                            <div class="bg-gray-100 p-3 rounded-lg break-all">
+                                <p class="font-mono text-sm">${data.data}</p>
+                            </div>
+                            <button class="btn btn-primary mt-4" onclick="copyInviteLink('${data.data}')">
+                                <i class="fas fa-copy mr-2"></i>Copiar Link
+                            </button>
+                        `,
+                        icon: 'success',
+                        confirmButtonColor: '#4CAF50',
+                        showConfirmButton: false
+                    });
+                }
+            } catch (error) {
+                showAlert('Erro', error.message, 'error');
+            }
+        }
+
+        function copyInviteLink(link) {
+            navigator.clipboard.writeText(link).then(() => {
+                Swal.fire({
+                    title: 'Copiado!',
+                    text: 'Link de convite copiado para a área de transferência.',
+                    icon: 'success',
+                    confirmButtonColor: '#4CAF50'
+                });
+            });
+        }
+
+        async function updateGroupSettings(groupId) {
+            const { value: action } = await Swal.fire({
+                title: 'Atualizar Configurações do Grupo',
+                input: 'select',
+                inputOptions: {
+                    announcement: 'Somente admins enviam mensagem',
+                    not_announcement: 'Todos enviam mensagem',
+                    locked: 'Apenas admins alteram foto/descrição',
+                    unlocked: 'Todos alteram foto/descrição'
+                },
+                inputPlaceholder: 'Selecione uma opção',
+                showCancelButton: true,
+                confirmButtonColor: '#4CAF50',
+                cancelButtonColor: '#f44336',
+            });
+
+            if (action) {
+                try {
+                    const response = await fetch('/group/update-settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ instanceKey: selectedInstance, id: groupId, action })
+                    });
+                    const data = await response.json();
+                    if (handleApiResponse(data)) {
+                        showAlert('Sucesso', 'Configurações do grupo atualizadas com sucesso!', 'success');
+                    }
+                } catch (error) {
+                    showAlert('Erro', error.message, 'error');
+                }
+            }
+        }
+
+        async function updateGroupSubject(groupId) {
+            const { value: subject } = await Swal.fire({
+                title: 'Atualizar Assunto do Grupo',
+                input: 'text',
+                inputLabel: 'Novo assunto',
+                inputPlaceholder: 'Digite o novo assunto do grupo',
+                showCancelButton: true,
+                confirmButtonColor: '#4CAF50',
+                cancelButtonColor: '#f44336',
+            });
+
+            if (subject) {
+                try {
+                    const response = await fetch('/group/update-subject', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ instanceKey: selectedInstance, id: groupId, subject })
+                    });
+                    const data = await response.json();
+                    if (handleApiResponse(data)) {
+                        showAlert('Sucesso', 'Assunto do grupo atualizado com sucesso!', 'success');
+                        getAllGroups(); // Atualiza a lista de grupos para refletir a mudança
+                    }
+                } catch (error) {
+                    showAlert('Erro', error.message, 'error');
+                }
+            }
+        }
+
+        async function updateGroupDescription(groupId) {
+            const { value: description } = await Swal.fire({
+                title: 'Atualizar Descrição do Grupo',
+                input: 'textarea',
+                inputLabel: 'Nova descrição',
+                inputPlaceholder: 'Digite a nova descrição do grupo',
+                showCancelButton: true,
+                confirmButtonColor: '#4CAF50',
+                cancelButtonColor: '#f44336',
+            });
+
+            if (description) {
+                try {
+                    const response = await fetch('/group/update-description', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ instanceKey: selectedInstance, id: groupId, description })
+                    });
+                    const data = await response.json();
+                    if (handleApiResponse(data)) {
+                        showAlert('Sucesso', 'Descrição do grupo atualizada com sucesso!', 'success');
+                    }
+                } catch (error) {
+                    showAlert('Erro', error.message, 'error');
+                }
+            }
+        }
+
+        async function extractMembers(groupId, nome) {
+    try {
+        const response = await fetch(`/group/extract-members?instanceKey=${selectedInstance}&id=${groupId}`);
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            const data = await response.json();
+            if (handleApiResponse(data)) {
+                const members = data.data.map(member => member.replace("@s.whatsapp.net", "")).join('\n');
+                const blob = new Blob([members], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'nums_' + nome  + ".txt";
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                showAlert('Sucesso', 'Membros extraídos com sucesso!', 'success');
+            }
+        } else {
+            // Se não for JSON, lê como texto e mostra o erro
+            const textResponse = await response.text();
+            console.error('Resposta não-JSON recebida:', textResponse);
+            showAlert('Erro', 'O servidor retornou uma resposta inválida. Por favor, tente novamente mais tarde.', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao extrair membros:', error);
+        showAlert('Erro', 'Falha ao extrair membros do grupo. Por favor, verifique sua conexão e tente novamente.', 'error');
+    }
+}
+    </script>
+</body>
+</html>

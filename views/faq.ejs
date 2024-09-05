@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BudZap - Guia Completo e FAQ</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .bg-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-gradient text-white py-10 shadow-lg">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-5xl font-bold mb-4">BudZap</h1>
+            <p class="text-xl">Guia Completo e FAQ</p>
+        </div>
+    </header>
+
+    <nav class="bg-white shadow-md py-4 sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <ul class="flex flex-wrap justify-center space-x-6">
+                <li><a href="#introducao" class="text-purple-600 hover:text-purple-800 transition duration-300">Introdução</a></li>
+                <li><a href="#instancias" class="text-purple-600 hover:text-purple-800 transition duration-300">Instâncias</a></li>
+                <li><a href="#funis" class="text-purple-600 hover:text-purple-800 transition duration-300">Funis</a></li>
+                <li><a href="#autoresposta" class="text-purple-600 hover:text-purple-800 transition duration-300">Autoresposta</a></li>
+                <li><a href="#mensagens-massa" class="text-purple-600 hover:text-purple-800 transition duration-300">Mensagens em Massa</a></li>
+                <li><a href="#grupos" class="text-purple-600 hover:text-purple-800 transition duration-300">Grupos</a></li>
+                <li><a href="#integracoes" class="text-purple-600 hover:text-purple-800 transition duration-300">Integrações</a></li>
+                <li><a href="#analise" class="text-purple-600 hover:text-purple-800 transition duration-300">Análise</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-12">
+        <section id="introducao" class="mb-16">
+            <h2 class="text-4xl font-bold text-purple-800 mb-6">Introdução ao BudZap</h2>
+            <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+                <div class="flex flex-col md:flex-row items-center mb-6">
+                    <div class="md:w-1/2 mb-6 md:mb-0">
+                        <h3 class="text-2xl font-semibold text-purple-700 mb-4">O que é o BudZap?</h3>
+                        <p class="text-gray-700 mb-4">
+                            BudZap é uma plataforma avançada de automação e marketing para WhatsApp, projetada para impulsionar seus negócios através de comunicação eficiente e automatizada. Com recursos poderosos como gerenciamento de múltiplas instâncias, funis de venda personalizados, autoresposta inteligente e muito mais, o BudZap é a ferramenta ideal para empresas que desejam maximizar seu potencial no WhatsApp.
+                        </p>
+                    </div>
+                    <div class="md:w-1/2 md:pl-8">
+                        <img src="https://cdn.pixabay.com/photo/2021/09/23/07/05/chat-6648214_1280.png" alt="BudZap Interface" class="w-full h-auto rounded-lg shadow-md animate-float">
+                    </div>
+                </div>
+                <div class="bg-purple-100 rounded-lg p-6">
+                    <h4 class="text-xl font-semibold text-purple-800 mb-4">Principais Recursos:</h4>
+                    <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i>Gerenciamento de múltiplas instâncias do WhatsApp</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i>Criação de funis de venda personalizados</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i>Sistema de autoresposta inteligente</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i>Envio de mensagens em massa</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i>Gerenciamento avançado de grupos</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i>Integrações com ElevenLabs e Mercado Pago</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i>Análise detalhada de desempenho</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h3 class="text-2xl font-semibold text-purple-700 mb-6">Planos Disponíveis</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-gradient-to-b from-purple-100 to-purple-200 rounded-lg p-6 transform hover:scale-105 transition duration-300">
+                        <h4 class="text-xl font-bold text-purple-800 mb-4">Plano Gratuito</h4>
+                        <ul class="text-gray-700 space-y-2">
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>1 instância do WhatsApp</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Até 50 mensagens em massa</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>1 funil de venda</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>30 autorespostas por mês</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gradient-to-b from-indigo-100 to-indigo-200 rounded-lg p-6 transform hover:scale-105 transition duration-300">
+                        <h4 class="text-xl font-bold text-indigo-800 mb-4">Plano Plus</h4>
+                        <ul class="text-gray-700 space-y-2">
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>5 instâncias do WhatsApp</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Até 1500 mensagens em massa</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>10 funis de venda</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>1000 autorespostas por mês</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gradient-to-b from-pink-100 to-pink-200 rounded-lg p-6 transform hover:scale-105 transition duration-300">
+                        <h4 class="text-xl font-bold text-pink-800 mb-4">Plano Premium</h4>
+                        <ul class="text-gray-700 space-y-2">
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>20 instâncias do WhatsApp</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Mensagens em massa ilimitadas</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>35 funis de venda</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Autorespostas ilimitadas</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="instancias" class="mb-16">
+            <h2 class="text-4xl font-bold text-purple-800 mb-6">Gerenciamento de Instâncias</h2>
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h3 class="text-2xl font-semibold text-purple-700 mb-4">O que são instâncias no BudZap?</h3>
+                <p class="text-gray-700 mb-6">
+                    Instâncias no BudZap são sessões individuais do WhatsApp que você pode gerenciar simultaneamente. Cada instância representa uma conta do WhatsApp diferente, permitindo que você gerencie múltiplos números ou departamentos a partir de uma única plataforma.
+                </p>
+
+                <div class="bg-gray-100 rounded-lg p-6 mb-8">
+                    <h4 class="text-xl font-semibold text-purple-800 mb-4">Como criar uma nova instância:</h4>
+                    <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                        <li>Acesse a página de "Gerenciamento de Instâncias" no seu painel BudZap.</li>
+                        <li>Clique no botão "Criar Nova Instância".</li>
+                        <li>Dê um nome à sua nova instância (ex: "Vendas", "Suporte", etc).</li>
+                        <li>Depois so clicar no botão qr code.</li>
+                        <li>E depois só ler o qr code no seu WhatsApp.</li>
+                    </ol>
+                </div>
+
+                <div class="flex flex-col md:flex-row items-center mb-8">
+                    <div class="md:w-1/2 mb-6 md:mb-0">
+                        <h4 class="text-xl font-semibold text-purple-800 mb-4">Gerenciando suas instâncias:</h4>
+                        <ul class="text-gray-700 space-y-2">
+                            <li class="flex items-center"><i class="fas fa-sync-alt text-blue-500 mr-2"></i><strong>Atualizar status:</strong> Verifique se a instância está conectada.</li>
+                            <li class="flex items-center"><i class="fas fa-qrcode text-green-500 mr-2"></i><strong>Gerar QR Code:</strong> Para conectar ou reconectar uma instância.</li>
+                            <li class="flex items-center"><i class="fas fa-trash-alt text-red-500 mr-2"></i><strong>Deletar instância:</strong> Remova instâncias que não são mais necessárias.</li>
+                            <li class="flex items-center"><i class="fas fa-unlink text-yellow-500 mr-2"></i><strong>Desconectar:</strong> Encerre a sessão de uma instância ativa.</li>
+                        </ul>
+                    </div>
+                    <div class="md:w-1/2 md:pl-8">
+                        <img src="https://cdn.pixabay.com/photo/2018/01/17/04/11/mobile-phone-3087898_1280.jpg" alt="Gerenciamento de Instâncias" class="w-full h-auto rounded-lg shadow-md">
+                    </div>
+                </div>
+
+                <div class="bg-yellow-100 rounded-lg p-6">
+                    <h4 class="text-xl font-semibold text-yellow-800 mb-4">Dica Pro:</h4>
+                    <p class="text-gray-700">
+                        Para otimizar seu fluxo de trabalho, considere criar instâncias separadas para diferentes departamentos ou campanhas. Por exemplo, você pode ter uma instância para "Vendas", outra para "Suporte ao Cliente" e uma terceira para "Campanhas de Marketing". Isso ajudará a manter suas conversas organizadas e facilitará o gerenciamento de diferentes aspectos do seu negócio.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="funis" class="mb-16">
+            <h2 class="text-4xl font-bold text-purple-800 mb-6">Funis de Venda</h2>
+            <section id="funis" class="mb-16">
+                <h2 class="text-4xl font-bold text-purple-800 mb-6">Funis de Venda</h2>
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h3 class="text-2xl font-semibold text-purple-700 mb-4">O que são funis de venda no BudZap?</h3>
+                    <p class="text-gray-700 mb-6">
+                        Funis de venda no BudZap são sequências automatizadas de mensagens projetadas para guiar seus clientes através do processo de compra. Eles permitem que você crie jornadas de conversação personalizadas, aumentando o engajamento e as chances de conversão.
+                    </p>
+    
+                    <div class="bg-gray-100 rounded-lg p-6 mb-8">
+                        <h4 class="text-xl font-semibold text-purple-800 mb-4">Como criar um funil de vendas:</h4>
+                        <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                            <li>No painel BudZap, navegue até "Funis de Venda".</li>
+                            <li>Clique em "Criar Novo Funil".</li>
+                            <li>Dê um nome ao seu funil (ex: "Promoção de Verão").</li>
+                            <li>Adicione etapas ao seu funil:
+                                <ul class="list-disc list-inside ml-6 mt-2 space-y-1">
+                                    <li>Mensagem de texto</li>
+                                    <li>Imagem</li>
+                                    <li>Vídeo</li>
+                                    <li>Áudio</li>
+                                    <li>Espera (delay)</li>
+                                    <li>Condicionais</li>
+                                    <li>Input do usuário</li>
+                                </ul>
+                            </li>
+                            <li>Configure as condições para avançar entre as etapas.</li>
+                            <li>Salve seu funil.</li>
+                        </ol>
+                    </div>
+    
+                    <div class="flex flex-col md:flex-row items-center mb-8">
+                        <div class="md:w-1/2 mb-6 md:mb-0">
+                            <h4 class="text-xl font-semibold text-purple-800 mb-4">Recursos dos funis:</h4>
+                            <ul class="text-gray-700 space-y-2">
+                                <li class="flex items-center"><i class="fas fa-clock text-blue-500 mr-2"></i><strong>Atrasos:</strong> Defina intervalos entre mensagens.</li>
+                                <li class="flex items-center"><i class="fas fa-random text-green-500 mr-2"></i><strong>Condicionais:</strong> Crie caminhos diferentes baseados nas respostas.</li>
+                                <li class="flex items-center"><i class="fas fa-images text-purple-500 mr-2"></i><strong>Mídia:</strong> Adicione imagens, vídeos e áudios às suas mensagens.</li>
+                                <li class="flex items-center"><i class="fas fa-keyboard text-orange-500 mr-2"></i><strong>Input do usuário:</strong> Capture respostas dos clientes.</li>
+                            </ul>
+                        </div>
+                        <div class="md:w-1/2 md:pl-8">
+                            <img src="https://cdn.pixabay.com/photo/2020/03/17/16/34/graph-4941099_1280.png" alt="Exemplo de Funil" class="w-full h-auto rounded-lg shadow-md">
+                        </div>
+                    </div>
+    
+                    <div class="bg-green-100 rounded-lg p-6">
+                        <h4 class="text-xl font-semibold text-green-800 mb-4">Exemplo prático:</h4>
+                        <p class="text-gray-700 mb-4">
+                            Imagine que você tem uma loja de roupas online. Você pode criar um funil chamado "Lançamento Coleção Verão" com as seguintes etapas:
+                        </p>
+                        <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                            <li>Mensagem de boas-vindas: "Olá [Nome]! Está preparado para o verão?"</li>
+                            <li>Imagem: Envie uma imagem com as novas peças da coleção.</li>
+                            <li>Pergunta interativa: "Qual é o seu estilo favorito para o verão?"</li>
+                            <li>Condicional: Baseado na resposta, envie recomendações personalizadas.</li>
+                            <li>Oferta especial: "Use o cupom VERAO20 para 20% de desconto na sua primeira compra!"</li>
+                            <li>Call-to-action: Link para a loja online com o cupom já aplicado.</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+    
+            <section id="autoresposta" class="mb-16">
+                <h2 class="text-4xl font-bold text-purple-800 mb-6">Sistema de Autoresposta</h2>
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h3 class="text-2xl font-semibold text-purple-700 mb-4">O que é o sistema de autoresposta do BudZap?</h3>
+                    <p class="text-gray-700 mb-6">
+                        O sistema de autoresposta do BudZap permite configurar respostas automáticas para mensagens recebidas em suas instâncias do WhatsApp. Isso ajuda a manter uma comunicação rápida e eficiente com seus clientes, mesmo quando você não está disponível.
+                    </p>
+    
+                    <div class="bg-gray-100 rounded-lg p-6 mb-8">
+                        <h4 class="text-xl font-semibold text-purple-800 mb-4">Como configurar a autoresposta:</h4>
+                        <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                            <li>Acesse a seção "Autoresposta" no seu painel BudZap.</li>
+                            <li>Selecione a instância do WhatsApp que você deseja configurar.</li>
+                            <li>Escolha um funil existente para usar como autoresposta.</li>
+                            <li>Ative a autoresposta para a instância selecionada.</li>
+                        </ol>
+                    </div>
+    
+                    <div class="flex flex-col md:flex-row items-center mb-8">
+                        <div class="md:w-1/2 mb-6 md:mb-0">
+                            <h4 class="text-xl font-semibold text-purple-800 mb-4">Recursos de autoresposta:</h4>
+                            <ul class="text-gray-700 space-y-2">
+                                <li class="flex items-center"><i class="fas fa-robot text-blue-500 mr-2"></i>Use funis existentes para criar fluxos de conversa automatizados.</li>
+                                <li class="flex items-center"><i class="fas fa-calendar-alt text-green-500 mr-2"></i>Configure respostas para diferentes horários ou dias da semana.</li>
+                                <li class="flex items-center"><i class="fas fa-chart-bar text-purple-500 mr-2"></i>Monitore o uso de autorespostas com base no seu plano.</li>
+                            </ul>
+                        </div>
+                        <div class="md:w-1/2 md:pl-8">
+                            <img src="https://cdn.pixabay.com/photo/2018/01/23/12/23/robot-3101143_1280.png" alt="Autoresposta" class="w-full h-auto rounded-lg shadow-md">
+                        </div>
+                    </div>
+    
+                    <div class="bg-blue-100 rounded-lg p-6">
+                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Dica de Uso:</h4>
+                        <p class="text-gray-700">
+                            Crie funis de autoresposta específicos para diferentes situações, como "Fora do Horário Comercial", "Dúvidas Frequentes" ou "Promoção Atual". Isso permite que você ofereça respostas relevantes e personalizadas mesmo quando não estiver disponível para responder manualmente.
+                        </p>
+                    </div>
+                </div>
+            </section>
+    
+            <section id="mensagens-massa" class="mb-16">
+                <h2 class="text-4xl font-bold text-purple-800 mb-6">Mensagens em Massa</h2>
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h3 class="text-2xl font-semibold text-purple-700 mb-4">Como funciona o envio de mensagens em massa no BudZap?</h3>
+                    <p class="text-gray-700 mb-6">
+                        O recurso de mensagens em massa do BudZap permite que você envie uma mesma mensagem para múltiplos contatos simultaneamente. É uma ferramenta para campanhas de marketing, anúncios de promoções ou comunicações em larga escala.
+                    </p>
+    
+                    <div class="bg-gray-100 rounded-lg p-6 mb-8">
+                        <h4 class="text-xl font-semibold text-purple-800 mb-4">Como enviar mensagens em massa:</h4>
+                        <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                            <li>Acesse a seção "Mensagens em Massa" no painel BudZap.</li>
+                            <li>Selecione a instância do WhatsApp que você deseja usar.</li>
+                            <li>Insira os números de telefone dos destinatários.</li>
+                            <li>Selecione o funil que será usado para a campanha.</li>
+                            <li>Configure as opções de envio, como alternar entre instâncias.</li>
+                            <li>Inicie o envio e monitore o progresso.</li>
+                        </ol>
+                    </div>
+    
+                    <div class="flex flex-col md:flex-row items-center mb-8">
+                        <div class="md:w-1/2 mb-6 md:mb-0">
+                            <h4 class="text-xl font-semibold text-purple-800 mb-4">Recursos de mensagens em massa:</h4>
+                            <ul class="text-gray-700 space-y-2">
+                                <li class="flex items-center"><i class="fas fa-file-import text-blue-500 mr-2"></i>Importação de lista de contatos.</li>
+                                <li class="flex items-center"><i class="fas fa-sitemap text-green-500 mr-2"></i>Uso de funis personalizados para campanhas.</li>
+                                <li class="flex items-center"><i class="fas fa-chart-line text-purple-500 mr-2"></i>Monitoramento em tempo real do progresso de envio.</li>
+                                <li class="flex items-center"><i class="fas fa-shield-alt text-orange-500 mr-2"></i>Limites de envio baseados no plano do usuário.</li>
+                            </ul>
+                        </div>
+                        <div class="md:w-1/2 md:pl-8">
+                            <img src="https://cdn.pixabay.com/photo/2020/02/24/08/31/email-4875674_1280.jpg" alt="Mensagens em Massa" class="w-full h-auto rounded-lg shadow-md">
+                        </div>
+                    </div>
+    
+                    <div class="bg-red-100 rounded-lg p-6">
+                        <h4 class="text-xl font-semibold text-red-800 mb-4">Atenção:</h4>
+                        <p class="text-gray-700">
+                            O uso de mensagens em massa deve ser feito com responsabilidade. Certifique-se de que seus contatos consentiram em receber mensagens e sempre forneça uma opção clara para que possam optar por não receber futuras comunicações. O abuso deste recurso pode resultar em bloqueios por parte do WhatsApp e feedback negativo dos clientes.
+                        </p>
+                    </div>
+                </div>
+            </section>
+    
+            <section id="grupos" class="mb-16">
+                <h2 class="text-4xl font-bold text-purple-800 mb-6">Gerenciamento de Grupos</h2>
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h3 class="text-2xl font-semibold text-purple-700 mb-4">Como gerenciar grupos no BudZap?</h3>
+                    <p class="text-gray-700 mb-6">
+                        O BudZap oferece ferramentas para criar, gerenciar e interagir com grupos do WhatsApp, permitindo uma comunicação eficiente com múltiplos contatos simultaneamente.
+                    </p>
+    
+                    <div class="bg-gray-100 rounded-lg p-6 mb-8">
+                        <h4 class="text-xl font-semibold text-purple-800 mb-4">Funcionalidades principais:</h4>
+                        <ul class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
+                            <li class="flex items-center"><i class="fas fa-plus-circle text-green-500 mr-2"></i>Criar novos grupos</li>
+                            <li class="flex items-center"><i class="fas fa-user-plus text-blue-500 mr-2"></i>Adicionar e remover membros</li>
+                            <li class="flex items-center"><i class="fas fa-user-shield text-purple-500 mr-2"></i>Configurar administradores</li>
+                            <li class="flex items-center"><i class="fas fa-info-circle text-yellow-500 mr-2"></i>Obter informações do grupo</li>
+                            <li class="flex items-center"><i class="fas fa-sign-out-alt text-red-500 mr-2"></i>Sair de grupos</li>
+                            <li class="flex items-center"><i class="fas fa-cog text-gray-500 mr-2"></i>Atualizar configurações do grupo</li>
+                            <li class="flex items-center"><i class="fas fa-edit text-indigo-500 mr-2"></i>Atualizar assunto e descrição do grupo</li>
+                        </ul>
+                    </div>
+    
+                    <div class="flex flex-col md:flex-row items-center mb-8">
+                        <div class="md:w-1/2 mb-6 md:mb-0">
+                            <h4 class="text-xl font-semibold text-purple-800 mb-4">Como criar e gerenciar um grupo:</h4>
+                            <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                                <li>Acesse a seção "Gerenciamento de Grupos" no painel.</li>
+                                <li>Use as opções disponíveis para criar um novo grupo ou gerenciar grupos existentes.</li>
+                                <li>Para criar um grupo, forneça um nome e adicione participantes.</li>
+                                <li>Use as ferramentas de gerenciamento para monitorar e interagir com o grupo.</li>
+                            </ol>
+                        </div>
+                        <div class="md:w-1/2 md:pl-8">
+                            <img src="https://cdn.pixabay.com/photo/2018/09/04/19/08/network-3654587_1280.jpg" alt="Gerenciamento de Grupos" class="w-full h-auto rounded-lg shadow-md">
+                        </div>
+                    </div>
+    
+                    <div class="bg-yellow-100 rounded-lg p-6">
+                        <h4 class="text-xl font-semibold text-yellow-800 mb-4">Dica Pro:</h4>
+                        <p class="text-gray-700">
+                            Utilize grupos para segmentar seus clientes ou criar comunidades temáticas. Por exemplo, você pode criar um grupo VIP para seus melhores clientes, oferecendo promoções exclusivas e atendimento prioritário. Isso ajuda a aumentar o engajamento e a fidelidade dos clientes.
+                        </p>
+                    </div>
+                </div>
+            </section>
+    
+            <section id="integracoes" class="mb-16">
+                <h2 class="text-4xl font-bold text-purple-800 mb-6">Integrações</h2>
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h3 class="text-2xl font-semibold text-purple-700 mb-4">Expandindo as capacidades do BudZap com integrações</h3>
+                    <p class="text-gray-700 mb-6">
+                        O BudZap oferece integrações com serviços externos para ampliar suas funcionalidades. Duas integrações principais são o ElevenLabs para geração de voz e o Mercado Pago para transações financeiras.
+                    </p>
+    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <div class="bg-blue-100 rounded-lg p-6">
+                            <h4 class="text-xl font-semibold text-blue-800 mb-4">Integração ElevenLabs</h4>
+                            <p class="text-gray-700 mb-4">
+                                Gere mensagens de voz realistas para suas campanhas de WhatsApp.
+                            </p>
+                            <ul class="list-disc list-inside text-gray-700 space-y-2">
+                                <li>Converta texto em fala natural</li>
+                                <li>Personalize vozes para diferentes campanhas</li>
+                                <li>Melhore o engajamento com mensagens de áudio</li>
+                            </ul>
+                        </div>
+                        <div class="bg-green-100 rounded-lg p-6">
+                            <h4 class="text-xl font-semibold text-green-800 mb-4">Integração Mercado Pago</h4>
+                            <p class="text-gray-700 mb-4">
+                                Visualize informações financeiras da sua conta Mercado Pago.
+                            </p>
+                            <ul class="list-disc list-inside text-gray-700 space-y-2">
+                                <li>Acompanhe transações em tempo real</li>
+                                <li>Visualize saldo diário e lucro mensal</li>
+                                <li>Gere relatórios financeiros detalhados</li>
+                            </ul>
+                        </div>
+                    </div>
+    
+                    <div class="bg-purple-100 rounded-lg p-6">
+                        <h4 class="text-xl font-semibold text-purple-800 mb-4">Como configurar integrações:</h4>
+                        <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                            <li>Acesse a seção "Integrações" no painel BudZap.</li>
+                            <li>Selecione a integração que deseja configurar.</li>
+                            <li>Siga as instruções para obter as credenciais necessárias do serviço externo.</li>
+                            <li>Insira as credenciais no BudZap e teste a conexão.</li>
+                            <li>Comece a usar os recursos da integração em suas campanhas e automações.</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+    
+            <section id="analise" class="mb-16">
+                <h2 class="text-4xl font-bold text-purple-800 mb-6">Análise de Desempenho</h2>
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h3 class="text-2xl font-semibold text-purple-700 mb-4">Medindo o sucesso de suas campanhas</h3>
+                    <p class="text-gray-700 mb-6">
+                        O BudZap oferece ferramentas de análise para ajudar você a entender o desempenho de suas campanhas e otimizar suas estratégias de comunicação no WhatsApp.
+                    </p>
+    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-indigo-100 rounded-lg p-4">
+                            <h4 class="text-lg font-semibold text-indigo-800 mb-2">Métricas de Engajamento</h4>
+                            <ul class="text-gray-700 space-y-1">
+                                <li>Total de mensagens enviadas</li>
+                                <li>Número de autorespostas</li>
+                                <li>Taxa de engajamento</li>
+                            </ul>
+                        </div>
+                        <div class="bg-pink-100 rounded-lg p-4">
+                            <h4 class="text-lg font-semibold text-pink-800 mb-2">Análise de Funis</h4>
+                            <ul class="text-gray-700 space-y-1">
+                                <li>Funis ativos</li>
+                                <li>Desempenho por etapa do funil</li>
+                                <li>Taxa de conclusão de funis</li>
+                            </ul>
+                        </div>
+                        <div class="bg-yellow-100 rounded-lg p-4">
+                            <h4 class="text-lg font-semibold text-yellow-800 mb-2">Insights de Grupos</h4>
+                            <ul class="text-gray-700 space-y-1">
+                                <li>Número de grupos gerenciados</li>
+                                <li>Engajamento por grupo</li>
+                                <li>Crescimento de membros</li>
+                            </ul>
+                        </div>
+                    </div>
+    
+                    <div class="flex flex-col md:flex-row items-center mb-8">
+                        <div class="md:w-1/2 mb-6 md:mb-0">
+                            <h4 class="text-xl font-semibold text-purple-800 mb-4">Como usar a análise para otimização:</h4>
+                            <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                                <li>Identifique os funis mais eficazes.</li>
+                                <li>Analise o desempenho das autorespostas.</li>
+                                <li>Otimize suas campanhas com base nas taxas de engajamento.</li>
+                                <li>Ajuste suas estratégias de grupo com base nos insights obtidos.</li>
+                                <li>Monitore o uso de recursos em relação aos limites do seu plano.</li>
+                            </ol>
+                        </div>
+                        <div class="md:w-1/2 md:pl-8">
+                            <img src="https://cdn.pixabay.com/photo/2018/07/25/17/52/bar-chart-3562140_1280.png" alt="Dashboard de Análise" class="w-full h-auto rounded-lg shadow-md">
+                        </div>
+                    </div>
+    
+                    <div class="bg-green-100 rounded-lg p-6">
+                        <h4 class="text-xl font-semibold text-green-800 mb-4">Exemplo de otimização baseada em dados:</h4>
+                        <p class="text-gray-700">
+                            Se você notar que um determinado funil tem uma alta taxa de abandono em uma etapa específica, você pode revisar e ajustar essa etapa. Por exemplo, se muitos usuários abandonam o funil após uma mensagem de vídeo, você pode considerar encurtar o vídeo ou substituí-lo por uma série de imagens com texto.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    
+        <footer class="bg-gradient text-white py-8">
+            <div class="container mx-auto px-4 text-center">
+                <p>&copy; 2023 BudZap. Todos os direitos reservados.</p>
+                <p class="mt-2">Transformando a comunicação via WhatsApp para impulsionar seu negócio.</p>
+            </div>
+        </footer>
+    
+        <script>
+            // Animações com GSAP
+            gsap.registerPlugin(ScrollTrigger);
+    
+            gsap.utils.toArray('section').forEach(section => {
+                gsap.from(section, {
+                    opacity: 0,
+                    y: 50,
+                    duration: 1,
+                    scrollTrigger: {
+                        trigger: section,
+                        start: "top 80%",
+                        end: "top 20%",
+                        toggleActions: "play none none reverse"
+                    }
+                });
+            });
+    
+            // Animação para os elementos flutuantes
+            gsap.to('.animate-float', {
+                y: -20,
+                duration: 2,
+                repeat: -1,
+                yoyo: true,
+                ease: "power1.inOut"
+            });
+    
+            // Smooth scroll para os links de navegação
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        </script>
+    </body>
+    </html>

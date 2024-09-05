@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuração ElevenLabs</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        @keyframes wave {
+            0% { transform: scaleY(1); }
+            50% { transform: scaleY(0.6); }
+            100% { transform: scaleY(1); }
+        }
+        .wave {
+            animation: wave 1.5s infinite;
+        }
+        .audio-wave > * {
+            animation: wave 1.5s infinite;
+            animation-delay: calc(var(--i) * 0.2s);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 min-h-screen p-4 md:p-8">
+    <% if (user.plan === 'gratuito') { %>
+        <div class="alert alert-warning shadow-lg mb-6">
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <span>Esta funcionalidade está disponível apenas para usuários do plano Plus ou superior.</span>
+            </div>
+        </div>
+    <% } else { %>
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
+        <div class="md:flex">
+            <div class="md:flex-shrink-0 bg-purple-600 md:w-48 flex items-center justify-center p-4">
+                <svg class="w-24 h-24 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                </svg>
+            </div>
+            <div class="p-8 w-full">
+                <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold mb-1">Integração Avançada</div>
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-6">Configuração ElevenLabs</h2>
+                
+                <form id="elevenlabsForm" class="space-y-6">
+                    <div>
+                        <label for="apiKey" class="block text-sm font-medium text-gray-700">Chave da API</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <input type="password" id="apiKey" name="apiKey" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pr-10 sm:text-sm border-gray-300 rounded-md" placeholder="Insira sua chave API">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="voiceId" class="block text-sm font-medium text-gray-700">ID da Voz</label>
+                        <input type="text" id="voiceId" name="voiceId" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" placeholder="Ex: 21m00Tcm4TlvDq8ikWAM">
+                    </div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Salvar Configuração
+                    </button>
+                </form>
+
+                <div class="mt-10">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Testar Geração de Voz</h3>
+                    <div class="space-y-4">
+                        <textarea id="testText" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Digite aqui o texto para gerar voz..."></textarea>
+                        <div>
+                            <label for="tonSelect" class="block text-sm font-medium text-gray-700">Selecione o Tom</label>
+                            <select id="tonSelect" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                <!-- Opções de tom serão preenchidas dinamicamente -->
+                            </select>
+                        </div>
+                        <button id="testButton" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Gerar e Reproduzir Áudio
+                        </button>
+                    </div>
+                </div>
+
+                <div id="audioPlayerContainer" class="mt-6 hidden">
+                    <h4 class="text-lg font-medium text-gray-900 mb-2">Áudio Gerado</h4>
+                    <audio id="audioPlayer" controls class="w-full">
+                        Seu navegador não suporta o elemento de áudio.
+                    </audio>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="alertContainer" class="fixed bottom-5 right-5 max-w-sm"></div>
+
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl">
+            <div class="flex items-center space-x-2 audio-wave">
+                <div class="w-2 h-8 bg-purple-600 rounded wave" style="--i: 1;"></div>
+                <div class="w-2 h-12 bg-purple-600 rounded wave" style="--i: 2;"></div>
+                <div class="w-2 h-10 bg-purple-600 rounded wave" style="--i: 3;"></div>
+                <div class="w-2 h-6 bg-purple-600 rounded wave" style="--i: 4;"></div>
+                <div class="w-2 h-8 bg-purple-600 rounded wave" style="--i: 5;"></div>
+            </div>
+            <p class="mt-4 text-lg font-semibold text-gray-800">Gerando voz...</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiKeyInput = document.getElementById('apiKey');
+            const voiceIdInput = document.getElementById('voiceId');
+            const form = document.getElementById('elevenlabsForm');
+            const testButton = document.getElementById('testButton');
+            const testText = document.getElementById('testText');
+            const tonSelect = document.getElementById('tonSelect');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const audioPlayer = document.getElementById('audioPlayer');
+            const audioPlayerContainer = document.getElementById('audioPlayerContainer');
+
+            // Carregar configuração existente e opções de tom
+            axios.get('/integrations/elevenlabs/config')
+                .then(response => {
+                    apiKeyInput.value = response.data.elevenlabsApiKey || '';
+                    voiceIdInput.value = response.data.elevenlabsVoiceId || '';
+                    
+                    // Preencher o select de tons
+                    response.data.tonsOptions.forEach(ton => {
+                        const option = document.createElement('option');
+                        option.value = ton.nome;
+                        option.textContent = `${ton.nome}`;
+                        tonSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar configuração:', error);
+                    showAlert('error', 'Falha ao carregar configuração existente.');
+                });
+
+         // Adicionar evento de submit ao formulário para salvar a configuração
+         form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const apiKey = apiKeyInput.value;
+                const voiceId = voiceIdInput.value;
+
+                loadingOverlay.style.display = 'flex';
+                axios.post('/integrations/elevenlabs/save', { apiKey, voiceId })
+                    .then(response => {
+                        showAlert('success', 'Configuração salva com sucesso!');
+                    })
+                    .catch(error => {
+                        console.error('Erro ao salvar configuração:', error);
+                        showAlert('error', 'Falha ao salvar configuração.');
+                    })
+                    .finally(() => {
+                        loadingOverlay.style.display = 'none';
+                    });
+            });
+
+            // Atualizar a função de teste para incluir o tom selecionado
+            testButton.addEventListener('click', function() {
+                if (!testText.value.trim()) {
+                    showAlert('error', 'Por favor, insira um texto para gerar o áudio.');
+                    return;
+                }
+                loadingOverlay.style.display = 'flex';
+                axios.post('/integrations/elevenlabs/test', { 
+                    text: testText.value,
+                    tom: tonSelect.value
+                }, { responseType: 'blob' })
+                    .then(response => {
+                        const audioUrl = URL.createObjectURL(response.data);
+                        audioPlayer.src = audioUrl;
+                        audioPlayerContainer.classList.remove('hidden');
+                        audioPlayer.play();
+                        showAlert('success', 'Áudio gerado com sucesso!');
+                    })
+                    .catch(() => showAlert('error', 'Falha ao gerar áudio.'))
+                    .finally(() => loadingOverlay.style.display = 'none');
+            });
+
+            function showAlert(type, message) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `p-4 mb-4 rounded-md ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} flex items-center`;
+                alertDiv.innerHTML = `
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${type === 'success' ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'}"></path>
+                    </svg>
+                    ${message}
+                `;
+                document.getElementById('alertContainer').appendChild(alertDiv);
+                setTimeout(() => alertDiv.remove(), 5000);
+            }
+        });
+    </script>
+      <% } %>
+</body>
+</html>

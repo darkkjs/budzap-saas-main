@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Envio em Massa</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gradient-to-r from-purple-100 to-blue-100 min-h-screen flex flex-col">
+    <nav class="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold"><i class="fas fa-paper-plane mr-2"></i>BudZap - Envio em Massa</h1>
+            <span class="text-sm">Plano: <%= user.plan.charAt(0).toUpperCase() + user.plan.slice(1) %></span>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-6 flex-grow">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4 text-purple-700"><i class="fas fa-cog mr-2"></i>Configuração do Envio</h2>
+                <form id="massMessageForm" class="space-y-4">
+                    <div>
+                        <label for="phoneNumbers" class="block mb-2 font-medium text-gray-700">Números de Telefone (um por linha)</label>
+                        <textarea id="phoneNumbers" rows="5" class="w-full p-2 border rounded focus:ring focus:ring-purple-300" placeholder="5517991134416&#10;55 17 99113-4423&#10;+55 18 99232 3211"></textarea>
+                        <p class="text-sm text-gray-600 mt-1">
+                            Limite restante: <span id="numberLimit"><%= user.funnelLimit - user.funnelUsage %></span> números
+                        </p>
+                    </div>
+                    <div>
+                        <label for="funnelSelect" class="block mb-2 font-medium text-gray-700">Selecione o Funil</label>
+                        <select id="funnelSelect" name="funnelId" class="select select-bordered w-full">
+                            <option disabled selected>Escolha um funil</option>
+                            <% funnels.forEach(funnel => { %>
+                              <option value="<%= funnel._id %>"><%= funnel.name %></option>
+                            <% }); %>
+                          </select>
+                    </div>
+                    <div>
+                        <label class="block mb-2 font-medium text-gray-700">Selecione as Instâncias do WhatsApp</label>
+                        <div id="instancesContainer" class="space-y-4">
+                            <!-- As instâncias serão carregadas aqui dinamicamente -->
+                        </div>
+                    </div>
+                    <div>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="alternateInstances" class="checkbox checkbox-primary">
+                            <span>Alternar entre instâncias selecionadas</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full"><i class="fas fa-play mr-2"></i>Iniciar Envio em Massa</button>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4 text-purple-700"><i class="fas fa-chart-line mr-2"></i>Status do Envio</h2>
+                <div id="statusPanel" class="hidden space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="stat-box bg-green-100 p-3 rounded">
+                            <p class="font-semibold text-green-700">Enviados</p>
+                            <p id="sentCount" class="text-2xl font-bold text-green-800">0</p>
+                        </div>
+                        <div class="stat-box bg-red-100 p-3 rounded">
+                            <p class="font-semibold text-red-700">Erros</p>
+                            <p id="errorCount" class="text-2xl font-bold text-red-800">0</p>
+                        </div>
+                        <div class="stat-box bg-blue-100 p-3 rounded">
+                            <p class="font-semibold text-blue-700">Tempo Estimado</p>
+                            <p id="estimatedTime" class="text-2xl font-bold text-blue-800">--:--</p>
+                        </div>
+                        <div class="stat-box bg-purple-100 p-3 rounded">
+                            <p class="font-semibold text-purple-700">Progresso</p>
+                            <p id="progressPercentage" class="text-2xl font-bold text-purple-800">0%</p>
+                        </div>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="progressBar" class="bg-purple-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <button id="stopButton" class="btn btn-error w-full"><i class="fas fa-stop mr-2"></i>Interromper Envio</button>
+                    <div id="chartContainer" class="hidden">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+      
+        <div class="mt-6 bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4 text-purple-700"><i class="fas fa-history mr-2"></i>Log de Envios</h2>
+            <div id="logContainer" class="h-64 overflow-y-auto border p-2 rounded bg-gray-50">
+                <!-- Logs serão adicionados aqui -->
+            </div>
+        </div>
+        <% if (user.plan === 'gratuito' || user.plan === 'plus') { %>
+            <!-- Card de Marketing para Upgrade (apenas para planos gratuito e plus) -->
+            <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg shadow-lg p-6 text-white">
+                <h2 class="text-2xl font-bold mb-4"><i class="fas fa-rocket mr-2"></i>Potencialize seu Alcance!</h2>
+                <p class="mb-4 text-lg">Seu plano atual (<%= user.plan.charAt(0).toUpperCase() + user.plan.slice(1) %>) permite enviar até <span class="font-bold text-yellow-300"><%= user.funnelLimit %></span> mensagens.</p>
+                <div class="mb-4">
+                    <div class="w-full bg-white rounded-full h-4">
+                        <div class="bg-yellow-400 h-4 rounded-full" style="width: '<%= (user.funnelUsage / user.funnelLimit) * 100 %>%';"></div>
+                    </div>
+                    <p class="text-sm mt-2">Você já usou <span class="font-bold"><%= user.funnelUsage %></span> de <span class="font-bold"><%= user.funnelLimit %></span> mensagens</p>
+                </div>
+                <p class="mb-4">Quer alcançar mais clientes e impulsionar suas vendas?</p>
+                <ul class="list-disc list-inside mb-6 space-y-2">
+                    <li><i class="fas fa-check-circle mr-2 text-green-300"></i>Aumente seu limite de envios</li>
+                    <li><i class="fas fa-check-circle mr-2 text-green-300"></i>Acesse recursos avançados de segmentação</li>
+                    <li><i class="fas fa-check-circle mr-2 text-green-300"></i>Prioridade no suporte técnico</li>
+                </ul>
+                <a href="/change-plan" class="btn btn-warning btn-lg w-full animate-pulse hover:animate-none transition duration-300">
+                    <i class="fas fa-crown mr-2"></i><%= user.plan === 'gratuito' ? 'Upgrade para Plus' : 'Upgrade para Premium' %>
+                </a>
+            </div>
+            <% } %>
+    </main>
+
+    <script>
+        let chart;
+        let isSpamming = false;
+        let totalNumbers = 0;
+        let sentCount = 0;
+        let errorCount = 0;
+        let startTime;
+        let currentReportId;
+        const userPlan = '<%= user.plan %>';
+        const planLimits = {
+            gratuito: 50,
+            plus: 1500,
+            premium: Infinity
+        };
+        let numberLimit = '<%= user.funnelLimit - user.funnelUsage %>'
+        let currentFunnelUsage = '<%= user.funnelUsage %>'
+        let progressPollingInterval;
+
+
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('massMessageForm').addEventListener('submit', startMassMessage);
+            document.getElementById('stopButton').addEventListener('click', stopMassMessage);
+            document.getElementById('phoneNumbers').addEventListener('input', formatPhoneNumbers);
+            document.getElementById('numberLimit').textContent = numberLimit === Infinity ? 'Ilimitado' : numberLimit;
+            loadInstances();
+        });
+
+
+   
+        async function loadInstances() {
+            try {
+                const response = await fetch('/whatsapp/list');
+                const instances = await response.json();
+                const instancesContainer = document.getElementById('instancesContainer');
+                instancesContainer.innerHTML = '';
+                let connectedCount = 0;
+
+                instances.forEach(instance => {
+                    if (instance.isConnected) connectedCount++;
+                    const instanceElement = document.createElement('div');
+                    instanceElement.className = 'bg-gray-50 p-4 sm:p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg mb-4';
+                    instanceElement.innerHTML = `
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                            <div class="mb-4 sm:mb-0">
+                                <h3 class="text-lg sm:text-xl font-semibold text-purple-700">${instance.name}</h3>
+                               
+                                <p class="text-sm ${instance.isConnected ? 'text-green-600' : 'text-red-600'} font-medium mt-2">
+                                    <i class="fas fa-${instance.isConnected ? 'check-circle' : 'times-circle'} mr-2"></i>
+                                    ${instance.isConnected ? 'Conectado' : 'Desconectado'}
+                                </p>
+                                ${instance.whatsappName ? `<p class="text-sm text-blue-600 font-medium">WhatsApp: ${instance.whatsappName}</p>` : ''}
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" name="instances" value="${instance._id}" class="checkbox checkbox-primary mr-4" ${instance.isConnected ? '' : 'disabled'}>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="getQRCode('${instance._id}')" class="btn btn-info btn-sm">
+                                        <i class="fas fa-qrcode mr-1"></i> QR Code
+                                    </button>
+                                    <button type="button" onclick="disconnectInstance('${instance._id}')" class="btn btn-warning btn-sm" ${!instance.isConnected ? 'disabled' : ''}>
+                                        <i class="fas fa-unlink mr-1"></i> Desconectar
+                                    </button>
+                                    <button type="button" onclick="deleteInstance('${instance._id}')" class="btn btn-error btn-sm">
+                                        <i class="fas fa-trash mr-1"></i> Deletar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    instancesContainer.appendChild(instanceElement);
+                });
+
+                // Atualize o contador de instâncias conectadas, se necessário
+                // document.getElementById('connectedInstances').textContent = connectedCount;
+            } catch (error) {
+                console.error('Erro ao carregar instâncias:', error);
+                addLog('Erro ao carregar instâncias do WhatsApp', 'error');
+            }
+        }
+
+        async function getQRCode(instanceId) {
+            const response = await fetch(`/whatsapp/qr/${instanceId}`);
+            const data = await response.json();
+            if (data.qr) {
+                const qrModal = document.createElement('div');
+                qrModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+                qrModal.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-2xl max-w-sm w-full">
+                        <h3 class="text-xl sm:text-2xl font-bold mb-4 text-purple-700">QR Code para Conexão</h3>
+                        <img src="${data.qr}" alt="QR Code" class="mx-auto mb-6 w-full max-w-xs">
+                        <button onclick="this.closest('.fixed').remove()" class="btn btn-primary w-full">Fechar</button>
+                    </div>
+                `;
+                document.body.appendChild(qrModal);
+            } else {
+                showToast('Erro ao obter QR Code', 'error');
+            }
+        }
+
+        async function disconnectInstance(instanceId) {
+            if (confirm('Tem certeza que deseja desconectar esta instância?')) {
+                try {
+                    const response = await fetch(`/whatsapp/disconnect/${instanceId}`, { method: 'POST' });
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        showToast('Instância desconectada com sucesso!', 'success');
+                        loadInstances();
+                    } else {
+                        if (data.error === 'Instância já desconectada') {
+                            showToast('Esta instância já não tem um WhatsApp conectado.', 'info');
+                        } else {
+                            showToast(`Erro ao desconectar instância: ${data.message}`, 'error');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    showToast('Erro ao desconectar instância. Por favor, tente novamente.', 'error');
+                }
+            }
+        }
+
+        async function deleteInstance(instanceId) {
+            if (confirm('Tem certeza que deseja deletar esta instância? Esta ação é irreversível.')) {
+                const response = await fetch(`/whatsapp/delete/${instanceId}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showToast('Instância deletada com sucesso!', 'success');
+                    loadInstances();
+                } else {
+                    showToast('Erro ao deletar instância', 'error');
+                }
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg text-white ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' :
+                type === 'info' ? 'bg-blue-500' : 'bg-yellow-500'
+            } animate-fade-in-up max-w-xs w-full`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Enviados', 'Erros', 'Pendentes'],
+                    datasets: [{
+                        data: [0, 0, 100],
+                        backgroundColor: ['#4CAF50', '#F44336', '#FFEB3B']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function formatPhoneNumbers() {
+            const textarea = document.getElementById('phoneNumbers');
+            const numbers = textarea.value.split('\n');
+            const formattedNumbers = numbers.map(number => {
+                return number.replace(/\D/g, '');
+            }).filter(number => number.length > 0);
+            textarea.value = formattedNumbers.join('\n');
+            
+            const remainingLimit = numberLimit - formattedNumbers.length;
+            document.getElementById('numberLimit').textContent = remainingLimit >= 0 ? remainingLimit : 0;
+        }
+
+       async function startMassMessage(e) {
+    e.preventDefault();
+    if (isSpamming) {
+        addLog('Já existe um envio em massa em andamento.', 'warning');
+        return;
+    }
+
+    const numbers = document.getElementById('phoneNumbers').value.split('\n');
+    if (numbers.length > numberLimit) {
+        addLog(`Limite de ${numberLimit} números excedido. Por favor, reduza a quantidade de números.`, 'error');
+        return;
+    }
+
+    const funnelId = document.getElementById('funnelSelect').value;
+    const instanceIds = Array.from(document.querySelectorAll('input[name="instances"]:checked')).map(el => el.value);
+    const alternateInstances = document.getElementById('alternateInstances').checked;
+
+    console.log('Instâncias selecionadas:', instanceIds); // Para debug
+
+    if (numbers.length === 0 || !funnelId || instanceIds.length === 0) {
+        addLog('Por favor, preencha todos os campos e selecione pelo menos uma instância.', 'error');
+        return;
+    }
+
+    isSpamming = true;
+    sentCount = 0;
+    errorCount = 0;
+    startTime = Date.now();
+    document.getElementById('statusPanel').classList.remove('hidden');
+
+    try {
+        const response = await fetch('/whatsapp/start-mass-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ numbers, funnelId, instanceIds, alternateInstances })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Falha ao iniciar o envio em massa');
+        }
+
+        const data = await response.json();
+        totalNumbers = data.totalNumbers;
+        currentReportId = data.reportId;
+        console.log('ReportId recebido:', currentReportId); // Log para debug
+        addLog(`Iniciando envio para ${totalNumbers} números`, 'info');
+        startProgressPolling();
+        initChart();
+        document.getElementById('chartContainer').classList.remove('hidden');
+    } catch (error) {
+        console.error(error);
+        addLog(`Erro ao iniciar envio em massa: ${error.message}`, 'error');
+        isSpamming = false;
+    }
+}
+
+
+function startProgressPolling() {
+    progressPollingInterval = setInterval(async () => {
+        if (!isSpamming) {
+            clearInterval(progressPollingInterval);
+            return;
+        }
+
+        try {
+            const response = await fetch(`/whatsapp/mass-message-progress?reportId=${currentReportId}`);
+            const data = await response.json();
+            updateProgress(data.sent, data.errors, data.total);
+
+            if (data.isCompleted) {
+                isSpamming = false;
+                clearInterval(progressPollingInterval);
+                addLog('Envio em massa concluído', 'success');
+                document.getElementById('stopButton').disabled = true;
+            }
+        } catch (error) {
+            console.error('Erro ao obter progresso:', error);
+        }
+    }, 1000); // Poll a cada 1 segundo
+}
+
+async function stopMassMessage() {
+    if (!isSpamming || !currentReportId) {
+        console.log('Não é possível interromper: isSpamming =', isSpamming, 'currentReportId =', currentReportId);
+        return;
+    }
+    try {
+        console.log('Tentando interromper com reportId:', currentReportId); // Log para debug
+        const response = await fetch('/whatsapp/stop-mass-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reportId: currentReportId })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            isSpamming = false;
+            addLog('Envio em massa interrompido pelo usuário.', 'warning');
+            updateProgress(data.sent, data.errors, data.total);
+            document.getElementById('stopButton').disabled = true;
+            if (progressPollingInterval) {
+                clearInterval(progressPollingInterval);
+            }
+        } else {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Falha ao interromper o envio em massa');
+        }
+    } catch (error) {
+        console.error('Erro ao interromper envio:', error);
+        addLog(`Erro ao interromper envio: ${error.message}`, 'error');
+    }
+}
+        function updateProgress(sent, errors, total) {
+            sentCount = sent;
+            errorCount = errors;
+            totalNumbers = total;
+            const totalProcessed = sentCount + errorCount;
+            const percentComplete = (totalProcessed / totalNumbers) * 100;
+
+            document.getElementById('sentCount').textContent = sentCount;
+            document.getElementById('errorCount').textContent = errorCount;
+            document.getElementById('progressPercentage').textContent = `${percentComplete.toFixed(2)}%`;
+            document.getElementById('progressBar').style.width = `${percentComplete}%`;
+
+            const elapsedTime = (Date.now() - startTime) / 1000;
+            const estimatedTotalTime = (elapsedTime / totalProcessed) * totalNumbers;
+            const remainingTime = estimatedTotalTime - elapsedTime;
+            document.getElementById('estimatedTime').textContent = formatTime(remainingTime);
+
+            if (chart) {
+                chart.data.datasets[0].data = [sentCount, errorCount, totalNumbers - totalProcessed];
+                chart.update();
+            }
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = `mb-1 p-2 rounded ${type === 'error' ? 'bg-red-100 text-red-700' : type === 'success' ? 'bg-green-100 text-green-700' : type === 'warning' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>

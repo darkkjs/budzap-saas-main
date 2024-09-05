@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BudZap - Chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        #activeFunnelsList {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        #activeFunnelsList div {
+            transition: all 0.3s ease;
+        }
+
+        #activeFunnelsList div:hover {
+            background-color: #f3f4f6;
+        }
+
+        #funnelDetails {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .media-content {
+            max-width: 250px;
+            max-height: 250px;
+            object-fit: cover;
+            cursor: pointer;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .audio-player {
+            display: flex;
+            align-items: center;
+            background-color: #f0f0f0;
+            border-radius: 20px;
+            padding: 8px 12px;
+        }
+
+        .audio-player::before {
+            content: '\f028';
+            /* FontAwesome speaker icon */
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            margin-right: 8px;
+        }
+
+        .video-thumbnail {
+            position: relative;
+            display: inline-block;
+        }
+
+        .video-thumbnail::after {
+            content: '\f144';
+            /* FontAwesome play icon */
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .document-link {
+            display: flex;
+            align-items: center;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .document-link i {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+
+        .chat-message {
+            display: flex;
+            flex-direction: column;
+            max-width: 70%;
+        }
+
+        .chat-message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 2px;
+        }
+
+        .chat-sender {
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin-right: 8px;
+        }
+
+        .chat-time {
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+
+        @media (max-width: 768px) {
+            #mobileGroupMembersButton {
+                display: inline-flex !important;
+            }
+        }
+
+        .chat-bubble {
+            max-width: 70%;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            padding: 8px 12px;
+            border-radius: 12px;
+            line-height: 1.4;
+        }
+
+        .chat-bubble.with-media {
+            padding: 4px;
+            overflow: hidden;
+        }
+
+        .media-content {
+            max-width: 100%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            .chat-bubble.with-media {
+                max-width: 80%;
+            }
+
+            .media-content {
+                width: 100%;
+            }
+        }
+
+        .unread-indicator {
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+
+        .chat-item.unread {
+            background-color: #e1f5fe;
+            font-weight: bold;
+        }
+
+        .full-size-media {
+            max-width: 90%;
+            max-height: 80vh;
+            margin: 10px auto;
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .full-size-media-container {
+            position: relative;
+            width: 100%;
+            text-align: center;
+        }
+
+        .close-full-size-media {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .group-members-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .group-members-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .chat-list,
+        .message-list {
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .bg-chat-pattern {
+            background-color: #e5ddd5;
+            background-image: url("/img/159160.png");
+            background-size: cover;
+        }
+
+        .chat-item {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+
+        .chat-item:hover {
+            background-color: #f5f5f5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-item.unread {
+            background-color: #e1f5fe;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideIn 0.5s ease-out;
+            background-color: #075E54;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .notification .close-btn {
+            cursor: pointer;
+            padding: 0 5px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+            }
+
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .modal-box {
+            width: 90%;
+            max-width: 400px;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background-color: #4a90e2;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #3a7bc8;
+            transform: translateY(-2px);
+        }
+
+        .input-bordered {
+            border-radius: 8px;
+        }
+
+        .truncate-message {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .funnels-container {
+            display: flex;
+            overflow-x: auto;
+            padding: 10px 0;
+            margin-bottom: 10px;
+        }
+
+        .funnel-button {
+            flex: 0 0 auto;
+            margin-right: 10px;
+            padding: 5px 10px;
+            background-color: #4a90e2;
+            color: white;
+            border-radius: 15px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+
+            .chat-bubble {
+                max-width: 80%;
+            }
+
+            .chat-container {
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+            }
+
+            #mobileChats,
+            #mobileMessages {
+                flex: 1;
+                overflow-y: auto;
+            }
+
+            #mobileChatList,
+            #mobileMessageList {
+                height: calc(100vh - 120px);
+            }
+
+            .chat-item {
+                padding: 10px;
+            }
+
+            .chat-bubble {
+                max-width: 80%;
+            }
+
+            #mobileMessageInput {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 10px;
+                background: white;
+                z-index: 1000;
+            }
+
+            .funnels-container {
+                padding: 5px 0;
+            }
+
+            .funnel-button {
+                padding: 3px 6px;
+                font-size: 10px;
+            }
+
+            #mobileChatHeader {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 1000;
+            }
+
+            #mobileMessageList {
+                margin-top: 60px;
+                margin-bottom: 60px;
+                padding-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    <!-- Modal de seleção de instância -->
+    <div id="instanceModal" class="modal modal-open">
+        <div class="modal-box p-6 max-w-3xl">
+            <h1 id="connectedInstancesCount" class="text-2xl font-bold mb-4 text-center"></h1>
+            <h3 class="font-bold text-lg mb-4">Selecione uma Instância</h3>
+            <div id="instanceList" class="mb-4 max-h-96 overflow-y-auto"></div>
+            <div id="noInstancesError" class="text-red-500 mt-4 hidden">
+                Nenhuma instância conectada. Por favor, conecte uma instância para continuar.
+            </div>
+            <div class="modal-action mt-6">
+                <button id="confirmInstance" class="btn btn-primary">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container principal do chat -->
+    <div id="chatContainer" class="hidden">
+        <!-- Layout para PC -->
+        <div class="hidden md:flex h-screen">
+            <!-- Lista de chats -->
+            <div class="w-1/3 bg-white border-r flex flex-col shadow-md">
+                <div
+                    class="p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white flex justify-between items-center">
+                    <h1 class="text-2xl font-bold">BudZap</h1>
+                    <div>
+                        <button id="refreshButton" class="btn btn-ghost btn-circle">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button id="settingsButton" class="btn btn-ghost btn-circle">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <input type="text" id="searchChat" placeholder="Buscar chat..."
+                        class="input input-bordered w-full bg-gray-100" />
+                </div>
+                <div id="chatList" class="chat-list p-4 space-y-2 flex-grow overflow-y-auto"></div>
+            </div>
+            <!-- Área de mensagens -->
+            <div class="w-2/3 flex flex-col">
+                <div id="chatHeader"
+                    class="p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white flex items-center justify-between">
+                    <div class="flex items-center">
+                        <img id="chatAvatar" src="https://cdn-icons-png.flaticon.com/512/4792/4792929.png"
+                            alt="Chat Avatar" class="w-12 h-12 rounded-full mr-3 border-2 border-white">
+                        <div>
+                            <h2 id="chatName" class="text-xl font-semibold">Selecione um chat</h2>
+                            <p id="chatType" class="text-sm"></p>
+                        </div>
+                    </div>
+                    <div>
+                        <button id="groupMembersButton" class="btn btn-ghost btn-circle hidden">
+                            <i class="fas fa-users"></i>
+                        </button>
+                        <button id="chatInfoButton" class="btn btn-ghost btn-circle">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="messageList" class="message-list flex-grow p-6 bg-chat-pattern overflow-y-auto"></div>
+                <div class="p-4 bg-white">
+                    <div id="funnelsContainer" class="funnels-container"></div>
+                    <div class="flex items-center">
+                        <button id="attachButton" class="btn btn-ghost btn-circle mr-2">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <input type="text" id="messageInput" class="input input-bordered flex-grow mr-2 bg-gray-100"
+                            placeholder="Digite uma mensagem">
+                        <button id="sendButton" class="btn btn-circle btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal para membros do grupo -->
+                <div id="groupMembersModal" class="group-members-modal">
+                    <div class="group-members-content">
+                        <span class="close-modal">&times;</span>
+                        <h2 class="text-xl font-bold mb-4">Membros do Grupo</h2>
+                        <ul id="groupMembersList"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Layout para celular -->
+        <div class="md:hidden">
+            <!-- Lista de chats (tela inicial) -->
+            <div id="mobileChats" class="h-screen flex flex-col">
+                <div
+                    class="p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white flex justify-between items-center">
+                    <h1 class="text-2xl font-bold">BudZap</h1>
+                    <div>
+                        <button id="mobileRefreshButton" class="btn btn-ghost btn-circle">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button id="mobileSettingsButton" class="btn btn-ghost btn-circle">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-2">
+                    <input type="text" id="mobileSearchChat" placeholder="Buscar chat..."
+                        class="input input-bordered w-full bg-gray-100" />
+                </div>
+                <div id="mobileChatList" class="chat-list flex-grow p-2 space-y-2 overflow-y-auto"></div>
+            </div>
+
+            <!-- Área de mensagens (aparece ao clicar em um chat) -->
+            <div id="mobileMessages" class="hidden chat-container flex flex-col h-screen bg-white">
+                <div id="mobileChatHeader"
+                    class="p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white flex items-center justify-between">
+                    <div class="flex items-center">
+                        <button id="backButton" class="mr-2">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <img id="mobileChatAvatar" src="https://cdn-icons-png.flaticon.com/512/4792/4792929.png"
+                            alt="Chat Avatar" class="w-10 h-10 rounded-full mr-3">
+                        <div>
+                            <h2 id="mobileChatName" class="text-xl font-semibold">Selecione um chat</h2>
+                            <p id="mobileChatType" class="text-sm"></p>
+                        </div>
+                    </div>
+                    <div>
+                        <button id="mobileGroupMembersButton" class="btn btn-ghost btn-circle hidden">
+                            <i class="fas fa-users"></i>
+                        </button>
+                        <button id="mobileChatInfoButton" class="btn btn-ghost btn-circle">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="mobileMessageList" class="message-list flex-grow p-4 bg-chat-pattern overflow-y-auto"></div>
+                <div class="p-4 bg-white">
+                    <div id="mobileFunnelsContainer" class="funnels-container"></div>
+                    <div class="flex items-center">
+                        <button id="mobileAttachButton" class="btn btn-ghost btn-circle mr-2">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <input type="text" id="mobileMessageInput"
+                            class="input input-bordered flex-grow mr-2 bg-gray-100" placeholder="Digite uma mensagem">
+                        <button id="mobileSendButton" class="btn btn-circle btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para membros do grupo (móvel) -->
+        <div id="mobileGroupMembersModal" class="group-members-modal">
+            <div class="group-members-content">
+                <span class="close-modal">&times;</span>
+                <h2 class="text-xl font-bold mb-4">Membros do Grupo</h2>
+                <ul id="mobileGroupMembersList"></ul>
+            </div>
+        </div>
+
+        <!-- Modal de configurações -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg mb-4">Configurações</h3>
+                <div class="form-control">
+                    <label class="label cursor-pointer">
+                        <span class="label-text">Ativar som de mensagem enviada</span>
+                        <input type="checkbox" id="sendSoundToggle" class="toggle toggle-primary" checked>
+                    </label>
+                </div>
+                <div class="form-control">
+                    <label class="label cursor-pointer">
+                        <span class="label-text">Ativar som de mensagem recebida</span>
+                        <input type="checkbox" id="receiveSoundToggle" class="toggle toggle-primary" checked>
+                    </label>
+                </div>
+                <div class="form-control">
+                    <label class="label cursor-pointer">
+                        <span class="label-text">Mudar papel de parede</span>
+                    </label>
+                    <input type="file" id="wallpaperInput" accept="image/*"
+                        class="file-input file-input-bordered w-full max-w-xs">
+                </div>
+                <div class="modal-action">
+                    <button id="closeSettingsModal" class="btn">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="notificationSound" src="https://www.myinstants.com/media/sounds/web_whatsapp.mp3"></audio>
+    <audio id="sendSound" src="/media/send.mp3"></audio>
+
+
+    <div id="funnelReportPopup"
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 class="text-2xl font-bold text-indigo-700">Relatórios de Funis Ativos</h3>
+                    <button id="closeFunnelReport" class="text-gray-400 hover:text-gray-500">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="mt-4 flex">
+                    <!-- Lista de chats com funis ativos -->
+                    <div id="activeFunnelsList" class="w-1/3 pr-4 border-r">
+                        <h4 class="text-lg font-semibold text-gray-700 mb-2">Chats Ativos</h4>
+                        <!-- Os chats serão inseridos aqui dinamicamente -->
+                    </div>
+                    <!-- Detalhes do relatório do funil selecionado -->
+                    <div id="funnelReportDetails" class="w-2/3 pl-4">
+                        <h4 class="text-lg font-semibold text-gray-700 mb-2">Detalhes do Funil</h4>
+                        <div id="funnelDetails" class="bg-gray-50 p-4 rounded-lg">
+                            <!-- Os detalhes do funil serão inseridos aqui dinamicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button id="openFunnelReport"
+        class="fixed bottom-4 right-4 px-4 py-2 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hidden">
+        <svg class="w-6 h-6 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2">
+            </path>
+        </svg>
+        Ver Relatórios de Funis
+    </button>
+
+    <script>
+        const instanceModal = document.getElementById('instanceModal');
+        const instanceSelect = document.getElementById('instanceSelect');
+        const confirmInstance = document.getElementById('confirmInstance');
+        const chatContainer = document.getElementById('chatContainer');
+        const chatList = document.getElementById('chatList');
+        const mobileChatList = document.getElementById('mobileChatList');
+        const messageList = document.getElementById('messageList');
+        const mobileMessageList = document.getElementById('mobileMessageList');
+        const chatName = document.getElementById('chatName');
+        const mobileChatName = document.getElementById('mobileChatName');
+        const chatAvatar = document.getElementById('chatAvatar');
+        const mobileChatAvatar = document.getElementById('mobileChatAvatar');
+        const messageInput = document.getElementById('messageInput');
+        const mobileMessageInput = document.getElementById('mobileMessageInput');
+        const sendButton = document.getElementById('sendButton');
+        const mobileSendButton = document.getElementById('mobileSendButton');
+        const mobileChats = document.getElementById('mobileChats');
+        const mobileMessages = document.getElementById('mobileMessages');
+        const backButton = document.getElementById('backButton');
+        const refreshButton = document.getElementById('refreshButton');
+        const mobileRefreshButton = document.getElementById('mobileRefreshButton');
+        const searchChat = document.getElementById('searchChat');
+        const mobileSearchChat = document.getElementById('mobileSearchChat');
+        const notificationSound = document.getElementById('notificationSound');
+        const sendSound = document.getElementById('sendSound');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeSettingsModal2 = document.getElementById('closeSettingsModal');
+        const sendSoundToggle = document.getElementById('sendSoundToggle');
+        const receiveSoundToggle = document.getElementById('receiveSoundToggle');
+        const wallpaperInput = document.getElementById('wallpaperInput');
+        const funnelsContainer = document.getElementById('funnelsContainer');
+        const mobileFunnelsContainer = document.getElementById('mobileFunnelsContainer');
+
+
+        const funnelReportPopup = document.getElementById('funnelReportPopup');
+        const openFunnelReportBtn = document.getElementById('openFunnelReport');
+        const closeFunnelReportBtn = document.getElementById('closeFunnelReport');
+        const totalStepsElement = document.getElementById('totalSteps');
+        const currentStepElement = document.getElementById('currentStep');
+        const hasInputElement = document.getElementById('hasInput');
+        const waitingForInputElement = document.getElementById('waitingForInput');
+        const waitingForInputAlert = document.getElementById('waitingForInputAlert');
+        const currentContentElement = document.getElementById('currentContent');
+        const funnelAnimationElement = document.getElementById('funnelAnimation');
+
+
+
+        const activeFunnelsList = document.getElementById('activeFunnelsList');
+        const funnelDetails = document.getElementById('funnelDetails');
+
+        let activeFunnels = {};
+        let currentSelectedFunnel = null;
+
+
+
+        let funnelReportInterval;
+
+        let currentChatInfo = null;
+        let currentInstanceKey = '';
+        let currentChatId = '';
+        let chats = [];
+        let userFunnels = [];
+
+
+
+        function openSettingsModal() {
+            settingsModal.classList.add('modal-open');
+            // Prevenir que o modal feche imediatamente em dispositivos móveis
+            setTimeout(() => {
+                settingsModal.addEventListener('click', closeSettingsModalOutside);
+            }, 100);
+        }
+
+        function closeSettingsModalOutside(event) {
+            if (event.target === settingsModal) {
+                closeSettingsModal();
+            }
+        }
+
+        function closeSettingsModal() {
+            settingsModal.classList.remove('modal-open');
+            settingsModal.removeEventListener('click', closeSettingsModalOutside);
+        }
+
+        // Atualize os event listeners
+        document.getElementById('settingsButton').addEventListener('click', openSettingsModal);
+        document.getElementById('mobileSettingsButton').addEventListener('click', openSettingsModal);
+        closeSettingsModal2.addEventListener('click', closeSettingsModal);
+
+        // Função para carregar instâncias
+        async function loadInstances() {
+            const response = await fetch('/whatsapp/list');
+            const instances = await response.json();
+            const instanceList = document.getElementById('instanceList');
+            instanceList.innerHTML = '';
+
+            let connectedCount = 0;
+            instances.forEach(instance => {
+                if (instance.isConnected) {
+                    connectedCount++;
+                    const instanceElement = document.createElement('div');
+                    instanceElement.className = 'bg-white p-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg mb-4 transform hover:scale-102';
+                    instanceElement.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                        <div class="mb-4 sm:mb-0">
+                            <h3 class="text-xl font-semibold text-purple-700">${instance.name}</h3>
+                            <p class="text-sm text-gray-600">Chave: ${instance.key}</p>
+                            <p class="text-sm ${instance.isConnected ? 'text-green-600' : 'text-red-600'} font-medium mt-2">
+                                <i class="fas fa-${instance.isConnected ? 'check-circle' : 'times-circle'} mr-2"></i>
+                                ${instance.isConnected ? 'Conectado' : 'Desconectado'}
+                            </p>
+                            ${instance.whatsappName ? `<p class="text-sm text-blue-600 font-medium">WhatsApp: ${instance.whatsappName}</p>` : ''}
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="selectInstance('${instance.key}')" class="btn btn-primary btn-sm" ${!instance.isConnected ? 'disabled' : ''}>
+                                <i class="fas fa-check mr-1"></i> Selecionar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                    instanceList.appendChild(instanceElement);
+                }
+            });
+
+            const connectedInstancesCount = document.getElementById('connectedInstancesCount');
+            const noInstancesError = document.getElementById('noInstancesError');
+
+            if (connectedCount > 0) {
+                connectedInstancesCount.textContent = `${connectedCount} Instância(s) Conectada(s)`;
+                noInstancesError.classList.add('hidden');
+            } else {
+                connectedInstancesCount.textContent = 'Nenhuma Instância Conectada';
+                noInstancesError.classList.remove('hidden');
+            }
+        }
+
+        // Função para selecionar uma instância
+        function selectInstance(instanceKey) {
+            currentInstanceKey = instanceKey;
+            instanceModal.classList.remove('modal-open');
+            chatContainer.classList.remove('hidden');
+            loadChats(currentInstanceKey);
+            loadUserFunnels();
+            setInterval(() => updateChats(), 5000); // Atualiza a cada 5 segundos
+        }
+
+        // Função para carregar os funis do usuário
+        async function loadUserFunnels() {
+            try {
+                const response = await fetch('/funnels/user-funnels');
+                userFunnels = await response.json();
+                renderFunnels();
+            } catch (error) {
+                console.error('Erro ao carregar funis:', error);
+            }
+        }
+
+
+
+        // Função para iniciar o funil
+        async function startFunnel(funnelId) {
+            if (!currentInstanceKey || !currentChatId) {
+                showPopup('Selecione um chat antes de iniciar um funil', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/chat/start-funnel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        funnelId: funnelId,
+                        instanceKey: currentInstanceKey,
+                        chatId: currentChatId
+                    }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showPopup('Funil iniciado com sucesso');
+                    addActiveFinnel(funnelId, currentInstanceKey, currentChatId);
+                    updateFunnelReportButton();
+                } else {
+                    const errorData = await response.json();
+                    showPopup(errorData.error || 'Erro ao iniciar funil', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao iniciar funil:', error);
+                showPopup('Erro ao iniciar funil', 'error');
+            }
+        }
+
+        // Função para adicionar um funil ativo
+        function addActiveFinnel(funnelId, instanceKey, chatId) {
+            const key = `${instanceKey}:${chatId}`;
+            activeFunnels[key] = { funnelId, instanceKey, chatId };
+            updateActiveFunnelsList();
+        }
+
+
+        function formatPhoneNumber(num) {
+            const cleaned = num.replace(/\D/g, '');
+            const ddd = parseInt(cleaned.slice(0, 2));
+            if (ddd <= 27) {
+                return cleaned.padStart(13, '55'); // Ensure 11 digits for DDD <= 27
+            } else {
+                return cleaned.padStart(12, '55'); // Ensure 10 digits for DDD > 27
+            }
+        }
+
+        function formatarNumeroBrasileiro(numero) {
+            // Remove todos os caracteres não numéricos
+            numero = numero.replace(/\D/g, '');
+
+            // Verifica se o número começa com 55 (DDI do Brasil)
+            if (!numero.startsWith('55')) {
+                return false;
+            }
+
+            // Remove o DDI
+            numero = numero.slice(2);
+
+            // Extrai o DDD
+            const ddd = parseInt(numero.slice(0, 2));
+
+            // Verifica se o DDD é válido
+            if (ddd < 11 || ddd > 99) {
+                return false;
+            }
+
+            // Aplica as regras de formatação
+            if (ddd <= 27) {
+                // DDD até 27: deve ter 11 dígitos
+                if (numero.length < 11) {
+                    // Adiciona o 9 se estiver faltando
+                    numero = numero.slice(0, 2) + '9' + numero.slice(2);
+                } else if (numero.length > 11) {
+                    // Remove dígitos extras
+                    numero = numero.slice(0, 11);
+                }
+            } else {
+                // DDD 28 ou mais: deve ter 10 dígitos
+                if (numero.length > 10) {
+                    // Remove o 9 extra ou dígitos adicionais
+                    numero = numero.slice(0, 2) + numero.slice(3).slice(0, 8);
+                } else if (numero.length < 10) {
+                    // Número inválido se tiver menos de 10 dígitos
+                    return false;
+                }
+            }
+
+            // Retorna o número formatado com o DDI
+            return '55' + numero;
+        }
+
+        // Função para atualizar a lista de funis ativos
+        function updateActiveFunnelsList() {
+            activeFunnelsList.innerHTML = '';
+            Object.entries(activeFunnels).forEach(async ([key, funnel]) => {
+
+                const formattedNumber = formatPhoneNumber(funnel.chatId);
+                if (!formattedNumber) {
+                    return res.status(400).json({ message: 'Número de telefone inválido.' });
+                }
+
+                const numfinal = formattedNumber.startsWith('55')
+                    ? await formatarNumeroBrasileiro(formattedNumber)
+                    : formattedNumber;
+
+
+                const listItem = document.createElement('div');
+                listItem.className = 'p-2 hover:bg-gray-100 cursor-pointer rounded';
+                listItem.textContent = `Chat: ${numfinal}`;
+                listItem.onclick = () => selectFunnel(key);
+                activeFunnelsList.appendChild(listItem);
+            });
+        }
+
+        // Função para selecionar um funil
+        function selectFunnel(key) {
+            currentSelectedFunnel = activeFunnels[key];
+            updateFunnelDetails();
+        }
+
+        // Função para atualizar os detalhes do funil
+        async function updateFunnelDetails() {
+            if (!currentSelectedFunnel) return;
+
+            try {
+                const response = await fetch(`/funnels/status?funnelId=${currentSelectedFunnel.funnelId}&instanceKey=${currentSelectedFunnel.instanceKey}&chatId=${currentSelectedFunnel.chatId}`);
+                const data = await response.json();
+
+                funnelDetails.innerHTML = `
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="bg-blue-50 p-3 rounded-lg">
+                    <p class="text-sm font-medium text-blue-800">Total de passos</p>
+                    <p class="text-2xl font-bold text-blue-600">${data.totalSteps}</p>
+                </div>
+                <div class="bg-green-50 p-3 rounded-lg">
+                    <p class="text-sm font-medium text-green-800">Passo atual</p>
+                    <p class="text-2xl font-bold text-green-600">${data.currentStep}</p>
+                </div>
+                <div class="bg-yellow-50 p-3 rounded-lg">
+                    <p class="text-sm font-medium text-yellow-800">Contém input</p>
+                    <p class="text-2xl font-bold text-yellow-600">${data.hasInput ? 'Sim' : 'Não'}</p>
+                </div>
+                <div class="bg-purple-50 p-3 rounded-lg">
+                    <p class="text-sm font-medium text-purple-800">Aguardando resposta</p>
+                    <p class="text-2xl font-bold text-purple-600">${data.waitingForInput ? 'Sim' : 'Não'}</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <h4 class="text-lg font-semibold text-gray-700 mb-2">Conteúdo Atual</h4>
+                <div id="currentContent" class="bg-gray-100 p-4 rounded-lg">
+                    ${formatCurrentContent(data.currentContent)}
+                </div>
+            </div>
+            <div id="funnelAnimation" class="mt-6 h-40 w-full">
+                ${createFunnelAnimation(data.currentStep, data.totalSteps)}
+            </div>
+        `;
+
+                if (data.status === 'completed') {
+                    delete activeFunnels[`${currentSelectedFunnel.instanceKey}:${currentSelectedFunnel.chatId}`];
+                    updateActiveFunnelsList();
+                    showCompletionMessage(currentSelectedFunnel.chatId);
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar detalhes do funil:', error);
+            }
+        }
+
+        // Função para formatar o conteúdo atual
+        function formatCurrentContent(content) {
+            switch (content.type) {
+                case 'text':
+                    return `<p class="text-gray-700">${content.value}</p>`;
+                case 'image':
+                    return `<img src="${content.value}" alt="Current step image" class="max-w-full h-auto rounded-lg">`;
+                case 'video':
+                    return `
+                <video controls class="w-full rounded-lg">
+                    <source src="${content.value}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            `;
+                case 'audio':
+                    return `
+                <audio controls class="w-full">
+                    <source src="${content.value}" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+            `;
+                default:
+                    return `<p class="text-gray-500">Conteúdo não disponível</p>`;
+            }
+        }
+
+        // Função para criar a animação do funil
+        function createFunnelAnimation(currentStep, totalSteps) {
+            const progress = (currentStep / totalSteps) * 100;
+            return `
+        <svg class="w-full h-full" viewBox="0 0 100 100">
+            <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#4f46e5" />
+                    <stop offset="100%" stop-color="#7c3aed" />
+                </linearGradient>
+            </defs>
+            <path d="M10 10 L90 10 L50 90 Z" fill="none" stroke="#e2e8f0" stroke-width="2" />
+            <path d="M10 10 L90 10 L50 90 Z" fill="none" stroke="url(#gradient)" stroke-width="2" stroke-dasharray="280" stroke-dashoffset="${280 - (280 * progress / 100)}">
+                <animate attributeName="stroke-dashoffset" from="280" to="${280 - (280 * progress / 100)}" dur="1s" fill="freeze" />
+            </path>
+            <circle cx="50" cy="${10 + (80 * progress / 100)}" r="5" fill="url(#gradient)">
+                <animate attributeName="cy" from="10" to="${10 + (80 * progress / 100)}" dur="1s" fill="freeze" />
+            </circle>
+        </svg>
+    `;
+        }
+
+        // Função para mostrar mensagem de conclusão
+        function showCompletionMessage(chatId) {
+            const completionMessage = document.createElement('div');
+            completionMessage.className = 'fixed bottom-4 left-4 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg';
+            completionMessage.textContent = `Funil concluído com sucesso para o chat ${chatId}!`;
+            document.body.appendChild(completionMessage);
+
+            setTimeout(() => {
+                completionMessage.remove();
+            }, 5000);
+        }
+
+        // Função para atualizar o botão de relatório de funil
+        function updateFunnelReportButton() {
+            if (Object.keys(activeFunnels).length > 0) {
+                openFunnelReportBtn.classList.remove('hidden');
+            } else {
+                openFunnelReportBtn.classList.add('hidden');
+            }
+        }
+
+        // Função para abrir o popup de relatório
+        function openFunnelReportPopup() {
+            funnelReportPopup.classList.remove('hidden');
+            updateActiveFunnelsList();
+            startFunnelReportInterval();
+        }
+
+        // Função para fechar o popup de relatório
+        function closeFunnelReportPopup() {
+            funnelReportPopup.classList.add('hidden');
+            stopFunnelReportInterval();
+        }
+
+        // Função para iniciar o intervalo de atualização do relatório
+        function startFunnelReportInterval() {
+            stopFunnelReportInterval(); // Garante que não haja intervalos duplicados
+            funnelReportInterval = setInterval(() => {
+                if (currentSelectedFunnel) {
+                    updateFunnelDetails();
+                }
+            }, 2000);
+        }
+
+        // Função para parar o intervalo de atualização do relatório
+        function stopFunnelReportInterval() {
+            if (funnelReportInterval) {
+                clearInterval(funnelReportInterval);
+            }
+        }
+
+        // Event listeners
+        openFunnelReportBtn.addEventListener('click', openFunnelReportPopup);
+        closeFunnelReportBtn.addEventListener('click', closeFunnelReportPopup);
+
+
+        // Atualizar a função renderFunnels para usar a nova função startFunnel
+        function renderFunnels() {
+            const funnelHTML = userFunnels.map(funnel => `
+        <button class="funnel-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 mr-2 mb-2" data-funnel-id="${funnel._id}">
+            ${funnel.name}
+        </button>
+    `).join('');
+            funnelsContainer.innerHTML = funnelHTML;
+            mobileFunnelsContainer.innerHTML = funnelHTML;
+
+            document.querySelectorAll('.funnel-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const funnelId = button.dataset.funnelId;
+                    startFunnel(funnelId);
+                });
+            });
+        }
+
+        // Função para verificar funis ativos periodicamente
+        function checkActiveFunnels() {
+            setInterval(async () => {
+                const activeFunnelKeys = Object.keys(activeFunnels);
+                for (const key of activeFunnelKeys) {
+                    const [instanceKey, chatId] = key.split(':');
+                    const funnel = activeFunnels[key];
+                    try {
+                        const response = await fetch(`/funnels/status?funnelId=${funnel.funnelId}&instanceKey=${instanceKey}&chatId=${chatId}`);
+                        const data = await response.json();
+                        if (data.status === 'completed') {
+                            delete activeFunnels[key];
+                            updateActiveFunnelsList();
+                            updateFunnelReportButton();
+                            showCompletionMessage(chatId);
+                        }
+                    } catch (error) {
+                        console.error('Erro ao verificar status do funil:', error);
+                    }
+                }
+            }, 5000); // Verifica a cada 5 segundos
+        }
+
+        // Inicializar a verificação de funis ativos
+        checkActiveFunnels();
+
+        function getMediaDescription(messageType, content) {
+            switch (messageType) {
+                case 'image':
+                    return '🖼️ Imagem';
+                case 'video':
+                    return '🎥 Vídeo';
+                case 'audio':
+                    return '🎵 Áudio';
+                case 'document':
+                    return '📄 Documento';
+                case 'sticker':
+                    return '😊 Sticker';
+                default:
+                    return content;
+            }
+        }
+
+        // Carregar chats
+        async function loadChats(instanceKey) {
+            const response = await fetch(`/chat/chats/${instanceKey}`);
+            chats = await response.json();
+            renderChats(chats);
+        }
+
+        function renderChats(chatsToRender) {
+
+            // Seleciona o elemento pelo seletor de classe
+            const navbarElement = document.querySelector('.navbar.glassmorphism.sticky.top-0.z-30');
+
+            // Verifica se o elemento existe no DOM antes de tentar removê-lo
+            if (navbarElement) {
+                navbarElement.remove();
+            }
+
+            // Seleciona o elemento pelo seletor de classe
+            const footerElement = document.querySelector('footer.bg-white.dark\\:bg-gray-800.text-center.p-4.mt-8.rounded-lg.shadow');
+
+            // Verifica se o elemento existe no DOM antes de tentar removê-lo
+            if (footerElement) {
+                footerElement.remove();
+            }
+
+            // Seleciona o elemento pelo seletor de classe
+            const navElement = document.querySelector('nav.text-gray-500.dark\\:text-gray-400.text-sm.mb-4[aria-label="Breadcrumb"]');
+
+            // Verifica se o elemento existe no DOM antes de tentar removê-lo
+            if (navElement) {
+                navElement.remove();
+            }
+
+
+            const chatHTML = chatsToRender.map(chat => {
+                const lastMessageContent = getMediaDescription(chat.lastMessageType, chat.lastMessage);
+                const chatTypeIcon = chat.chatType === 'grupo' ? '👥' : '👤';
+                const unreadCount = chat.unreadCount || 0;
+                const unreadClass = unreadCount > 0 ? 'unread' : '';
+                const unreadIndicator = unreadCount > 0 ? `<span class="unread-indicator">${unreadCount}</span>` : '';
+                const avatarUrl = getAvatarUrl(chat, chat.id);
+
+                return `
+                    <div class="chat-item p-4 hover:bg-gray-100 cursor-pointer rounded-lg transition duration-300 ease-in-out ${unreadClass}" data-chat-id="${chat.id}" data-chat-type="${chat.chatType}">
+                        <div class="flex items-center relative">
+                            <img src="${avatarUrl}" alt="${chat.name}" class="w-12 h-12 rounded-full mr-3">
+                            <div class="flex-grow">
+                                <div class="font-semibold text-gray-800">${chatTypeIcon} ${chat.name}</div>
+                                <div class="text-sm text-gray-600 truncate-message">${lastMessageContent}</div>
+                            </div>
+                            <div class="text-xs text-gray-500">${new Date(chat.lastMessageTimestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                            ${unreadIndicator}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            chatList.innerHTML = chatHTML;
+            mobileChatList.innerHTML = chatHTML;
+            addChatListeners();
+        }
+
+        // Função para carregar mensagens atualizada
+        async function loadMessages(instanceKey, chatId) {
+            try {
+                const response = await fetch(`/chat/messages/${instanceKey}/${chatId}`);
+                const messages = await response.json();
+                renderMessages(messages, chatId);
+                scrollToBottom();
+            } catch (error) {
+                console.error('Erro ao carregar mensagens:', error);
+                showPopup('Erro ao carregar mensagens', 'error');
+            }
+        }
+
+        async function markChatAsRead(chatId) {
+            try {
+                await fetch(`/chat/mark-as-read/${currentInstanceKey}/${chatId}`, { method: 'POST' });
+                updateChatReadStatus(chatId);
+            } catch (error) {
+                console.error('Erro ao marcar chat como lido:', error);
+            }
+        }
+
+        function updateChatReadStatus(chatId) {
+            const chatElement = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+            if (chatElement) {
+                chatElement.classList.remove('unread');
+                const unreadIndicator = chatElement.querySelector('.unread-indicator');
+                if (unreadIndicator) {
+                    unreadIndicator.remove();
+                }
+            }
+        }
+
+        function getSenderName(message, chatId, currentChatInfo) {
+            if (currentChatInfo.chatType !== 'grupo' || message.fromMe) {
+                return '';
+            }
+
+            let senderName = message.sender;
+            if (chatId.includes("@g.us") && message.info && message.info.userQueEnviou) {
+                senderName = message.info.userQueEnviou;
+            }
+
+            return `<div class="chat-header text-xs font-bold">${senderName}</div>`;
+        }
+
+        function getAvatarUrl(chat, chatId) {
+            const defaultGroupImage = "https://portais.univasf.edu.br/reitoria/imagens/5ba6d9f7590b4a7d8f4456737206be0e.png/@@images/image.png";
+            const defaultUserImage = "https://cdn-icons-png.flaticon.com/512/4792/4792929.png";
+
+            if (chatId.includes("@g.us")) {
+                return chat.senderImage || defaultGroupImage;
+            }
+
+            return chat.senderImage || defaultUserImage;
+        }
+
+        function renderMessages(messages, chatId) {
+            const messageHTML = messages.map(message => {
+                const messageClass = message.fromMe ? 'chat-end' : 'chat-start';
+                const bubbleClass = message.fromMe ? 'bg-blue-500 text-white' : 'bg-white text-gray-800';
+                let contentHtml = '';
+
+                switch (message.type) {
+                    case 'image':
+                    case 'video':
+                        mediaClass = 'with-media';
+                        break;
+                    // ... outros casos ...
+                }
+
+                switch (message.type) {
+                    case 'texto':
+                    case 'text':
+                        contentHtml = `<div class="chat-bubble ${bubbleClass}">${message.content}</div>`;
+                        break;
+                    case 'image':
+                        contentHtml = `
+                    <div class="chat-bubble ${bubbleClass} p-1">
+                        <img src="${message.content}" alt="Image" class="media-content" onclick="openMediaPopup('${message.content}', 'image')">
+                    </div>`;
+                        break;
+                    case 'video':
+                        contentHtml = `
+                    <div class="chat-bubble ${bubbleClass} p-1">
+                        <div class="video-thumbnail" onclick="openMediaPopup('${message.content}', 'video')">
+                            <video src="${message.content}" class="media-content"></video>
+                        </div>
+                    </div>`;
+                        break;
+                    case 'audio':
+                        contentHtml = `
+                <div class="chat-bubble ${bubbleClass} p-1">
+                    <audio src="${message.content}" class="audio-player" controls></audio>
+                </div>`;
+                        break;
+                    case 'document':
+                        contentHtml = `
+                <div class="chat-bubble ${bubbleClass}">
+                    <a href="${message.content}" target="_blank" class="document-link">
+                        <i class="fas fa-file-pdf"></i>
+                        Download Document
+                    </a>
+                </div>`;
+                        break;
+                    default:
+                        contentHtml = `<div class="chat-bubble ${bubbleClass}">${message.content}</div>`;
+                }
+                const senderNameHtml = getSenderName(message, chatId, currentChatInfo);
+
+                return `
+            <div class="chat ${messageClass}">
+                <div class="chat-image avatar">
+                    <div class="w-10 rounded-full">
+                        <img src="${message.senderImage || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png'}" alt="${message.sender}">
+                    </div>
+                </div>
+                <div class="chat-message">
+                    <div class="chat-message-header">
+                        ${senderNameHtml ? `<span class="chat-sender">${senderNameHtml}</span>` : ''}
+                        <span class="chat-time">${new Date(message.timestamp * 1000).toLocaleString()}</span>
+                    </div>
+                    ${contentHtml}
+                </div>
+            </div>
+        `;
+            }).join('');
+
+            messageList.innerHTML = messageHTML;
+            mobileMessageList.innerHTML = messageHTML;
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            messageList.scrollTop = messageList.scrollHeight;
+            mobileMessageList.scrollTop = mobileMessageList.scrollHeight;
+        }
+
+        function openMediaPopup(src, type) {
+            const mediaContainer = document.createElement('div');
+            mediaContainer.className = 'fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-75';
+            let content;
+
+            if (type === 'image') {
+                content = `<img src="${src}" alt="Full size image" class="max-w-full max-h-full object-contain">`;
+            } else if (type === 'video') {
+                content = `<video src="${src}" controls class="max-w-full max-h-full object-contain"></video>`;
+            }
+
+            mediaContainer.innerHTML = `
+        <div class="relative">
+            ${content}
+            <button class="absolute top-4 right-4 text-white text-2xl" onclick="this.closest('.fixed').remove()">&times;</button>
+        </div>
+    `;
+
+            document.body.appendChild(mediaContainer);
+        }
+
+        function displayChatInfo(chat) {
+            currentChatInfo = chat;
+            chatName.textContent = chat.name;
+            mobileChatName.textContent = chat.name;
+            chatAvatar.src = chat.image || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
+            mobileChatAvatar.src = chat.image || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
+            chatType.textContent = chat.chatType === 'grupo' ? 'Grupo' : 'Chat Individual';
+
+            if (chat.chatType === 'grupo') {
+                groupMembersButton.classList.remove('hidden');
+                mobileGroupMembersButton.classList.remove('hidden');
+            } else {
+                groupMembersButton.classList.add('hidden');
+                mobileGroupMembersButton.classList.add('hidden');
+            }
+        }
+
+        function addChatListeners() {
+            document.querySelectorAll('.chat-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    currentChatId = item.dataset.chatId;
+                    const chatType = item.dataset.chatType;
+                    const chat = chats.find(c => c.id === currentChatId);
+                    displayChatInfo(chat);
+                    loadMessages(currentInstanceKey, currentChatId);
+                    if (window.innerWidth < 768) {
+                        mobileChats.classList.add('hidden');
+                        mobileMessages.classList.remove('hidden');
+                    }
+                    markChatAsRead(currentChatId);
+                });
+            });
+        }
+
+        function showGroupMembers() {
+            if (currentChatInfo && currentChatInfo.chatType === 'grupo') {
+                const membersList = document.getElementById('groupMembersList');
+                membersList.innerHTML = currentChatInfo.participants.map(participant =>
+                    `<li class="mb-2">${participant.name || participant.id}</li>`
+                ).join('');
+                document.getElementById('groupMembersModal').style.display = 'block';
+            }
+        }
+
+        async function updateChats() {
+            const response = await fetch(`/chat/chats/${currentInstanceKey}`);
+            const newChats = await response.json();
+            const newChatIds = new Set(newChats.map(chat => chat.id));
+            const oldChatIds = new Set(chats.map(chat => chat.id));
+
+            // Verificar novos chats ou mensagens
+            newChats.forEach(newChat => {
+                const oldChat = chats.find(chat => chat.id === newChat.id);
+                if (!oldChat || newChat.lastMessageTimestamp > oldChat.lastMessageTimestamp) {
+                    showNotification(newChat);
+                }
+            });
+
+            chats = newChats.sort((a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp);
+            renderChats(chats);
+        }
+
+        function showNotification(chat) {
+            if (chat.fromMe == true) return;
+            console.log(chat);
+            if (receiveSoundToggle.checked) {
+                notificationSound.play();
+            }
+            const lastMessageContent = getMediaDescription(chat.lastMessageType, chat.lastMessage);
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <img src="${chat.image || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png'}" alt="${chat.name}" class="w-10 h-10 rounded-full mr-3">
+                    <div>
+                        <div class="font-semibold">${chat.name}</div>
+                        <div class="text-sm">${lastMessageContent}</div>
+                    </div>
+                </div>
+                <span class="close-btn">&times;</span>
+            `;
+            document.body.appendChild(notification);
+
+            // Adicionar evento para fechar a notificação
+            notification.querySelector('.close-btn').addEventListener('click', () => {
+                notification.remove();
+            });
+
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        async function sendMessage(content) {
+            if (!currentInstanceKey || !currentChatId || !content.trim()) {
+                console.error('Missing required information to send message');
+                return;
+            }
+
+            try {
+                const response = await fetch('/chat/send-message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        instanceKey: currentInstanceKey,
+                        chatId: currentChatId,
+                        content: content.trim()
+                    }),
+                });
+
+                if (response.ok) {
+                    console.log('Message sent successfully');
+                    const messageData = await response.json();
+
+                    if (sendSoundToggle.checked) {
+                        sendSound.play();
+                    }
+
+                    showPopup('Mensagem enviada');
+
+                    messageInput.value = '';
+                    mobileMessageInput.value = '';
+
+                    await updateChats();
+                    await loadMessages(currentInstanceKey, currentChatId);
+                } else {
+                    console.error('Error sending message');
+                    showPopup('Erro ao enviar mensagem', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showPopup('Erro ao enviar mensagem', 'error');
+            }
+        }
+
+        function showPopup(message, type = 'success') {
+            const popup = document.createElement('div');
+            popup.className = `fixed top-4 right-4 px-4 py-2 rounded shadow-lg transform transition-all duration-300 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`;
+            popup.textContent = message;
+            document.body.appendChild(popup);
+
+            setTimeout(() => {
+                popup.style.opacity = '0';
+                popup.style.transform = 'translateY(-20px)';
+                setTimeout(() => popup.remove(), 300);
+            }, 3000);
+        }
+
+        function filterChats(query) {
+            const filteredChats = chats.filter(chat =>
+                chat.name.toLowerCase().includes(query.toLowerCase()) ||
+                chat.lastMessage.toLowerCase().includes(query.toLowerCase())
+            );
+            renderChats(filteredChats);
+        }
+
+
+
+        wallpaperInput.addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.documentElement.style.setProperty('--chat-background', `url(${e.target.result})`);
+                    localStorage.setItem('chatWallpaper', e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Event Listeners
+        confirmInstance.addEventListener('click', () => {
+            if (currentInstanceKey) {
+                instanceModal.classList.remove('modal-open');
+                chatContainer.classList.remove('hidden');
+                loadChats(currentInstanceKey);
+                loadUserFunnels();
+                setInterval(() => updateChats(), 5000);
+            } else {
+                alert('Por favor, selecione uma instância antes de continuar.');
+            }
+        });
+
+        [sendButton, mobileSendButton].forEach(button => {
+            button.addEventListener('click', () => {
+                const input = button.id === 'sendButton' ? messageInput : mobileMessageInput;
+                sendMessage(input.value);
+            });
+        });
+
+        [messageInput, mobileMessageInput].forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage(input.value);
+                }
+            });
+        });
+
+        backButton.addEventListener('click', () => {
+            mobileMessages.classList.add('hidden');
+            mobileChats.classList.remove('hidden');
+        });
+
+        [refreshButton, mobileRefreshButton].forEach(button => {
+            button.addEventListener('click', () => {
+                updateChats();
+            });
+        });
+
+        [searchChat, mobileSearchChat].forEach(input => {
+            input.addEventListener('input', (e) => {
+                filterChats(e.target.value);
+            });
+        });
+
+        document.getElementById('groupMembersButton').addEventListener('click', showGroupMembers);
+        document.getElementById('mobileGroupMembersButton').addEventListener('click', showGroupMembers);
+
+        document.querySelector('.close-modal').addEventListener('click', () => {
+            document.getElementById('groupMembersModal').style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === document.getElementById('groupMembersModal')) {
+                document.getElementById('groupMembersModal').style.display = 'none';
+            }
+        });
+
+
+
+        // Inicialização
+        loadInstances();
+
+        // Carregar configurações salvas
+        if (localStorage.getItem('sendSound') === 'false') {
+            sendSoundToggle.checked = false;
+        }
+        if (localStorage.getItem('receiveSound') === 'false') {
+            receiveSoundToggle.checked = false;
+        }
+        const savedWallpaper = localStorage.getItem('chatWallpaper');
+        if (savedWallpaper) {
+            document.documentElement.style.setProperty('--chat-background', `url(${savedWallpaper})`);
+        }
+
+        // Salvar configurações
+        sendSoundToggle.addEventListener('change', () => {
+            localStorage.setItem('sendSound', sendSoundToggle.checked);
+        });
+        receiveSoundToggle.addEventListener('change', () => {
+            localStorage.setItem('receiveSound', receiveSoundToggle.checked);
+        });
+
+        // Event listener para o botão de abrir relatório (caso não tenha sido adicionado antes)
+        document.addEventListener('DOMContentLoaded', () => {
+            const openFunnelReportBtn = document.getElementById('openFunnelReport');
+            if (openFunnelReportBtn) {
+                openFunnelReportBtn.addEventListener('click', openFunnelReportPopup);
+            }
+        });
+    </script>
+</body>
+
+</html>

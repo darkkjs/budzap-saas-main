@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Funis - BudZap</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css" rel="stylesheet">
+    <style>
+        @media (max-width: 640px) {
+            .mobile-full-width {
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <nav class="bg-purple-600 text-white p-4">
+        <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
+            <h1 class="text-2xl font-bold mb-2 sm:mb-0">Funis</h1>
+            <div class="flex flex-col sm:flex-row items-center">
+                <span id="funnelCount" class="mb-2 sm:mb-0 sm:mr-4"></span>
+                <button id="createFunnelBtn" class="btn btn-outline btn-white w-full sm:w-auto">
+                    <i class="fas fa-plus mr-2"></i>Criar Novo Funil
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-4 flex-grow">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <h2 class="text-2xl sm:text-3xl font-bold text-purple-800 mb-4 sm:mb-0">Seus Funis</h2>
+            <div class="flex flex-col sm:flex-row items-center w-full sm:w-auto">
+                <input type="text" id="searchInput" placeholder="Buscar funis..." class="input input-bordered w-full sm:w-auto mb-2 sm:mb-0 sm:mr-2">
+                <select id="sortSelect" class="select select-bordered w-full sm:w-auto">
+                    <option value="name">Ordenar por Nome</option>
+                    <option value="date">Ordenar por Data</option>
+                    <option value="steps">Ordenar por Nº de Passos</option>
+                </select>
+            </div>
+        </div>
+        <div id="funnelList" class="grid grid-cols-1 gap-4"></div>
+    </main>
+
+    <!-- Modal para criar/editar funil -->
+    <div id="funnelModal" class="modal">
+        <div class="modal-box w-11/12 max-w-md">
+            <h3 class="font-bold text-lg" id="modalTitle">Criar Novo Funil</h3>
+            <form id="funnelForm" class="py-4">
+                <input type="text" id="funnelName" placeholder="Nome do Funil" class="input input-bordered w-full mb-4" required>
+                <textarea id="funnelDescription" placeholder="Descrição (opcional)" class="textarea textarea-bordered w-full" rows="3"></textarea>
+            </form>
+            <div class="modal-action">
+                <button id="saveFunnelBtn" class="btn btn-primary" type="submit" form="funnelForm">Salvar</button>
+                <button onclick="closeModal()" class="btn">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
+    <script>
+        let funnels = [];
+        const currentPlan = '<%= user.plan %>';
+const PLAN_LIMITS = {
+    gratuito: 1,
+    plus: 5,
+    premium: Infinity
+};
+const funnelLimit = PLAN_LIMITS[currentPlan];
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadFunnels();
+    
+    document.getElementById('createFunnelBtn').addEventListener('click', () => {
+        // Verifica se o plano não é 'premium' antes de checar o limite
+        if (currentPlan !== 'premium' && funnels.length >= funnelLimit) {
+            showNotification('Limite atingido', `Você atingiu o limite de funis para o plano ${currentPlan}. Faça um upgrade para criar mais funis.`, 'warning');
+        } else {
+            openModal('create');
+        }
+    });
+    
+    document.getElementById('searchInput').addEventListener('input', filterFunnels);
+    document.getElementById('sortSelect').addEventListener('change', sortFunnels);
+    document.getElementById('funnelForm').addEventListener('submit', handleFormSubmit);
+});
+
+
+        async function loadFunnels() {
+            try {
+                const response = await fetch('/funnels/api/list');
+                const data = await response.json();
+                
+                if (data && Array.isArray(data)) {
+                    funnels = data;
+                } else if (data && Array.isArray(data.funnels)) {
+                    funnels = data.funnels;
+                } else {
+                    console.error('Formato de dados inesperado:', data);
+                    funnels = [];
+                }
+
+                updateFunnelCount(funnels.length, funnelLimit);
+                renderFunnels();
+            } catch (error) {
+                console.error('Erro ao carregar funis:', error);
+                showNotification('Erro', 'Erro ao carregar funis. Por favor, tente novamente.', 'error');
+            }
+        }
+
+        function updateFunnelCount(count, limit) {
+            const funnelCountElement = document.getElementById('funnelCount');
+            funnelCountElement.textContent = `Funis: ${count}/${limit}`;
+            funnelCountElement.className = count >= limit ? 'text-red-300' : 'text-white';
+        }
+
+        function renderFunnels() {
+            const funnelList = document.getElementById('funnelList');
+            funnelList.innerHTML = '';
+            funnels.forEach((funnel, index) => {
+                const isBlocked = index >= funnelLimit;
+                const funnelElement = document.createElement('div');
+                funnelElement.className = `card ${isBlocked ? 'bg-gray-200' : 'bg-white'} shadow-lg hover:shadow-xl transition-shadow duration-300`;
+                funnelElement.innerHTML = `
+                    <div class="card-body p-4">
+                        <h3 class="card-title text-lg ${isBlocked ? 'text-gray-500' : 'text-purple-700'}">${funnel.name}</h3>
+                        <p class="text-sm ${isBlocked ? 'text-gray-500' : 'text-gray-600'}">${funnel.description || 'Sem descrição'}</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-sm ${isBlocked ? 'text-gray-500' : 'text-purple-600'}">Passos: ${funnel.steps.length}</span>
+                            <span class="text-xs ${isBlocked ? 'text-gray-500' : 'text-gray-400'}">Criado em: ${new Date(funnel.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div class="card-actions justify-end mt-4">
+                            <button onclick="${isBlocked ? 'showUpgradeNotification()' : `editFunnel('${funnel._id}')`}" 
+                                    class="btn btn-sm ${isBlocked ? 'btn-disabled' : 'btn-primary'}">
+                                <i class="fas fa-edit mr-1"></i>Editar
+                            </button>
+                            <button onclick="${isBlocked ? 'showUpgradeNotification()' : `deleteFunnel('${funnel._id}')`}" 
+                                    class="btn btn-sm ${isBlocked ? 'btn-disabled' : 'btn-error'}">
+                                <i class="fas fa-trash mr-1"></i>Deletar
+                            </button>
+                        </div>
+                        ${isBlocked ? '<div class="mt-2 text-xs text-red-500">Faça upgrade para editar este funil</div>' : ''}
+                    </div>
+                `;
+                funnelList.appendChild(funnelElement);
+            });
+        }
+
+        function showUpgradeNotification() {
+            Swal.fire({
+                title: 'Upgrade Necessário',
+                text: 'Você atingiu o limite de funis para o seu plano atual. Faça um upgrade para editar ou deletar este funil.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Fazer Upgrade',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/change-plan';
+                }
+            });
+        }
+
+        function openModal(mode, funnelId = null) {
+            const modal = document.getElementById('funnelModal');
+            const title = document.getElementById('modalTitle');
+            const nameInput = document.getElementById('funnelName');
+            const descInput = document.getElementById('funnelDescription');
+
+            if (mode === 'create') {
+                title.textContent = 'Criar Novo Funil';
+                nameInput.value = '';
+                descInput.value = '';
+            } else {
+                title.textContent = 'Editar Funil';
+                const funnel = funnels.find(f => f._id === funnelId);
+                nameInput.value = funnel.name;
+                descInput.value = funnel.description || '';
+            }
+
+            modal.classList.add('modal-open');
+        }
+
+        function closeModal() {
+            document.getElementById('funnelModal').classList.remove('modal-open');
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('funnelName').value;
+            const description = document.getElementById('funnelDescription').value;
+
+            try {
+                const response = await fetch('/funnels/api/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, description, steps: [] })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Falha ao criar funil');
+                }
+
+                const newFunnel = await response.json();
+                closeModal();
+                await loadFunnels();
+                showNotification('Sucesso', 'Funil criado com sucesso!', 'success');
+            } catch (error) {
+                console.error('Erro ao criar funil:', error);
+                showNotification('Erro', `Erro ao criar funil: ${error.message}`, 'error');
+            }
+        }
+
+        function editFunnel(id) {
+            if (id) {
+                window.location.href = `/funnels/editor/${id}`;
+            } else {
+                showNotification('Erro', 'ID do funil não encontrado. Por favor, tente novamente.', 'error');
+            }
+        }
+
+        async function deleteFunnel(id) {
+            const result = await Swal.fire({
+                title: 'Tem certeza?',
+                text: "Você não poderá reverter esta ação!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sim, deletar!',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/funnels/api/delete/${id}`, { method: 'DELETE' });
+                    if (response.ok) {
+                        await loadFunnels();
+                        showNotification('Sucesso', 'Funil deletado com sucesso!', 'success');
+                    } else {
+                        throw new Error('Falha ao deletar funil');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    showNotification('Erro', 'Erro ao deletar funil. Por favor, tente novamente.', 'error');
+                }
+            }
+        }
+
+        function filterFunnels() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredFunnels = funnels.filter(funnel => 
+                funnel.name.toLowerCase().includes(searchTerm) || 
+                (funnel.description && funnel.description.toLowerCase().includes(searchTerm))
+            );
+            renderFilteredFunnels(filteredFunnels);
+        }
+
+        function sortFunnels() {
+            const sortBy = document.getElementById('sortSelect').value;
+            funnels.sort((a, b) => {
+                if (sortBy === 'name') return a.name.localeCompare(b.name);
+                if (sortBy === 'date') return new Date(b.createdAt) - new Date(a.createdAt);
+                if (sortBy === 'steps') return b.steps.length - a.steps.length;
+            });
+            renderFunnels();
+        }
+
+        function renderFilteredFunnels(filteredFunnels) {
+            const funnelList = document.getElementById('funnelList');
+            funnelList.innerHTML = '';
+            filteredFunnels.forEach((funnel, index) => {
+                const isBlocked = index >= funnelLimit;
+                const funnelElement = document.createElement('div');
+                funnelElement.className = 'card bg-white shadow-lg hover:shadow-xl transition-shadow duration-300';
+                funnelElement.innerHTML = `
+                    <div class="card-body p-4">
+                        <h3 class="card-title text-lg text-purple-700">${funnel.name}</h3>
+                        <p class="text-sm text-gray-600">${funnel.description || 'Sem descrição'}</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-sm text-purple-600">Passos: ${funnel.steps.length}</span>
+                         <span class="text-xs text-gray-400">Criado em: ${new Date(funnel.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div class="card-actions justify-end mt-4">
+                            <button onclick="editFunnel('${funnel._id}')" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit mr-1"></i>Editar
+                            </button>
+                            <button onclick="deleteFunnel('${funnel._id}')" class="btn btn-sm btn-error">
+                                <i class="fas fa-trash mr-1"></i>Deletar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                funnelList.appendChild(funnelElement);
+            });
+        }
+
+        function showNotification(title, message, icon) {
+            Swal.fire({
+                title: title,
+                text: message,
+                icon: icon,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+        }
+    </script>
+</body>
+</html>

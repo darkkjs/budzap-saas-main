@@ -1,0 +1,212 @@
+[
+  {
+    "nome": "Confiança Estabelecida / Amigável",
+    "estabilidade": 70,
+    "similaridade": 85,
+    "exagero": 0,
+    "boost": true
+  },
+  {
+    "nome": "Confiança Assertiva / Amigável",
+    "estabilidade": 65,
+    "similaridade": 80,
+    "exagero": 0,
+    "boost": true
+  },
+  {
+    "nome": "Confiança Serena / Amigável",
+    "estabilidade": 75,
+    "similaridade": 90,
+    "exagero": 0,
+    "boost": false
+  },
+  {
+    "nome": "Confiança Dinâmica / Amigável" ,
+    "estabilidade": 60,
+    "similaridade": 85,
+    "exagero": 5,
+    "boost": false
+  },
+  {
+    "nome": "Confiança Inspiradora / Amigável",
+    "estabilidade": 68,
+    "similaridade": 82,
+    "exagero": 0,
+    "boost": true
+  },
+  {
+    "nome": "Tom Conversacional / Amigável - Amigável e Apoiador",
+    "estabilidade": 60,
+    "similaridade": 85,
+    "exagero": 0,
+    "boost": true
+  },
+  {
+    "nome": "Tom Conversacional / Amigável - Conversacional e Encorajador",
+    "estabilidade": 65,
+    "similaridade": 80,
+    "exagero": 0,
+    "boost": false
+  },
+  {
+    "nome": "Tom Conversacional / Amigável - Amigável e Entusiasta",
+    "estabilidade": 55,
+    "similaridade": 75,
+    "exagero": 5,
+    "boost": true
+  },
+  {
+    "nome": "Tom Conversacional / Amigável - Acolhedor e Pessoal",
+    "estabilidade": 58,
+    "similaridade": 82,
+    "exagero": 0,
+    "boost": true
+  },
+  {
+    "nome": "Tom Inspirador / Motivacional - Encorajamento Apaixonado",
+    "estabilidade": 55,
+    "similaridade": 85,
+    "exagero": 5,
+    "boost": true
+  },
+  {
+    "nome": "Tom Inspirador / Motivacional - Motivação Cativante",
+    "estabilidade": 45,
+    "similaridade": 75,
+    "exagero": 0,
+    "boost": true
+  },
+  {
+    "nome": "Tom Inspirador / Motivacional - Motivação Afirmativa",
+    "estabilidade": 50,
+    "similaridade": 80,
+    "exagero": 5,
+    "boost": true
+  },
+  {
+    "nome": "Tom de Autoridade - Autoridade Convicta",
+    "estabilidade": 70,
+    "similaridade": 90,
+    "exagero": 0,
+    "boost": true
+  },
+  {
+    "nome": "Tom de Autoridade - Liderança Segura",
+    "estabilidade": 75,
+    "similaridade": 85,
+    "exagero": 0,
+    "boost": false
+  },
+  {
+    "nome": "Tom de Autoridade - Credibilidade Profunda",
+    "estabilidade": 80,
+    "similaridade": 80,
+    "exagero": 0,
+    "boost": true
+  },
+  {
+    "nome": "Tom de Autoridade - Especialista Confiável",
+    "estabilidade": 78,
+    "similaridade": 88,
+    "exagero": 5,
+    "boost": false
+  },
+  {
+    "nome": "Tom de Autoridade - Voz de Comando",
+    "estabilidade": 72,
+    "similaridade": 92,
+    "exagero": 0,
+    "boost": true
+  },
+  {
+    "nome": "Tom de Solucionador de Problema - Solucionador Confidente",
+    "estabilidade": 65,
+    "similaridade": 85,
+    "exagero": 0,
+    "boost": true
+  },
+  {
+    "nome": "Tom de Solucionador de Problema - Direto e Assertivo",
+    "estabilidade": 60,
+    "similaridade": 80,
+    "exagero": 0,
+    "boost": false
+  },
+  {
+    "nome": "Tom de Solucionador de Problema - Prático e Relevante",
+    "estabilidade": 70,
+    "similaridade": 90,
+    "exagero": 0,
+    "boost": false
+  },
+  {
+    "nome": "Tom de Solucionador de Problema - Especialista Solucionador",
+    "estabilidade": 68,
+    "similaridade": 88,
+    "exagero": 5,
+    "boost": true
+  },
+  {
+    "nome": "Tom de Solucionador de Problema - Orientado para Soluções",
+    "estabilidade": 72,
+    "similaridade": 82,
+    "exagero": 0,
+    "boost": true
+  },
+  {
+    "nome": "Tom de Surpresa / Revelação - Revelação Impactante",
+    "estabilidade": 55,
+    "similaridade": 85,
+    "exagero": 10,
+    "boost": true
+  },
+  {
+    "nome": "Tom de Surpresa / Revelação - Surpresa Dinâmica",
+    "estabilidade": 50,
+    "similaridade": 80,
+    "exagero": 15,
+    "boost": true
+  },
+  {
+    "nome": "Tom de Surpresa / Revelação - Anúncio Inesperado",
+    "estabilidade": 60,
+    "similaridade": 90,
+    "exagero": 5,
+    "boost": false
+  },
+  {
+    "nome": "Tom de Surpresa / Revelação - Virada Emocionante",
+    "estabilidade": 45,
+    "similaridade": 75,
+    "exagero": 20,
+    "boost": true
+  },
+  {
+    "nome": "Tom de Empatia - Empatia Profunda",
+    "estabilidade": 65,
+    "similaridade": 90,
+    "exagero": 0,
+    "boost": true
+  },
+  {
+    "nome": "Tom de Empatia - Compreensão Amigável",
+    "estabilidade": 60,
+    "similaridade": 85,
+    "exagero": 0,
+    "boost": false
+  },
+  {
+    "nome": "Tom de Empatia - Conexão Emocional",
+    "estabilidade": 70,
+    "similaridade": 95,
+    "exagero": 0,
+    "boost": true
+  },
+  {
+    "nome": "Tom de Empatia - Sensibilidade Compassiva",
+    "estabilidade": 68,
+    "similaridade": 88,
+    "exagero": 5,
+    "boost": true
+  }
+]

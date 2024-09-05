@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autoresposta Avançada - BudZap</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+        }
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        .campaign-card {
+            transition: all 0.3s ease;
+        }
+        .campaign-card:hover {
+            transform: scale(1.03);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="drawer lg:drawer-open">
+        <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
+        <div class="drawer-content flex flex-col">
+            <!-- Navbar -->
+            <nav class="bg-gradient-primary text-white p-4 shadow-lg">
+                <div class="container mx-auto flex justify-between items-center">
+                    <h1 class="text-2xl font-bold flex items-center">
+                        <svg class="w-8 h-8 mr-2 animate-float" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8 14C8 14 9.5 16 12 16C14.5 16 16 14 16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M9 9H9.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M15 9H15.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Autoresposta Avançada
+                    </h1>
+                    <label for="my-drawer-2" class="btn btn-primary drawer-button lg:hidden">
+                        <i class="fas fa-bars"></i>
+                    </label>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="container mx-auto mt-8 p-4">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Configurações -->
+                    <div class="lg:col-span-2">
+                        <div class="card bg-base-100 shadow-xl card-hover mb-8">
+                            <div class="card-body">
+                                <h2 class="card-title text-2xl mb-6 text-purple-700">
+                                    <i class="fas fa-cog mr-2"></i>Configurações de Autoresposta
+                                </h2>
+                                <div class="mb-8 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-lg shadow-md p-6">
+                                    <h3 class="text-2xl font-bold text-purple-700 mb-4">
+                                        <i class="fas fa-robot mr-2"></i>Seu Poder de Autoresposta
+                                    </h3>
+                                    <div id="autoResponseUsage" class="flex flex-col items-center">
+                                        <div id="limitedPlanContent">
+                                            <div class="w-full bg-gray-200 rounded-full h-4 mb-4">
+                                                <div id="usageBar" class="bg-purple-600 h-4 rounded-full transition-all duration-500 ease-in-out" style="width: 0%"></div>
+                                            </div>
+                                            <p class="text-lg font-semibold text-gray-700 mb-2">
+                                                Você usou <span id="usedResponses" class="text-purple-600">0</span> de <span id="totalResponses" class="text-purple-600">0</span> respostas automáticas
+                                            </p>
+                                            <p id="limitMessage" class="text-sm text-gray-600 mb-4">Carregando informações do plano...</p>
+                                            <div class="flex justify-center">
+                                                <a href="/change-plan" class="btn btn-primary animate-pulse hover:animate-none transition duration-300">
+                                                    <i class="fas fa-rocket mr-2"></i>Aumente seu Limite Agora!
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div id="premiumPlanContent" class="hidden">
+                                            <p class="text-lg font-semibold text-purple-700 mb-2">
+                                                <i class="fas fa-infinity mr-2"></i>Você tem respostas automáticas ilimitadas!
+                                            </p>
+                                            <p class="text-sm text-gray-600 mb-4">Aproveite ao máximo seu plano Premium</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <form id="autoResponseForm" class="space-y-6">
+                                    <div class="form-control">
+                                        <label class="label">
+                                            <span class="label-text">Selecione a Instância</span>
+                                        </label>
+                                        <select id="instanceSelect" name="instanceKey" class="select select-bordered w-full">
+                                            <option disabled selected>Escolha uma instância</option>
+                                            <% user.whatsappInstances.forEach(instance => { %>
+                                                <option value="<%= instance.key %>"><%= instance.name %></option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+
+                                    <div id="campaignsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <!-- Campanhas serão adicionadas aqui dinamicamente -->
+                                    </div>
+
+                                    <button type="button" id="addCampaignBtn" class="btn btn-secondary w-full">
+                                        <i class="fas fa-plus mr-2"></i>Adicionar Nova Campanha
+                                    </button>
+
+                                    <button type="submit" class="btn btn-primary w-full">
+                                        <i class="fas fa-save mr-2"></i>Salvar Configurações
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Relatório e Gráficos -->
+                    <div class="lg:col-span-1">
+                        <div id="autoResponseReport" class="card bg-base-100 shadow-xl card-hover mb-8">
+                            <div class="card-body">
+                                <h2 class="card-title text-2xl mb-6 text-purple-700">
+                                    <i class="fas fa-chart-bar mr-2"></i>Relatório
+                                </h2>
+                                <div id="reportContent" class="space-y-4">
+                                    <!-- Conteúdo do relatório será preenchido dinamicamente -->
+                                </div>
+                                <div class="mt-6">
+                                    <canvas id="responseChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card bg-base-100 shadow-xl card-hover">
+                            <div class="card-body">
+                                <h2 class="card-title text-2xl mb-6 text-purple-700">
+                                    <i class="fas fa-fire mr-2"></i>Campanhas Mais Ativadas
+                                </h2>
+                                <canvas id="campaignActivationChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mini Tutoriais -->
+                <div class="mt-12">
+                    <h2 class="text-2xl font-bold text-purple-700 mb-6">
+                        <i class="fas fa-graduation-cap mr-2"></i>Mini Tutoriais
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="card bg-base-100 shadow-xl">
+                            <div class="card-body">
+                                <h3 class="card-title text-lg">Como criar uma campanha</h3>
+                                <p>1. Clique em "Adicionar Nova Campanha"</p>
+                                <p>2. Preencha os detalhes da campanha</p>
+                                <p>3. Escolha a condição de ativação</p>
+                                <p>4. Selecione o funil desejado</p>
+                                <p>5. Salve as configurações</p>
+                            </div>
+                        </div>
+                        <div class="card bg-base-100 shadow-xl">
+                            <div class="card-body">
+                                <h3 class="card-title text-lg">Condições de ativação</h3>
+                                <p><strong>Todas as mensagens:</strong> Ativa para qualquer mensagem</p>
+                                <p><strong>Começa com:</strong> Ativa se a mensagem começar com o texto especificado</p>
+                                <p><strong>Contém:</strong> Ativa se a mensagem contiver o texto especificado</p>
+                                <p><strong>É igual a:</strong> Ativa se a mensagem for exatamente igual ao texto especificado</p>
+                                <p><strong>Expressão Regular:</strong> Ativa se a mensagem corresponder à expressão regular</p>
+                            </div>
+                        </div>
+                        <div class="card bg-base-100 shadow-xl">
+                            <div class="card-body">
+                                <h3 class="card-title text-lg">Dicas para otimização</h3>
+                                <p>1. Use condições específicas para evitar ativações indesejadas</p>
+                                <p>2. Crie funis curtos e objetivos para melhor engajamento</p>
+                                <p>3. Teste suas campanhas regularmente</p>
+                                <p>4. Analise os relatórios para melhorar o desempenho</p>
+                                <p>5. Atualize suas campanhas com base no feedback dos usuários</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div> 
+    </div>
+
+    <!-- Template for campaign -->
+    <template id="campaignTemplate">
+        <div class="campaign-card card bg-base-200 shadow-sm p-4">
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">Nome da Campanha</span>
+                </label>
+                <input type="text" name="campaignName" class="input input-bordered" required placeholder="Nome da campanha">
+            </div>
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">Condição</span>
+                </label>
+                <select name="condition" class="select select-bordered w-full">
+                    <option value="all">Todas as mensagens</option>
+                    <option value="startsWith">Começa com</option>
+                    <option value="contains">Contém</option>
+                    <option value="equals">É igual a</option>
+                    <option value="regex">Expressão Regular</option>
+                </select>
+            </div>
+            <div class="form-control condition-value hidden">
+                <label class="label">
+                    <span class="label-text">Valor da Condição</span>
+                </label>
+                <input type="text" name="conditionValue" class="input input-bordered" placeholder="Valor da condição">
+            </div>
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">Selecione o Funil</span>
+                </label>
+                <select name="funnelId" class="select select-bordered w-full">
+                    <option disabled selected>Escolha um funil</option>
+                    <% funnels.forEach(funnel => { %>
+                        <option value="<%= funnel._id %>"><%= funnel.name %></option>
+                    <% }); %>
+                </select>
+            </div>
+            <div class="form-control">
+                <label class="cursor-pointer label">
+                    <span class="label-text">Ativar Campanha</span> 
+                    <input type="checkbox" name="isActive" class="toggle toggle-primary" checked />
+                </label>
+            </div>
+            <button type="button" class="btn btn-error btn-sm mt-2 remove-campaign-btn">
+                <i class="fas fa-trash mr-2"></i>Remover Campanha
+            </button>
+        </div>
+    </template>
+
+    <script>
+        const instanceSelect = document.getElementById('instanceSelect');
+    const campaignsList = document.getElementById('campaignsList');
+    const addCampaignBtn = document.getElementById('addCampaignBtn');
+    const campaignTemplate = document.getElementById('campaignTemplate');
+
+    let campaigns = [];
+
+    if (instanceSelect) {
+        instanceSelect.addEventListener('change', loadCampaigns);
+    }
+
+    if (addCampaignBtn) {
+        addCampaignBtn.addEventListener('click', addCampaign);
+    }
+
+    function loadCampaigns() {
+        const instanceKey = instanceSelect ? instanceSelect.value : null;
+        if (!instanceKey) return;
+
+        fetch(`/auto-response/campaigns/${instanceKey}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    campaignsList.innerHTML = '';
+                    campaigns = [];
+                    data.campaigns.forEach(campaign => addCampaign(campaign));
+                } else {
+                    console.error('Erro ao carregar campanhas:', data.error);
+                }
+            })
+            .catch(error => console.error('Erro ao carregar campanhas:', error));
+    }
+
+        function addCampaign(campaignData = null) {
+            const newCampaign = campaignTemplate.content.cloneNode(true);
+            const campaignItem = newCampaign.querySelector('.campaign-card');
+            
+            if (campaignData) {
+                campaignItem.querySelector('[name="campaignName"]').value = campaignData.name || '';
+                campaignItem.querySelector('[name="condition"]').value = campaignData.condition || 'all';
+                campaignItem.querySelector('[name="conditionValue"]').value = campaignData.value || '';
+                campaignItem.querySelector('[name="funnelId"]').value = campaignData.funnelId || '';
+                campaignItem.querySelector('[name="isActive"]').checked = campaignData.isActive !== undefined ? campaignData.isActive : true;
+            }
+            
+            campaignItem.querySelector('select[name="condition"]').addEventListener('change', toggleConditionValue);
+            campaignItem.querySelector('.remove-campaign-btn').addEventListener('click', () => removeCampaign(campaignItem));
+
+            campaignsList.appendChild(campaignItem);
+            campaigns.push(campaignItem);
+            
+            toggleConditionValue({ target: campaignItem.querySelector('select[name="condition"]') });
+        }
+
+        function removeCampaign(campaignItem) {
+            campaignsList.removeChild(campaignItem);
+            campaigns = campaigns.filter(item => item !== campaignItem);
+        }
+
+        function toggleConditionValue(event) {
+            const conditionSelect = event.target;
+            const conditionValueInput = conditionSelect.closest('.campaign-card').querySelector('.condition-value');
+            conditionValueInput.classList.toggle('hidden', conditionSelect.value === 'all');
+        }
+
+        document.getElementById('autoResponseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const instanceKey = formData.get('instanceKey');
+
+            const campaignsData = campaigns.map(campaign => ({
+                name: campaign.querySelector('[name="campaignName"]').value,
+                condition: campaign.querySelector('[name="condition"]').value,
+                value: campaign.querySelector('[name="conditionValue"]').value,
+                funnelId: campaign.querySelector('[name="funnelId"]').value,
+                isActive: campaign.querySelector('[name="isActive"]').checked
+            }));
+
+            try {
+                const response = await fetch('/auto-response/update-campaigns', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ instanceKey, campaigns: campaignsData }),
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso!',
+                        text: 'Campanhas de autoresposta atualizadas.',
+                        confirmButtonColor: '#4CAF50',
+                    });
+                    loadCampaigns(); // Recarrega as campanhas após salvar
+                } else {
+                    throw new Error(result.error || 'Erro ao atualizar campanhas');
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error.message,
+                    confirmButtonColor: '#f44336',
+                });
+            }
+        });
+
+     
+    function loadAutoResponseReport(instanceKey) {
+        if (!instanceKey) {
+            console.error('Chave da instância não fornecida');
+            return;
+        }
+
+        fetch(`/auto-response/report/${instanceKey}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    updateReportUI(data);
+                    updateResponseChart(data);
+                    updateCampaignActivationChart(data);
+                } else {
+                    console.error('Erro ao carregar relatório:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar relatório:', error);
+            });
+    }
+
+    function updateReportUI(data) {
+        const reportContent = document.getElementById('reportContent');
+        if (reportContent) {
+            reportContent.innerHTML = `
+                <div class="stats shadow">
+                    <div class="stat">
+                        <div class="stat-figure text-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                        </div>
+                        <div class="stat-title">Total de Respostas</div>
+                        <div class="stat-value text-primary">${data.totalResponses}</div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="table w-full">
+                        <thead>
+                            <tr>
+                                <th>Campanha</th>
+                                <th>Número</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.recentResponses.map(resp => `
+                                <tr>
+                                    <td>${resp.campaignName || 'N/A'}</td>
+                                    <td>${resp.phoneNumber}</td>
+                                    <td>${new Date(resp.timestamp).toLocaleString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+    }
+
+    function updateResponseChart(data) {
+        const ctx = document.getElementById('responseChart');
+        if (!ctx) {
+            console.error('Elemento do gráfico de respostas não encontrado');
+            return;
+        }
+
+        if (window.responseChart && typeof window.responseChart.destroy === 'function') {
+            window.responseChart.destroy();
+        }
+
+        window.responseChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.recentResponses.map(r => new Date(r.timestamp).toLocaleDateString()),
+                datasets: [{
+                    label: 'Respostas Automáticas',
+                    data: data.recentResponses.map((_, index) => index + 1),
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Evolução das Respostas Automáticas'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const response = data.recentResponses[context.dataIndex];
+                                return `Campanha: ${response.campaignName || 'N/A'}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateCampaignActivationChart(data) {
+        const ctx = document.getElementById('campaignActivationChart');
+        if (!ctx) {
+            console.error('Elemento do gráfico de ativações de campanha não encontrado');
+            return;
+        }
+
+        if (window.campaignActivationChart && typeof window.campaignActivationChart.destroy === 'function') {
+            window.campaignActivationChart.destroy();
+        }
+        
+        const sortedCampaigns = Object.entries(data.campaignActivations)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5); // Pegar as 5 campanhas mais ativadas
+
+        window.campaignActivationChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: sortedCampaigns.map(campaign => campaign[0]),
+                datasets: [{
+                    label: 'Ativações',
+                    data: sortedCampaigns.map(campaign => campaign[1]),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 206, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(153, 102, 255, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Campanhas Mais Ativadas'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateAutoResponseUsage() {
+        const instanceKey = instanceSelect.value;
+        if (!instanceKey) {
+            console.error('Instância não selecionada');
+            return;
+        }
+
+        fetch(`/auto-response/usage/${instanceKey}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const limitedPlanContent = document.getElementById('limitedPlanContent');
+                    const premiumPlanContent = document.getElementById('premiumPlanContent');
+                    const usedResponses = document.getElementById('usedResponses');
+                    const totalResponses = document.getElementById('totalResponses');
+                    const usageBar = document.getElementById('usageBar');
+                    const limitMessage = document.getElementById('limitMessage');
+
+                    if (data.isPremium) {
+                        limitedPlanContent.classList.add('hidden');
+                        premiumPlanContent.classList.remove('hidden');
+                    } else {
+                        limitedPlanContent.classList.remove('hidden');
+                        premiumPlanContent.classList.add('hidden');
+
+                        usedResponses.textContent = data.usage;
+                        totalResponses.textContent = data.limit;
+                        
+                        const percentage = (data.usage / data.limit) * 100;
+                        usageBar.style.width = `${percentage}%`;
+
+                        if (percentage >= 90) {
+                            usageBar.classList.add('bg-red-500');
+                            limitMessage.innerHTML = `<span class="text-red-500 font-semibold">Atenção!</span> Seu limite está quase esgotado. Atualize seu plano para continuar aproveitando as autorespostas!`;
+                        } else if (percentage >= 70) {
+                            usageBar.classList.add('bg-yellow-500');
+                            limitMessage.innerHTML = `Você está usando bem suas autorespostas! Que tal <span class="text-blue-500 font-semibold">aumentar seu limite</span> para alcançar ainda mais clientes?`;
+                        } else {
+                            limitMessage.textContent = `Aproveite o poder das autorespostas para impulsionar seu negócio!`;
+                        }
+                    }
+                } else {
+                    console.error('Erro ao buscar uso de autoresposta:', data.error);
+                }
+            })
+            .catch(error => console.error('Erro ao buscar uso de autoresposta:', error));
+    }
+    
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', () => {
+        updateAutoResponseUsage();
+        setInterval(updateAutoResponseUsage, 300000); // Atualiza a cada 5 minutos
+        
+        if (instanceSelect && instanceSelect.value) {
+            loadCampaigns();
+            loadAutoResponseReport(instanceSelect.value);
+        }
+
+        if (instanceSelect) {
+            instanceSelect.addEventListener('change', () => {
+                loadCampaigns();
+                loadAutoResponseReport(instanceSelect.value);
+            });
+        }
+    });
+    </script>
+    
+
+</body>
+</html>

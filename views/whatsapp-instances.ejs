@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Instâncias WhatsApp - BudZap</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.5s ease-out;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-100 to-indigo-200 min-h-screen">
+  
+
+    <div class="container mx-auto p-6">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-purple-800 mb-2">Gerenciador de Instâncias WhatsApp</h1>
+            <p class="text-gray-600">Crie, gerencie e monitore suas instâncias do WhatsApp com facilidade.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Painel de Criação de Instância -->
+            <div class="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition duration-300 animate-fade-in-up">
+                <h2 class="text-2xl font-semibold mb-6 text-purple-700 flex items-center">
+                    <svg class="h-6 w-6 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Criar Nova Instância
+                </h2>
+                <form id="createInstanceForm" class="space-y-4">
+                    <div class="form-control">
+                        <label for="instanceName" class="label">
+                            <span class="label-text text-purple-600">Nome da Instância</span>
+                        </label>
+                        <input type="text" id="instanceName" name="name" required 
+                               class="input input-bordered input-primary w-full focus:ring-2 focus:ring-purple-500 transition duration-300">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full mt-4 bg-purple-600 hover:bg-purple-700 transition duration-300">
+                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Criar Instância
+                    </button>
+                </form>
+            </div>
+
+             <!-- Estatísticas -->
+        <div class="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition duration-300 animate-fade-in-up mt-8">
+            <h2 class="text-2xl font-semibold mb-6 text-purple-700 flex items-center">
+                <svg class="h-6 w-6 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Estatísticas
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div class="stat bg-purple-100 rounded-lg p-4">
+                    <div class="stat-figure text-purple-600">
+                        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                        </svg>
+                    </div>
+                    <div class="stat-title text-purple-600">Total de Instâncias</div>
+                    <div class="stat-value text-purple-800 text-3xl" id="totalInstances">0</div>
+                </div>
+                <div class="stat bg-indigo-100 rounded-lg p-4">
+                    <div class="stat-figure text-indigo-600">
+                        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <div class="stat-title text-indigo-600">Instâncias Conectadas</div>
+                    <div class="stat-value text-indigo-800 text-3xl" id="connectedInstances">0</div>
+                </div>
+            </div>
+        </div>
+        <!-- Lista de Instâncias -->
+        <div class="mt-12 bg-white rounded-lg shadow-lg p-6 animate-fade-in-up">
+            <h2 class="text-2xl font-semibold mb-6 text-purple-700 flex items-center">
+                <svg class="h-6 w-6 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                Suas Instâncias
+            </h2>
+            <div id="instanceList" class="space-y-4">
+                <!-- As instâncias serão carregadas aqui dinamicamente -->
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+           let currentTotalInstances = 0;
+           let currentConnectedInstances = 0;
+
+        function generateRandomKey() {
+            return 'inst_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadInstances();
+
+            document.getElementById('createInstanceForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const instanceKey = generateRandomKey();
+                formData.append('key', instanceKey);
+                
+                const response = await fetch('/whatsapp/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+                if (response.ok) {
+                    showToast('Instância criada com sucesso!', 'success');
+                    loadInstances();
+                    e.target.reset();
+                } else {
+                    const data = await response.json();
+                    showToast(`Erro: ${data.error}`, 'error');
+                }
+            });
+        });
+
+        async function loadInstances() {
+            const response = await fetch('/whatsapp/list');
+            const instances = await response.json();
+            const instanceList = document.getElementById('instanceList');
+            instanceList.innerHTML = '';
+            
+            let connectedCount = 0;
+            instances.forEach(instance => {
+                if (instance.isConnected) connectedCount++;
+                const instanceElement = document.createElement('div');
+                instanceElement.className = 'bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg mb-4 transform hover:scale-102';
+                instanceElement.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                        <div class="mb-4 sm:mb-0">
+                            <h3 class="text-xl font-semibold text-purple-700">${instance.name}</h3>
+                            <p class="text-sm text-gray-600">Chave: ${instance.key}</p>
+                            <p class="text-sm ${instance.isConnected ? 'text-green-600' : 'text-red-600'} font-medium mt-2">
+                                <i class="fas fa-${instance.isConnected ? 'check-circle' : 'times-circle'} mr-2"></i>
+                                ${instance.isConnected ? 'Conectado' : 'Desconectado'}
+                            </p>
+                            ${instance.whatsappName ? `<p class="text-sm text-blue-600 font-medium">WhatsApp: ${instance.whatsappName}</p>` : ''}
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="getQRCode('${instance._id}')" class="btn btn-info btn-sm">
+                                <i class="fas fa-qrcode mr-1"></i> QR Code
+                            </button>
+                            <button onclick="disconnectInstance('${instance._id}')" class="btn btn-warning btn-sm" ${!instance.isConnected ? 'disabled' : ''}>
+                                <i class="fas fa-unlink mr-1"></i> Desconectar
+                            </button>
+                            <button onclick="deleteInstance('${instance._id}')" class="btn btn-error btn-sm">
+                                <i class="fas fa-trash mr-1"></i> Deletar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                instanceList.appendChild(instanceElement);
+            });
+
+            document.getElementById('totalInstances').textContent = instances.length;
+            document.getElementById('connectedInstances').textContent = connectedCount;
+
+          updateStatistics(instances.length, connectedCount);
+        }
+
+        function animateValue(id, start, end, duration) {
+            let current = start;
+            const range = end - start;
+            const increment = end > start ? 1 : -1;
+            const stepTime = Math.abs(Math.floor(duration / range));
+            const obj = document.getElementById(id);
+            const timer = setInterval(() => {
+                current += increment;
+                obj.textContent = current;
+                if (current == end) {
+                    clearInterval(timer);
+                }
+            }, stepTime);
+        }
+
+        async function getQRCode(instanceId) {
+            const response = await fetch(`/whatsapp/qr/${instanceId}`);
+            const data = await response.json();
+            if (data.qr) {
+                const qrModal = document.createElement('div');
+                qrModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+                qrModal.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-2xl max-w-sm w-full animate-fade-in-up">
+                        <h3 class="text-2xl font-bold mb-4 text-purple-700">QR Code para Conexão</h3>
+                        <img src="${data.qr}" alt="QR Code" class="mx-auto mb-6 w-full max-w-xs">
+                        <button onclick="this.closest('.fixed').remove()" class="btn btn-primary w-full">Fechar</button>
+                    </div>
+                `;
+                document.body.appendChild(qrModal);
+            } else {
+                showToast('Erro ao obter QR Code', 'error');
+            }
+        }
+
+        async function disconnectInstance(instanceId) {
+            if (confirm('Tem certeza que deseja desconectar esta instância?')) {
+                try {
+                    const response = await fetch(`/whatsapp/disconnect/${instanceId}`, { method: 'POST' });
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        showToast('Instância desconectada com sucesso!', 'success');
+                        loadInstances();
+                    } else {
+                        if (data.error === 'Instância já desconectada') {
+                            showToast('Esta instância já não tem um WhatsApp conectado.', 'info');
+                        } else {
+                            showToast(`Erro ao desconectar instância: ${data.message}`, 'error');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    showToast('Erro ao desconectar instância. Por favor, tente novamente.', 'error');
+                }
+            }
+        }
+
+        async function deleteInstance(instanceId) {
+            if (confirm('Tem certeza que deseja deletar esta instância? Esta ação é irreversível.')) {
+                const response = await fetch(`/whatsapp/delete/${instanceId}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showToast('Instância deletada com sucesso!', 'success');
+                    loadInstances();
+                } else {
+                    showToast('Erro ao deletar instância', 'error');
+                }
+            }
+        }
+
+        function updateStatistics(totalInstances, connectedInstances) {
+            const totalElement = document.getElementById('totalInstances');
+            const connectedElement = document.getElementById('connectedInstances');
+
+            animateCounter(totalElement, currentTotalInstances, totalInstances);
+            animateCounter(connectedElement, currentConnectedInstances, connectedInstances);
+
+            currentTotalInstances = totalInstances;
+            currentConnectedInstances = connectedInstances;
+        }
+
+        function animateCounter(element, start, end) {
+            const duration = 500;
+            const range = end - start;
+            const startTime = performance.now();
+
+            function updateCounter(currentTime) {
+                const elapsedTime = currentTime - startTime;
+                if (elapsedTime > duration) {
+                    element.textContent = end;
+                } else {
+                    const progress = elapsedTime / duration;
+                    const currentValue = Math.round(start + progress * range);
+                    element.textContent = currentValue;
+                    requestAnimationFrame(updateCounter);
+                }
+            }
+
+            requestAnimationFrame(updateCounter);
+        }
+        
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg text-white ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' :
+                type === 'info' ? 'bg-blue-500' : 'bg-yellow-500'
+            } animate-fade-in-up max-w-xs w-full`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-2"></i>
+                    <p>${message}</p>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('animate-fade-out');
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

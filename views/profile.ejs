@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - BudZap</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-slide-in { animation: slideIn 0.5s ease-out; }
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .bg-purple-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-purple-gradient text-white p-4 shadow-lg mb-8">
+        <div class="container mx-auto">
+            <h1 class="text-2xl font-bold"><i class="fas fa-user-circle mr-2"></i>Perfil do Usuário</h1>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Informações do Perfil -->
+            <div class="card bg-base-100 shadow-xl animate-slide-in">
+                <div class="card-body">
+                    <h2 class="card-title text-2xl mb-4 text-purple-700"><i class="fas fa-info-circle mr-2"></i>Informações do Perfil</h2>
+                    <form id="profileForm" action="/profile/update" method="POST">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Nome</span>
+                            </label>
+                            <input type="text" name="name" value="<%= user.name %>" class="input input-bordered" required>
+                        </div>
+                        <div class="form-control mt-4">
+                            <label class="label">
+                                <span class="label-text">Email</span>
+                            </label>
+                            <input type="email" name="email" value="<%= user.email %>" class="input input-bordered" required>
+                        </div>
+                        <div class="form-control mt-4">
+                            <label class="label">
+                                <span class="label-text">Telefone</span>
+                            </label>
+                            <input type="tel" name="phone" value="<%= user.phone %>" class="input input-bordered" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-6 w-full"><i class="fas fa-save mr-2"></i>Atualizar Perfil</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Foto de Perfil -->
+            <div class="card bg-base-100 shadow-xl animate-slide-in" style="animation-delay: 0.1s;">
+                <div class="card-body">
+                    <h2 class="card-title text-2xl mb-4 text-purple-700"><i class="fas fa-camera mr-2"></i>Foto de Perfil</h2>
+                    <div class="flex justify-center mb-4">
+                        <img src="<%= user.profileImage %>" alt="Foto de Perfil" class="w-32 h-32 rounded-full object-cover border-4 border-purple-500">
+                    </div>
+                    <form id="imageForm" action="/profile/upload-image" method="POST" enctype="multipart/form-data">
+                        <div class="form-control">
+                            <input type="file" name="profileImage" class="file-input file-input-bordered w-full" accept="image/*">
+                        </div>
+                        <button type="submit" class="btn btn-secondary mt-4 w-full"><i class="fas fa-upload mr-2"></i>Atualizar Foto</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Alterar Senha -->
+            <div class="card bg-base-100 shadow-xl animate-slide-in" style="animation-delay: 0.2s;">
+                <div class="card-body">
+                    <h2 class="card-title text-2xl mb-4 text-purple-700"><i class="fas fa-lock mr-2"></i>Alterar Senha</h2>
+                    <form id="passwordForm" action="/profile/change-password" method="POST">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Senha Atual</span>
+                            </label>
+                            <input type="password" name="currentPassword" class="input input-bordered" required>
+                        </div>
+                        <div class="form-control mt-4">
+                            <label class="label">
+                                <span class="label-text">Nova Senha</span>
+                            </label>
+                            <input type="password" name="newPassword" class="input input-bordered" required>
+                        </div>
+                        <div class="form-control mt-4">
+                            <label class="label">
+                                <span class="label-text">Confirmar Nova Senha</span>
+                            </label>
+                            <input type="password" name="confirmPassword" class="input input-bordered" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-6 w-full"><i class="fas fa-key mr-2"></i>Alterar Senha</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Informações do Plano -->
+            <div class="card bg-base-100 shadow-xl animate-slide-in" style="animation-delay: 0.3s;">
+                <div class="card-body">
+                    <h2 class="card-title text-2xl mb-4 text-purple-700"><i class="fas fa-crown mr-2"></i>Informações do Plano</h2>
+                    <p><strong>Plano Atual:</strong> <span class="badge badge-primary"><%= user.plan.charAt(0).toUpperCase() + user.plan.slice(1) %></span></p>
+                    <p><strong>Validade:</strong> <%= new Date(user.validUntil).toLocaleDateString() %></p>
+                    <p><strong>Limite de Funis:</strong> <%= user.funnelLimit %></p>
+                    <p><strong>Uso de Funis:</strong> <%= user.funnelUsage %></p>
+                    <div class="mt-4">
+                        <div class="text-sm font-medium text-gray-700">Uso de Funis</div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4 dark:bg-gray-700">
+                            <div class="bg-purple-600 h-2.5 rounded-full" style="width: <%= (user.funnelUsage / user.funnelLimit) * 100 %>%"></div>
+                        </div>
+                    </div>
+                    <a href="/change-plan" class="btn btn-secondary mt-4 w-full"><i class="fas fa-level-up-alt mr-2"></i>Mudar Plano</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Função para mostrar popups
+        function showPopup(icon, title, text) {
+            Swal.fire({
+                icon: icon,
+                title: title,
+                text: text,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+        }
+
+        // Verificações e submissões de formulários
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Aqui você pode adicionar validações adicionais se necessário
+            this.submit();
+        });
+
+        document.getElementById('imageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!this.profileImage.files.length) {
+                showPopup('error', 'Erro', 'Por favor, selecione uma imagem.');
+                return;
+            }
+            this.submit();
+        });
+
+        document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (this.newPassword.value !== this.confirmPassword.value) {
+                showPopup('error', 'Erro', 'As senhas não coincidem.');
+                return;
+            }
+            if (this.newPassword.value.length < 6) {
+                showPopup('error', 'Erro', 'A nova senha deve ter pelo menos 6 caracteres.');
+                return;
+            }
+
+            // Verificar a senha atual
+            const response = await fetch('/profile/verify-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ currentPassword: this.currentPassword.value }),
+            });
+
+            const data = await response.json();
+
+            if (data.isValid) {
+                this.submit();
+            } else {
+                showPopup('error', 'Erro', 'A senha atual está incorreta.');
+            }
+        });
+
+        // Exibir mensagens de sucesso ou erro do servidor
+        <% if (messages) { %>
+            <% if (messages.success_msg) { %>
+                showPopup('success', 'Sucesso', '<%= messages.success_msg %>');
+            <% } %>
+            <% if (messages.error_msg) { %>
+                showPopup('error', 'Erro', '<%= messages.error_msg %>');
+            <% } %>
+        <% } %>
+    </script>
+</body>
+</html>

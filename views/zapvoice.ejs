@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geração de Áudio e Envio - BudZap</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.11.4/dist/gsap.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body { 
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .chat-list {
+            max-height: calc(100vh - 300px);
+            overflow-y: auto;
+        }
+        .chat-item {
+            transition: all 0.3s ease;
+        }
+        .chat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <img class="h-8 w-auto" src="/img/logo1.jpeg" alt="BudZap">
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="#" class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Geração de Áudio
+                        </a>
+                    </div>
+                </div>
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    <button id="configCheck" class="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <span class="sr-only">Verificar configuração</span>
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
+            <div class="px-4 py-5 sm:p-6">
+                <h1 class="text-2xl font-bold text-gray-900 mb-6">Geração de Áudio e Envio</h1>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label for="instanceSelect" class="block text-sm font-medium text-gray-700">Instância do WhatsApp</label>
+                        <select id="instanceSelect" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="">Selecione uma instância</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="textInput" class="block text-sm font-medium text-gray-700">Texto para Áudio</label>
+                        <textarea id="textInput" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Digite o texto que será convertido em áudio"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="tonSelect" class="block text-sm font-medium text-gray-700">Tom de Voz</label>
+                        <select id="tonSelect" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="">Selecione um tom de voz</option>
+                        </select>
+                    </div>
+
+                    <button id="generateAudioBtn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Gerar Áudio
+                    </button>
+
+                    <div id="audioPlayerContainer" class="hidden">
+                        <audio id="audioPlayer" controls class="w-full"></audio>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">Selecione o Chat para Envio</h2>
+                    <input type="text" id="chatSearch" placeholder="Buscar chat..." class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <div id="chatList" class="mt-4 chat-list space-y-2">
+                        <!-- Chats serão carregados aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Confirmação -->
+    <div id="confirmModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fas fa-paper-plane text-indigo-600"></i>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                Confirmar Envio
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">
+                                    Você tem certeza que deseja enviar este áudio?
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" id="confirmSendBtn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Confirmar
+                    </button>
+                    <button type="button" id="cancelSendBtn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAudioBlob = null;
+        let selectedChatId = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            checkElevenLabsConfig();
+            loadInstances();
+            loadTons();
+            setupEventListeners();
+            animateElements();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('instanceSelect').addEventListener('change', loadChats);
+            document.getElementById('generateAudioBtn').addEventListener('click', generateAudio);
+            document.getElementById('chatSearch').addEventListener('input', filterChats);
+            document.getElementById('confirmSendBtn').addEventListener('click', confirmSendAudio);
+            document.getElementById('cancelSendBtn').addEventListener('click', hideConfirmModal);
+            document.getElementById('configCheck').addEventListener('click', checkElevenLabsConfig);
+        }
+
+        function animateElements() {
+            gsap.from("nav", {duration: 0.5, y: -50, opacity: 0, ease: "power3.out"});
+            gsap.from("main > div", {duration: 0.5, y: 50, opacity: 0, delay: 0.3, ease: "power3.out"});
+        }
+
+        async function checkElevenLabsConfig() {
+            try {
+                const response = await axios.get('/integrations/elevenlabs/check-config');
+                if (response.data.configured) {
+                    showNotification('ElevenLabs está configurado corretamente!', 'success');
+                } else {
+                    showNotification('ElevenLabs não está configurado. Por favor, configure nas configurações.', 'warning');
+                }
+            } catch (error) {
+                console.error('Erro ao verificar configuração do ElevenLabs:', error);
+                showNotification('Erro ao verificar configuração do ElevenLabs', 'error');
+            }
+        }
+
+        async function loadInstances() {
+            try {
+                const response = await axios.get('/whatsapp/list');
+                const instances = response.data.filter(instance => instance.isConnected);
+                const select = document.getElementById('instanceSelect');
+                select.innerHTML = '<option value="">Selecione uma instância</option>';
+                instances.forEach(instance => {
+                    const option = document.createElement('option');
+                    option.value = instance.key;
+                    option.textContent = instance.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar instâncias:', error);
+                showNotification('Erro ao carregar instâncias', 'error');
+            }
+        }
+
+        async function loadTons() {
+            try {
+                const response = await axios.get('/integrations/elevenlabs/config');
+                const tonsOptions = response.data.tonsOptions;
+                const select = document.getElementById('tonSelect');
+                select.innerHTML = '<option value="">Selecione um tom de voz</option>';
+                tonsOptions.forEach(ton => {
+                    const option = document.createElement('option');
+                    option.value = ton.nome;
+                    option.textContent = ton.nome;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar tons:', error);
+                showNotification('Erro ao carregar tons de voz', 'error');
+            }
+        }
+
+        async function loadChats() {
+            const instanceKey = document.getElementById('instanceSelect').value;
+            if (!instanceKey) return;
+
+            try {
+                const response = await axios.get(`/app/chats/${instanceKey}`);
+                const chats = response.data;
+                const chatList = document.getElementById('chatList');
+                chatList.innerHTML = '';
+                chats.forEach(chat => {
+                    const chatElement = document.createElement('div');
+                    chatElement.className = 'chat-item flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition duration-300 ease-in-out';
+                    chatElement.innerHTML = `
+                        <img src="${chat.image || 'https://cdn-icons-png.flaticon.com/512/9187/9187604.png'}" alt="${chat.name}" class="w-10 h-10 rounded-full mr-3">
+                        <div class="flex-1">
+                            <h3 class="text-sm font-medium text-gray-900">${chat.name}</h3>
+                            <p class="text-xs text-gray-500">${chat.chatId}</p>
+                        </div>
+                        <button class="send-audio-btn hidden px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded-full hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" data-chat-id="${chat.chatId}">
+                            Enviar
+                        </button>
+                    `;
+                    chatElement.querySelector('.send-audio-btn').addEventListener('click', () => showConfirmModal(chat.chatId));
+                    chatList.appendChild(chatElement);
+                });
+                gsap.from(".chat-item", {duration: 0.3, opacity: 0, y: 10, stagger: 0.05, ease: "power3.out"});
+            } catch (error) {
+                console.error('Erro ao carregar chats:', error);
+                showNotification('Erro ao carregar chats', 'error');
+            }
+        }
+
+        async function generateAudio() {
+            const text = document.getElementById('textInput').value;
+            const ton = document.getElementById('tonSelect').value;
+            if (!text) {
+                showNotification('Por favor, insira um texto para gerar o áudio.', 'warning');
+                return;
+            }
+
+            try {
+                showLoadingOverlay('Gerando áudio...');
+                const response = await axios.post('/integrations/elevenlabs/test', { 
+                    text: text,
+                    tom: ton
+                }, { responseType: 'blob' });
+                
+                currentAudioBlob = response.data;
+                const audioUrl = URL.createObjectURL(currentAudioBlob);
+                const audioPlayer = document.getElementById('audioPlayer');
+                audioPlayer.src = audioUrl;
+                document.getElementById('audioPlayerContainer').classList.remove('hidden');
+                gsap.from("#audioPlayerContainer", {duration: 0.5, opacity: 0, y: 20, ease: "power3.out"});
+                document.querySelectorAll('.send-audio-btn').forEach(btn => {
+                    btn.classList.remove('hidden');
+                    gsap.from(btn, {duration: 0.3, opacity: 0, scale: 0.5, ease: "back.out(1.7)"});
+                });
+                hideLoadingOverlay();
+                showNotification('Áudio gerado com sucesso!', 'success');
+            } catch (error) {
+                console.error('Erro ao gerar áudio:', error);
+                hideLoadingOverlay();
+                showNotification('Erro ao gerar áudio', 'error');
+            }
+        }
+
+        function showConfirmModal(chatId) {
+            selectedChatId = chatId;
+            document.getElementById('confirmModal').classList.remove('hidden');
+            gsap.from("#confirmModal > div > div", {duration: 0.3, opacity: 0, y: 30, ease: "power3.out"});
+        }
+
+        function hideConfirmModal() {
+            gsap.to("#confirmModal > div > div", {
+                duration: 0.3, 
+                opacity: 0, 
+                y: 30, 
+                ease: "power3.in",
+                onComplete: () => {
+                    document.getElementById('confirmModal').classList.add('hidden');
+                }
+            });
+        }
+
+        async function confirmSendAudio() {
+            hideConfirmModal();
+            await sendAudioToChat(selectedChatId);
+        }
+
+        async function sendAudioToChat(chatId) {
+            if (!currentAudioBlob || !(currentAudioBlob instanceof Blob)) {
+                showNotification('Por favor, gere um áudio válido primeiro.', 'warning');
+                return;
+            }
+            const instanceKey = document.getElementById('instanceSelect').value;
+            if (!instanceKey) {
+                showNotification('Por favor, selecione uma instância do WhatsApp.', 'warning');
+                return;
+            }
+
+            try {
+                showLoadingOverlay('Enviando áudio...');
+                const formData = new FormData();
+                formData.append('audio', currentAudioBlob, 'audio.mp3');
+                formData.append('chatId', chatId);
+                formData.append('instanceKey', instanceKey);
+
+                const response = await axios.post('/zapvoice/send-audio', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+
+                if (response.data && response.data.success) {
+                    hideLoadingOverlay();
+                    showNotification('Áudio enviado com sucesso!', 'success');
+                } else {
+                    throw new Error((response.data && response.data.message) || 'Erro ao enviar áudio');
+                }
+            } catch (error) {
+                console.error('Erro ao enviar áudio:', error);
+                hideLoadingOverlay();
+                showNotification(`Erro ao enviar áudio: ${error.message}`, 'error');
+            }
+        }
+
+        function filterChats() {
+            const searchTerm = document.getElementById('chatSearch').value.toLowerCase();
+            const chatItems = document.querySelectorAll('.chat-item');
+            chatItems.forEach(item => {
+                const name = item.querySelector('h3').textContent.toLowerCase();
+                const id = item.querySelector('p').textContent.toLowerCase();
+                if (name.includes(searchTerm) || id.includes(searchTerm)) {
+                    gsap.to(item, {duration: 0.3, opacity: 1, display: 'flex', ease: "power3.out"});
+                } else {
+                    gsap.to(item, {duration: 0.3, opacity: 0, display: 'none', ease: "power3.out"});
+                }
+            });
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed bottom-4 right-4 px-6 py-4 rounded-md shadow-lg z-50 ${getNotificationColor(type)}`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="${getNotificationIcon(type)} mr-3"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            gsap.from(notification, {duration: 0.5, opacity: 0, y: 50, ease: "power3.out"});
+            setTimeout(() => {
+                gsap.to(notification, {
+                    duration: 0.5, 
+                    opacity: 0, 
+                    y: 50, 
+                    ease: "power3.in",
+                    onComplete: () => notification.remove()
+                });
+            }, 3000);
+        }
+
+        function getNotificationColor(type) {
+            switch(type) {
+                case 'success': return 'bg-green-500 text-white';
+                case 'error': return 'bg-red-500 text-white';
+                case 'warning': return 'bg-yellow-500 text-white';
+                default: return 'bg-blue-500 text-white';
+            }
+        }
+
+        function getNotificationIcon(type) {
+            switch(type) {
+                case 'success': return 'fas fa-check-circle';
+                case 'error': return 'fas fa-exclamation-circle';
+                case 'warning': return 'fas fa-exclamation-triangle';
+                default: return 'fas fa-info-circle';
+            }
+        }
+
+        function showLoadingOverlay(message) {
+            const overlay = document.createElement('div');
+            overlay.id = 'loadingOverlay';
+            overlay.className = 'fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50';
+            overlay.innerHTML = `
+                <div class="bg-white p-5 rounded-lg shadow-lg flex items-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500 mr-3"></div>
+                    <span class="text-gray-700">${message}</span>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            gsap.from(overlay, {duration: 0.3, opacity: 0, ease: "power3.out"});
+        }
+
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                gsap.to(overlay, {
+                    duration: 0.3, 
+                    opacity: 0, 
+                    ease: "power3.in",
+                    onComplete: () => overlay.remove()
+                });
+            }
+        }
+    </script>
+</body>
+</html>

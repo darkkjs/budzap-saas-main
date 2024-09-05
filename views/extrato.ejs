@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-gradient-to-r from-purple-100 to-purple-200">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extrato Bancário - BudZap</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.6.0/dist/full.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@heroicons/v1/outline/index.min.js"></script>
+    <style>
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .bg-purple-gradient {
+            background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+        }
+    </style>
+</head>
+<body class="h-full">
+    <div class="min-h-full">
+        <nav class="bg-purple-gradient">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <img class="h-8 w-8" src="https://tailwindui.com/img/logos/workflow-mark-indigo-300.svg" alt="BudZap">
+                        </div>
+                        <div class="hidden md:block">
+                            <div class="ml-10 flex items-baseline space-x-4">
+                                <a href="#" class="bg-purple-800 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-purple-700">Extrato</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="ml-4 flex items-center md:ml-6">
+                            <button type="button" class="bg-purple-600 p-1 rounded-full text-purple-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-purple-600 focus:ring-white transition-colors duration-200">
+                                <span class="sr-only">Ver notificações</span>
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <header class="bg-white shadow">
+            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                <h1 class="text-3xl font-bold text-gray-900">Extrato Bancário</h1>
+            </div>
+        </header>
+
+        <main>
+            <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+                <div class="px-4 py-6 sm:px-0">
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                        <!-- Saldo do Dia Card -->
+                        <div class="bg-white overflow-hidden shadow rounded-lg transform transition duration-500 hover:scale-105">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
+                                        <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Saldo do Dia</dt>
+                                            <dd id="userBalance" class="text-lg font-medium text-gray-900 animate-pulse">Carregando...</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lucro Mensal Card -->
+                        <div class="bg-white overflow-hidden shadow rounded-lg transform transition duration-500 hover:scale-105">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                                        <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Lucro Mensal</dt>
+                                            <dd id="monthlyProfit" class="text-lg font-medium text-gray-900 animate-pulse">Carregando...</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gastos Mensais Card -->
+                        <div class="bg-white overflow-hidden shadow rounded-lg transform transition duration-500 hover:scale-105">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-red-500 rounded-md p-3">
+                                        <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Gastos Mensais</dt>
+                                            <dd id="monthlyExpenses" class="text-lg font-medium text-gray-900 animate-pulse">Carregando...</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Total de Transações Card -->
+                        <div class="bg-white overflow-hidden shadow rounded-lg transform transition duration-500 hover:scale-105">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                                        <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Total de Transações</dt>
+                                            <dd id="totalTransactions" class="text-lg font-medium text-gray-900 animate-pulse">Carregando...</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Controles e Tabela de Transações -->
+                    <div class="mt-8">
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                            <div class="w-full md:w-1/3 mb-4 md:mb-0">
+                                <div class="relative">
+                                    <input type="text" id="searchInput" placeholder="Pesquisar transações" class="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200">
+                                    <button class="absolute right-2 top-2">
+                                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <select id="filterType" class="rounded-md border border-gray-300 py-2 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200">
+                                    <option value="">Todos os tipos</option>
+                                    <option value="entrada">Entradas</option>
+                                    <option value="saida">Saídas</option>
+                                </select>
+                                <select id="sortOrder" class="rounded-md border border-gray-300 py-2 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200">
+                                    <option value="date-desc">Data (Recente)</option>
+                                    <option value="date-asc">Data (Antiga)</option>
+                                    <option value="amount-desc">Valor (Maior)</option>
+                                    <option value="amount-asc">Valor (Menor)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionList" class="bg-white divide-y divide-gray-200">
+                                    <!-- Transactions will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-4 flex justify-between items-center">
+                            <button id="prevPage" class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200">Anterior</button>
+                            <span id="pageInfo" class="text-sm text-gray-600">Página 1</span>
+                            <button id="nextPage" class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200">Próxima</button>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico de Movimentações -->
+                    <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                        <h2 class="text-lg font-medium text-gray-900 mb-4">Gráfico de Movimentações</h2>
+                        <canvas id="transactionsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-xl">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+            <p class="mt-4 text-gray-700">Carregando transações...</p>
+        </div>
+    </div>
+
+    <script>
+    let currentPage = 1;
+    let transactions = [];
+    let chart;
+    let isLoadingMore = false;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setupEventListeners();
+        loadTransactionsIncrementally();
+    });
+
+    function setupEventListeners() {
+        document.getElementById('searchInput').addEventListener('input', filterTransactions);
+        document.getElementById('filterType').addEventListener('change', filterTransactions);
+        document.getElementById('sortOrder').addEventListener('change', sortTransactions);
+        document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
+        document.getElementById('nextPage').addEventListener('click', () => changePage(1));
+    }
+
+    function updateMonthlyStats(transactions) {
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+
+        let monthlyProfit = 0;
+        let monthlyExpenses = 0;
+        let totalTransactions = 0;
+
+        transactions.forEach(transaction => {
+            const transactionDate = new Date(transaction.creationDate);
+            if (transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear) {
+                const amount = parseFloat(transaction.amount.fraction);
+                if (amount > 0) {
+                    monthlyProfit += amount;
+                } else {
+                    monthlyExpenses += Math.abs(amount);
+                }
+                totalTransactions++;
+            }
+        });
+
+        document.getElementById('monthlyProfit').textContent = formatAmount(monthlyProfit);
+        document.getElementById('monthlyExpenses').textContent = formatAmount(monthlyExpenses);
+        document.getElementById('totalTransactions').textContent = totalTransactions;
+    }
+
+    async function loadTransactionsIncrementally() {
+        try {
+            showLoadingOverlay();
+            while (true) {
+                const response = await axios.get(`/banco/mercadopago-activities?page=${currentPage}`);
+                const pageTransactions = response.data.results;
+                
+                if (pageTransactions && pageTransactions.length > 0) {
+                    transactions = transactions.concat(pageTransactions);
+                    updateBalance(response.data.dailyBalance.replace("R$", ""));
+                    updateMonthlyStats(transactions);
+                    displayTransactions();
+                    updateChart();
+                    updateLoadingProgress(currentPage, response.data.totalResults);
+                    currentPage++;
+                } else {
+                    break; // Sai do loop quando não há mais resultados
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Delay para evitar sobrecarga
+            }
+            hideLoadingOverlay();
+        } catch (error) {
+            console.error('Erro ao carregar transações:', error);
+            showErrorMessage('Não foi possível carregar todas as transações. Por favor, verifique sua conexão e tente novamente.');
+            hideLoadingOverlay();
+        }
+    }
+
+    function updateBalance(balance) {
+        const formattedBalance = formatAmount(parseFloat(balance));
+        document.getElementById('userBalance').textContent = formattedBalance;
+    }
+
+    function displayTransactions() {
+        const tableBody = document.getElementById('transactionList');
+        tableBody.innerHTML = '';
+
+        transactions.forEach(transaction => {
+            const row = document.createElement('tr');
+            const tipo = getTransactionType(transaction.type);
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(transaction.creationDate)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${transaction.description}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm ${transaction.amount.fraction.startsWith('-') ? 'text-red-500' : 'text-green-500'}">
+                    ${formatAmount(transaction.amount.fraction)}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tipo}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        updatePageInfo();
+    }
+
+    function getTransactionType(type) {
+        switch (type) {
+            case 'pix_transfer_mo_payout_movement':
+                return "Pix enviado";
+            case 'sale':
+                return "Venda de produto";
+            case 'pix_transfer_mi_movement':
+                return "Pix recebido";
+            default:
+                return type;
+        }
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR');
+    }
+
+    function formatAmount(amount) {
+        return parseFloat(amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function filterTransactions() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const filterType = document.getElementById('filterType').value;
+
+        const filtered = transactions.filter(transaction => {
+            const matchesSearch = transaction.description.toLowerCase().includes(searchTerm) ||
+                                  transaction.amount.fraction.includes(searchTerm);
+            const matchesType = filterType === '' || 
+                                (filterType === 'entrada' && !transaction.amount.fraction.startsWith('-')) ||
+                                (filterType === 'saida' && transaction.amount.fraction.startsWith('-'));
+            return matchesSearch && matchesType;
+        });
+
+        displayFilteredTransactions(filtered);
+    }
+
+    function sortTransactions() {
+        const sortOrder = document.getElementById('sortOrder').value;
+        
+        transactions.sort((a, b) => {
+            switch(sortOrder) {
+                case 'date-desc':
+                    return new Date(b.creationDate) - new Date(a.creationDate);
+                case 'date-asc':
+                    return new Date(a.creationDate) - new Date(b.creationDate);
+                case 'amount-desc':
+                    return parseFloat(b.amount.fraction) - parseFloat(a.amount.fraction);
+                case 'amount-asc':
+                    return parseFloat(a.amount.fraction) - parseFloat(b.amount.fraction);
+            }
+        });
+
+        displayTransactions();
+    }
+
+    function displayFilteredTransactions(filtered) {
+        const tableBody = document.getElementById('transactionList');
+        tableBody.innerHTML = '';
+
+        filtered.forEach(transaction => {
+            const row = document.createElement('tr');
+            const tipo = getTransactionType(transaction.type);
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(transaction.creationDate)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${transaction.description}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm ${transaction.amount.fraction.startsWith('-') ? 'text-red-500' : 'text-green-500'}">
+                    ${formatAmount(transaction.amount.fraction)}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tipo}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    function updateLoadingProgress(page, totalResults) {
+        const progressPercentage = Math.min((page / Math.ceil(totalResults / 50)) * 100, 100);
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const progressBar = loadingOverlay.querySelector('.animate-spin');
+        progressBar.style.width = `${progressPercentage}%`;
+    }
+
+    function changePage(change) {
+        currentPage += change;
+        if (currentPage < 1) currentPage = 1;
+        loadTransactionsIncrementally();
+    }
+
+    function updatePageInfo() {
+        document.getElementById('pageInfo').textContent = `Página ${currentPage}`;
+    }
+
+    function updateChart() {
+        const ctx = document.getElementById('transactionsChart').getContext('2d');
+        
+        const chartData = {
+            labels: transactions.map(t => formatDate(t.creationDate)),
+            datasets: [{
+                label: 'Movimentações',
+                data: transactions.map(t => parseFloat(t.amount.fraction)),
+                backgroundColor: transactions.map(t => t.amount.fraction.startsWith('-') ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'),
+                borderColor: transactions.map(t => t.amount.fraction.startsWith('-') ? 'rgba(239, 68, 68, 1)' : 'rgba(16, 185, 129, 1)'),
+                borderWidth: 1
+            }]
+        };
+
+        if (chart) {
+            chart.destroy();
+        }
+
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value, index, values) {
+                                return formatAmount(value);
+                            }
+                        }
+                    }
+                },
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Gráfico de Movimentações'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += formatAmount(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function showErrorMessage(message) {
+        // Implementar lógica para mostrar mensagem de erro
+        alert(message);
+    }
+
+    function showLoadingOverlay() {
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+    }
+
+    function hideLoadingOverlay() {
+        document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+    </script>
+</body>
+</html>

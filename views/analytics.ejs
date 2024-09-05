@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Desempenho - BudZap</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-purple-700 mb-8">Análise de Desempenho</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-2">Total de Mensagens</h2>
+                <p class="text-3xl font-bold text-purple-600"><%= totalMessages %></p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-2">Autorespostas</h2>
+                <p class="text-3xl font-bold text-purple-600"><%= totalAutoreplies %></p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-2">Funis Ativos</h2>
+                <p class="text-3xl font-bold text-purple-600"><%= totalFunnels %></p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-2">Grupos Gerenciados</h2>
+                <p class="text-3xl font-bold text-purple-600"><%= totalGroups %></p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Taxa de Engajamento</h2>
+            <p class="text-4xl font-bold text-purple-600"><%= engagementRate %>%</p>
+            <p class="text-gray-600">Baseado na proporção de autorespostas em relação ao total de mensagens</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-2xl font-semibold mb-4">Mensagens por Dia</h2>
+            <canvas id="messagesChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('messagesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Anteontem', 'Ontem', 'Hoje'],
+                datasets: [{
+                    label: 'Mensagens Enviadas',
+                    data: ['<%= messagesTwoDaysAgo %>', '<%= messagesYesterday %>', '<%= messagesToday %>'],
+                    borderColor: 'rgb(102, 126, 234)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Tendência de Mensagens'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

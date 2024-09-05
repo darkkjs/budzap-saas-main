@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BudZap Premium - Revolucione Seu Marketing no WhatsApp</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.6.0/dist/full.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .plan-card {
+            transition: all 0.3s ease;
+        }
+        .plan-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .bg-purple-gradient {
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        }
+        .feature-icon {
+            background: linear-gradient(135deg, #9f7aea, #7f9cf5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .countdown {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #7c3aed;
+        }
+        .testimonial-card {
+            background-color: #f3f4f6;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .badge-trust {
+            background-color: #e5e7eb;
+            color: #4b5563;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+    </style>
+     <style>
+      
+        .feature-icon {
+            background: linear-gradient(135deg, #9f7aea, #7f9cf5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+   
+      
+        .hero-section {
+            background-image: url('https://images.unsplash.com/photo-1557761469-f29c6e201784?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+   
+
+    <main class="container mx-auto flex-grow p-8">
+        <h2 class="text-5xl font-bold text-center mb-6 text-purple-800">Planos</h2>
+
+       
+        <div class="grid md:grid-cols-3 gap-8">
+            <% const planDetails = {
+                basico: {
+                    icon: 'seedling',
+                    description: 'Ideal para quem está começando e quer experimentar o poder da automação.',
+                    features: [
+                        'Acesso básico à plataforma',
+                        '1 conexão WhatsApp',
+                        '2 funis de mensagens',
+                        'Spam de mensagem para ate 1000 leads',
+                        'Autoresposta para até 500 leads',
+                        'Gerenciamento de grupos',
+                    ]
+                },
+                plus: {
+                    icon: 'rocket',
+                    description: 'Perfeito para negócios em crescimento que precisam de mais recursos e flexibilidade.',
+                    features: [
+                        'Todos os recursos do plano Gratuito',
+                        '5 conexões WhatsApp',
+                        '25 funis de mensagens',
+                        'Spam de mensagem para ate 10k leads',
+                        'Autoresposta para até 1000 leads',
+                        'Gerenciamento de grupos',
+                        'Gerador de voz (elevenlabs integração)',
+                        'Antiban ativo'
+                    ]
+                },
+                premium: {
+                    icon: 'crown',
+                    description: 'Para empresas que precisam de poder máximo e recursos ilimitados.',
+                    features: [
+                        'Todos os recursos do plano Plus',
+                        'Conexões WhatsApp ilimitadas',
+                        'Funis de mensagens ilimitados',
+                        'Spam de mensagens ilimitado',
+                        'Autoresposta ilimitada',
+                        'Suporte 24/7 com gerente de conta dedicado',
+                        'Acesso antecipado a novos recursos',
+                    ]
+                }
+            } %>
+            
+            <% Object.entries(plans).forEach(function([planKey, plan]) { 
+                const details = planDetails[planKey];
+            %>
+                <div class="plan-card card bg-base-100 shadow-xl <%= planKey === atualplan ? 'border-4 border-purple-500' : '' %>">
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-<%= details.icon %> text-4xl feature-icon"></i>
+                        </div>
+                        <h2 class="card-title text-2xl text-purple-700 justify-center"><%= plan.name %></h2>
+                        <% if (planKey === atualplan) { %>
+                            <div class="badge badge-primary mx-auto">Seu Plano Atual</div>
+                        <% } %>
+                        <p class="text-4xl font-bold my-4 text-purple-800 text-center">R$ <%= plan.price %><span class="text-sm font-normal">/mês</span></p>
+                        <% if (planKey === 'plus') { %>
+                            <p class="text-green-600 font-semibold text-center">Melhor Custo-Benefício!</p>
+                        <% } %>
+                        <p class="text-gray-600 text-center mb-4"><%= details.description %></p>
+                        <ul class="space-y-2 mb-4">
+                            <% details.features.forEach(feature => { %>
+                                <li><i class="fas fa-check text-green-500 mr-2"></i><%= feature %></li>
+                            <% }) %>
+                        </ul>
+                        <div class="card-actions justify-center mt-4">
+                            <button class="btn btn-primary btn-lg w-full <%= planKey === atualplan ? 'btn-disabled' : '' %>" 
+                                    onclick="selectPlan('<%= planKey %>')">
+                                <i class="fas <%= planKey === atualplan ? 'fa-check' : 'fa-rocket' %> mr-2"></i>
+                                <%= planKey === atualplan ? 'Seu Plano Atual' : 'Começar Agora' %>
+                            </button>
+                        </div>
+                        <% if (planKey !== 'gratuito') { %>
+                            <p class="text-center text-sm mt-2">Seu plano é ativado automaticamente!</p>
+                        <% } %>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+        <br>
+        <br>
+        <section id="features" class="mb-20">
+            <h3 class="text-3xl font-bold text-purple-800 mb-8 text-center">Por que escolher o BudZap?</h3>
+            <div class="features-grid">
+                <div class="text-center p-6 bg-white rounded-lg shadow-md">
+                    <i class="fas fa-chart-line text-4xl text-purple-600 mb-4"></i>
+                    <h4 class="text-xl font-semibold mb-2">Aumento de Vendas</h4>
+                    <p>Nossos clientes relatam um aumento médio de 200% nas vendas após 3 meses de uso.</p>
+                </div>
+                <div class="text-center p-6 bg-white rounded-lg shadow-md">
+                    <i class="fas fa-clock text-4xl text-purple-600 mb-4"></i>
+                    <h4 class="text-xl font-semibold mb-2">Economia de Tempo</h4>
+                    <p>Automatize suas conversas e economize até 20 horas por semana em tarefas repetitivas.</p>
+                </div>
+                <div class="text-center p-6 bg-white rounded-lg shadow-md">
+                    <i class="fas fa-users text-4xl text-purple-600 mb-4"></i>
+                    <h4 class="text-xl font-semibold mb-2">Aumento de Leads</h4>
+                    <p>Capture e nutra leads automaticamente, aumentando sua base de clientes em até 5x.</p>
+                </div>
+                <div class="text-center p-6 bg-white rounded-lg shadow-md">
+                    <i class="fas fa-robot text-4xl text-purple-600 mb-4"></i>
+                    <h4 class="text-xl font-semibold mb-2">Automação Inteligente</h4>
+                    <p>Use IA para personalizar mensagens e otimizar suas campanhas de marketing.</p>
+                </div>
+            </div>
+        </section>
+        
+
+       
+
+        <div class="mt-16 text-center">
+            <h3 class="text-2xl font-bold text-purple-800 mb-4">Pronto para revolucionar seu marketing no WhatsApp?</h3>
+            <p class="text-gray-600 mb-6">Nossa equipe está pronta para ajudar você a escolher o melhor plano para o seu negócio.</p>
+            <a href="https://wa.me/5551995746157?text=Opa+tenho+duvidas+sobre+o+bud" class="btn btn-primary btn-lg">Fale com um Especialista Agora</a>
+        </div>
+
+        <div class="mt-16 flex justify-center space-x-4">
+            <span class="badge-trust">
+                <i class="fas fa-lock mr-2"></i>
+                Pagamento Seguro
+            </span>
+           
+            <span class="badge-trust">
+                <i class="fas fa-headset mr-2"></i>
+                Suporte 24/7
+            </span>
+        </div>
+
+        <div class="mt-16" id="faq">
+            <h3 class="text-3xl font-bold text-purple-800 mb-8 text-center">Perguntas Frequentes</h3>
+            <div class="space-y-4">
+                <div class="collapse border rounded-box border-base-300 collapse-plus">
+                    <input type="checkbox" /> 
+                    <div class="collapse-title text-xl font-medium">
+                        Como o BudZap pode aumentar minhas vendas?
+                    </div>
+                    <div class="collapse-content"> 
+                        <p>O BudZap automatiza suas conversas no WhatsApp, permitindo que você atenda mais clientes simultaneamente, qualifique leads automaticamente e nunca perca uma oportunidade de venda.</p>
+                    </div>
+                </div>
+                <div class="collapse border rounded-box border-base-300 collapse-plus">
+                    <input type="checkbox" /> 
+                    <div class="collapse-title text-xl font-medium">
+                        É difícil começar a usar o BudZap?
+                    </div>
+                    <div class="collapse-content"> 
+                        <p>Não! Nossa interface é intuitiva e oferecemos tutoriais detalhados. Além disso, nossa equipe de suporte está sempre pronta para ajudar você a configurar e otimizar sua estratégia.</p>
+                    </div>
+                </div>
+
+                <div class="collapse border rounded-box border-base-300 collapse-plus">
+                    <input type="checkbox" /> 
+                    <div class="collapse-title text-xl font-medium">
+                        Como funciona o antiban?
+                    </div>
+                    <div class="collapse-content"> 
+                        <p>Nosso sistema simula uma conexão android e comportamentos humanos com a API do whatsapp e nosso sistema fica alterando o IP simultaneamente para não cruzar dados.</p>
+                    </div>
+                </div>
+
+                <div class="collapse border rounded-box border-base-300 collapse-plus">
+                    <input type="checkbox" /> 
+                    <div class="collapse-title text-xl font-medium">
+                        Como funciona a clonagem de voz?
+                    </div>
+                    <div class="collapse-content"> 
+                        <p>Nossa plataforma possui integração com a elevenlabs.</p>
+                    </div>
+                </div>
+
+                <div class="collapse border rounded-box border-base-300 collapse-plus">
+                    <input type="checkbox" /> 
+                    <div class="collapse-title text-xl font-medium">
+                        Tenho que pagar algum tipo de hospedagem?
+                    </div>
+                    <div class="collapse-content"> 
+                        <p>Não, nós cuidamos de todo o processo chato de hospedagem, domínio e código. Você não precisa gastar nada com isso!</p>
+                    </div>
+                </div>
+
+                <!-- Adicione mais perguntas frequentes aqui -->
+            </div>
+        </div>
+    </main>
+
+    
+    <div id="payment-form" class="hidden mt-8">
+        <form id="stripe-form" class="max-w-md mx-auto">
+            <div id="card-element" class="mb-4"></div>
+            <div id="card-errors" role="alert" class="text-red-600 mb-4"></div>
+            <button type="submit" class="btn btn-primary btn-lg w-full">
+                Confirmar Assinatura
+            </button>
+        </form>
+    </div>
+
+    <form id="change-plan-form" method="POST" action="/change-plan" class="hidden">
+        <input type="hidden" name="userId" value="<%= userId %>">
+        <input type="hidden" id="plan-select" name="newPlan" value="">
+    </form>
+
+    <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
+    </div>
+
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        const stripe = Stripe('pk_live_51LCHrRJd0dkXl3iIhRZhz1mw9tpa3ghe5psnERoRkEVvuRzQZCkRAlSkn2k4h3kHdZEHrFlVjSJlXI02QyskIDcH00bCzS8pzy');
+        const elements = stripe.elements();
+        const cardElement = elements.create('card');
+        cardElement.mount('#card-element');
+    
+        let selectedPlan = null;
+    
+        function selectPlan(planKey) {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        loadingOverlay.classList.remove('hidden');
+        loadingOverlay.classList.add('flex');
+
+        // Call your server to create a Checkout Session
+        fetch('/create-checkout-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                planKey: planKey,
+            }),
+        })
+        .then(response => response.json())
+        .then(session => {
+            // Redirect to Stripe Checkout
+            return stripe.redirectToCheckout({ sessionId: session.id });
+        })
+        .then(result => {
+            if (result.error) {
+                alert(result.error.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        })
+        .finally(() => {
+            loadingOverlay.classList.add('hidden');
+            loadingOverlay.classList.remove('flex');
+        });
+    }
+
+      
+ 
+    </script>
+</body>
+    </html>

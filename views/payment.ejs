@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BudZap - Checkout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/imask/6.4.3/imask.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            light: '#4FD1C5',
+                            DEFAULT: '#38B2AC',
+                            dark: '#319795',
+                        },
+                        secondary: {
+                            light: '#9F7AEA',
+                            DEFAULT: '#805AD5',
+                            dark: '#6B46C1',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #38B2AC, #805AD5);
+        }
+        .input-style {
+            @apply w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition duration-200;
+        }
+        .btn-primary {
+            @apply w-full py-3 px-4 bg-primary text-white font-semibold rounded-lg shadow-md hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-75 transition duration-300;
+        }
+        .btn-secondary {
+            @apply w-full py-3 px-4 bg-white text-primary border border-primary font-semibold rounded-lg shadow-md hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-75 transition duration-300;
+        }
+        .step-indicator {
+            @apply w-10 h-10 flex items-center justify-center rounded-full text-white font-bold;
+        }
+        .step-indicator.active {
+            @apply bg-primary;
+        }
+        .step-indicator.completed {
+            @apply bg-green-500;
+        }
+        .step-indicator.inactive {
+            @apply bg-gray-300 text-gray-600;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <header class="gradient-bg text-white py-4">
+        <div class="container mx-auto px-4 flex items-center justify-between">
+            <div class="flex items-center">
+                <img src="/api/placeholder/50/50" alt="BudZap Logo" class="w-10 h-10 mr-3">
+                <h1 class="text-2xl font-bold">BudZap</h1>
+            </div>
+            <nav>
+                <ul class="flex space-x-4">
+                    <li><a href="#" class="hover:text-primary-light"><i class="fas fa-home mr-1"></i>Home</a></li>
+                    <li><a href="#" class="hover:text-primary-light"><i class="fas fa-cogs mr-1"></i>Recursos</a></li>
+                    <li><a href="#" class="hover:text-primary-light"><i class="fas fa-envelope mr-1"></i>Contato</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">BudZap Pro</h2>
+            <p class="text-xl text-gray-600">Eleve sua comunicação no WhatsApp ao próximo nível</p>
+        </div>
+
+        <div class="flex justify-center mb-8">
+            <div class="flex items-center">
+                <div class="step-indicator active" id="step1">1</div>
+                <div class="w-16 h-1 bg-gray-300 mx-2" id="line1"></div>
+                <div class="step-indicator inactive" id="step2">2</div>
+                <div class="w-16 h-1 bg-gray-300 mx-2" id="line2"></div>
+                <div class="step-indicator inactive" id="step3">3</div>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-xl rounded-lg overflow-hidden max-w-4xl mx-auto">
+            <div class="p-8">
+                <!-- Etapa 1: Seleção de Plano -->
+                <div id="planSelection" class="space-y-8">
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-6">Escolha seu Plano</h3>
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <div class="plan-card bg-white border-2 border-primary-light rounded-lg overflow-hidden hover:shadow-lg transition duration-300">
+                            <div class="p-6">
+                                <div class="text-center mb-4">
+                                    <i class="fas fa-seedling text-4xl text-primary"></i>
+                                </div>
+                                <h4 class="text-xl font-semibold text-primary mb-2">Básico</h4>
+                                <p class="text-3xl font-bold text-gray-800 mb-4">R$ 29,90<span class="text-sm font-normal">/mês</span></p>
+                                <ul class="text-sm text-gray-600 mb-6">
+                                    <li class="mb-2"><i class="fas fa-check text-primary mr-2"></i>1 conexão WhatsApp</li>
+                                    <li class="mb-2"><i class="fas fa-check text-primary mr-2"></i>2 funis de mensagens</li>
+                                    <li class="mb-2"><i class="fas fa-check text-primary mr-2"></i>Até 1000 leads</li>
+                                </ul>
+                                <button onclick="selectPlan('basico')" class="btn-secondary">
+                                    <i class="fas fa-shopping-cart mr-2"></i>Selecionar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="plan-card bg-white border-2 border-primary rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition duration-300">
+                            <div class="p-6">
+                                <div class="text-center mb-4">
+                                    <i class="fas fa-rocket text-4xl text-secondary"></i>
+                                </div>
+                                <h4 class="text-xl font-semibold text-primary mb-2">Plus</h4>
+                                <div class="bg-secondary-light text-white text-xs font-semibold px-2 py-1 rounded-full inline-block mb-2">Mais Popular</div>
+                                <p class="text-3xl font-bold text-gray-800 mb-4">R$ 49,90<span class="text-sm font-normal">/mês</span></p>
+                                <ul class="text-sm text-gray-600 mb-6">
+                                    <li class="mb-2"><i class="fas fa-check text-primary mr-2"></i>5 conexões WhatsApp</li>
+                                    <li class="mb-2"><i class="fas fa-check text-primary mr-2"></i>25 funis de mensagens</li>
+                                    <li class="mb-2"><i class="fas fa-check text-primary mr-2"></i>Até 10k leads</li>
+                                </ul>
+                                <button onclick="selectPlan('plus')" class="btn-primary">
+                                    <i class="fas fa-shopping-cart mr-2"></i>Selecionar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="plan-card bg-white border-2 border-primary-light rounded-lg overflow-hidden hover:shadow-lg transition duration-300">
+                            <div class="p-6">
+                                <div class="text-center mb-4">
+                                    <i class="fas fa-crown text-4xl text-yellow-500"></i>
+                                </div>
+                                <h4 class="text-xl font-semibold text-primary mb-2">Premium</h4>
+                                <p class="text-3xl font-bold text-gray-800 mb-4">R$ 69,90<span class="text-sm font-normal">/mês</span></p>
+                                <ul class="text-sm text-gray-600 mb-6">
+                                    <li class="mb-2"><i class="fas fa-check text-primary mr-2"></i>Conexões ilimitadas</li>
+                                    <li class="mb-2"><i class="fas fa-check text-primary mr-2"></i>Funis ilimitados</li>
+                                    <li class="mb-2"><i class="fas fa-check text-primary mr-2"></i>Leads ilimitados</li>
+                                </ul>
+                                <button onclick="selectPlan('premium')" class="btn-secondary">
+                                    <i class="fas fa-shopping-cart mr-2"></i>Selecionar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Etapa 2: Informações de Pagamento -->
+                <div id="paymentInfo" class="hidden space-y-6">
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-6">Informações de Pagamento</h3>
+                    <div class="mb-4">
+                        <label for="paymentMethod" class="block text-sm font-medium text-gray-700 mb-2">Método de pagamento</label>
+                        <select id="paymentMethod" class="input-style">
+                            <option value="">Selecione um método</option>
+                            <option value="credit_card">Cartão de Crédito</option>
+                            <option value="pix">PIX</option>
+                        </select>
+                    </div>
+
+                    <div id="credit-card-fields" class="hidden space-y-4">
+                        <div>
+                            <label for="cardHolderName" class="block text-sm font-medium text-gray-700 mb-1">Nome no Cartão</label>
+                            <input type="text" id="cardHolderName" class="input-style" placeholder="Nome completo">
+                        </div>
+                        <div>
+                            <label for="cardNumber" class="block text-sm font-medium text-gray-700 mb-1">Número do Cartão</label>
+                            <input type="text" id="cardNumber" class="input-style" placeholder="1234 5678 9012 3456">
+                        </div>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label for="cardExpMonth" class="block text-sm font-medium text-gray-700 mb-1">Mês</label>
+                                <input type="text" id="cardExpMonth" class="input-style" placeholder="MM">
+                            </div>
+                            <div>
+                                <label for="cardExpYear" class="block text-sm font-medium text-gray-700 mb-1">Ano</label>
+                                <input type="text" id="cardExpYear" class="input-style" placeholder="AA">
+                            </div>
+                            <div>
+                                <label for="cardCVC" class="block text-sm font-medium text-gray-700 mb-1">CVC</label>
+                                <input type="text" id="cardCVC" class="input-style" placeholder="123">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                        <input type="text" id="phone" class="input-style" placeholder="(00) 00000-0000">
+                    </div>
+
+                    <div>
+                        <label for="cpf" class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                        <input type="text" id="cpf" class="input-style" placeholder="000.000.000-00">
+                    </div>
+
+                    <button onclick="processPayment()" class="btn-primary mt-6">
+                        <i class="fas fa-lock mr-2"></i>Finalizar Pagamento
+                    </button>
+                </div>
+
+                <!-- Etapa 3: Confirmação -->
+                <div id="confirmation" class="hidden space-y-6">
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-6">Confirmação de Pagamento</h3>
+                    <div id="payment-status" class="text-center">
+                        <p id="status-message" class="text-lg font-semibold"></p>
+                    </div>
+                    <div id="qr-code-container" class="hidden text-center">
+                        <h4 class="text-xl font-semibold mb-4">Escaneie o QR Code para pagar</h4>
+                        <img id="qr-code" class="mx-auto mb-4">
+                        <p class="text-sm text-gray-600">Use o app do seu banco para escanear e pagar via PIX</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h5 class="text-lg font-semibold mb-4">Sobre o BudZap</h5>
+                    <p class="text-gray-400">Revolucionando a comunicação via WhatsApp para empresas e empreendedores.</p>
+                </div>
+                <div>
+                    <h5 class="text-lg font-semibold mb-4">Links Rápidos</h5>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white"><i class="fas fa-home mr-2"></i>Home</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white"><i class="fas fa-cogs mr-2"></i>Recursos</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white"><i class="fas fa-tags mr-2"></i>Preços</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white"><i class="fas fa-envelope mr-2"></i>Contato</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="text-lg font-semibold mb-4">Contate-nos</h5>
+                    <p class="text-gray-400"><i class="fas fa-envelope mr-2"></i>Email: contato@budzap.com</p>
+                    <p class="text-gray-400"><i class="fas fa-phone mr-2"></i>Telefone: (11) 1234-5678</p>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-700 text-center">
+                <p class="text-gray-400">&copy; 2024 BudZap. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="loadingModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden flex items-center justify-center">
+        <div class="bg-white p-5 rounded-lg flex items-center">
+            <img src="https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif" alt="Loading" class="w-10 h-10 mr-3">
+            <span class="text-xl font-semibold">Processando...</span>
+        </div>
+    </div>
+
+    <script>
+        let selectedPlan = '';
+        let selectedPaymentMethod = '';
+
+        function getPlanPrice(plan) {
+            const prices = {
+                basico: 2990,  // R$ 29,90
+                plus: 4990,    // R$ 49,90
+                premium: 6990  // R$ 69,90
+            };
+            
+            const price = prices[plan] || 0;
+            return Math.max(1, Math.min(price, 999999900));
+        }
+
+        function formatPrice(cents) {
+            return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function selectPlan(plan) {
+            selectedPlan = plan;
+            document.getElementById('planSelection').classList.add('hidden');
+            document.getElementById('paymentInfo').classList.remove('hidden');
+            updateStepIndicators(2);
+        }
+
+        function updateStepIndicators(currentStep) {
+            for (let i = 1; i <= 3; i++) {
+                const step = document.getElementById(`step${i}`);
+                const line = document.getElementById(`line${i-1}`);
+                if (i < currentStep) {
+                    step.classList.remove('active', 'inactive');
+                    step.classList.add('completed');
+                    step.innerHTML = '<i class="fas fa-check"></i>';
+                    if (line) line.classList.add('bg-primary');
+                } else if (i === currentStep) {
+                    step.classList.remove('inactive', 'completed');
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active', 'completed');
+                    step.classList.add('inactive');
+                    if (line) line.classList.remove('bg-primary');
+                }
+            }
+        }
+
+        document.getElementById('paymentMethod').addEventListener('change', function () {
+            const cardFields = document.getElementById('credit-card-fields');
+            selectedPaymentMethod = this.value;
+            cardFields.style.display = this.value === 'credit_card' ? 'block' : 'none';
+        });
+
+        async function processPayment() {
+            const loadingModal = document.getElementById('loadingModal');
+            loadingModal.classList.remove('hidden');
+
+            const phone = document.getElementById('phone').value;
+            const cpf = document.getElementById('cpf').value;
+
+            let paymentData = { 
+                plan: selectedPlan, 
+                paymentMethod: selectedPaymentMethod, 
+                phone, 
+                cpf 
+            };
+
+            if (selectedPaymentMethod === 'credit_card') {
+                paymentData.cardData = {
+                    number: document.getElementById('cardNumber').value.replace(/\s/g, ''),
+                    expMonth: document.getElementById('cardExpMonth').value,
+                    expYear: document.getElementById('cardExpYear').value,
+                    securityCode: document.getElementById('cardCVC').value,
+                    holderName: document.getElementById('cardHolderName').value
+                };
+            }
+
+            try {
+                const response = await fetch('/payments/create-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(paymentData),
+                });
+
+                const result = await response.json();
+
+                document.getElementById('paymentInfo').classList.add('hidden');
+                document.getElementById('confirmation').classList.remove('hidden');
+                updateStepIndicators(3);
+
+                const statusMessage = document.getElementById('status-message');
+                const qrCodeContainer = document.getElementById('qr-code-container');
+
+                if (result.orderId) {
+                    statusMessage.textContent = 'Pagamento iniciado, aguardando confirmação...';
+                    if (selectedPaymentMethod === 'pix' && result.qrCode) {
+                        const qrCode = document.getElementById('qr-code');
+                        qrCode.src = result.qrCode.links.find(link => link.media === 'image/png').href;
+                        qrCodeContainer.classList.remove('hidden');
+                    }
+
+                    pollOrderStatus(result.orderId);
+                } else {
+                    statusMessage.textContent = 'Ocorreu um erro no pagamento: ' + (result.error ? result.error.error_messages[0].description : 'Erro desconhecido');
+                }
+            } catch (error) {
+                console.error('Erro ao processar pagamento:', error);
+                document.getElementById('status-message').textContent = 'Ocorreu um erro ao processar o pagamento. Por favor, tente novamente.';
+            } finally {
+                loadingModal.classList.add('hidden');
+            }
+        }
+
+        async function pollOrderStatus(orderId) {
+            const statusMessage = document.getElementById('status-message');
+            const qrCodeContainer = document.getElementById('qr-code-container');
+
+            try {
+                const response = await fetch(`/payments/order-status/${orderId}`);
+                const result = await response.json();
+
+                if (result.status === 'PAID') {
+                    statusMessage.textContent = 'Pagamento confirmado! Seu plano foi atualizado.';
+                    qrCodeContainer.classList.add('hidden');
+                } else if (result.status === 'DECLINED' || result.status === 'CANCELED') {
+                    statusMessage.textContent = 'Pagamento não aprovado. Por favor, tente novamente.';
+                } else {
+                    // Continuar verificando o status
+                    setTimeout(() => pollOrderStatus(orderId), 5000);
+                }
+            } catch (error) {
+                console.error('Erro ao verificar status do pedido:', error);
+                statusMessage.textContent = 'Erro ao verificar status do pagamento. Por favor, contate o suporte.';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const cardNumber = document.getElementById('cardNumber');
+            const cardExpMonth = document.getElementById('cardExpMonth');
+            const cardExpYear = document.getElementById('cardExpYear');
+            const cardCVC = document.getElementById('cardCVC');
+            const phone = document.getElementById('phone');
+            const cpf = document.getElementById('cpf');
+
+            IMask(cardNumber, { mask: '0000 0000 0000 0000' });
+            IMask(cardExpMonth, { mask: '00' });
+            IMask(cardExpYear, { mask: '00' });
+            IMask(cardCVC, { mask: '000' });
+            IMask(phone, { mask: '(00) 00000-0000' });
+            IMask(cpf, { mask: '000.000.000-00' });
+        });
+    </script>
+</body>
+</html>

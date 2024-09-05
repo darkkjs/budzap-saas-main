@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="bg-gray-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex flex-col">
+        <!-- Navbar -->
+        <nav class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 shadow-lg">
+            <div class="container mx-auto flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm">Bem-vindo, <%= user.name %></span>
+                    <a href="/logout" class="btn btn-sm btn-outline btn-white">Sair</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto p-6 space-y-6">
+
+               <!-- Nova seção: Alerta de Plano Gratuito -->
+               <% if (user.plan === 'gratuito') { %>
+                <section class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg shadow-md">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl mr-4"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold">Sua conta não está ativada!</p>
+                            <p>Para liberar todas as funções e aproveitar ao máximo o BudZap, ative algum de nossos planos.</p>
+                            <a href="/change-plan" class="mt-2 inline-block bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
+                                Conheça nossos planos
+                            </a>
+                        </div>
+                    </div>
+                </section>
+                <% } %>
+
+                
+            <!-- Notificação mais recente -->
+<% if (user.notifications && user.notifications.length > 0) { %>
+    <div class="bg-indigo-100 border-l-4 border-indigo-500 text-indigo-700 p-4 mb-4">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <i class="fas fa-bell text-indigo-500"></i>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm font-medium">
+                    <%= user.notifications[user.notifications.length - 1].title %>: <%= user.notifications[user.notifications.length - 1].content %>
+                </p>
+                <p class="text-xs text-indigo-500 mt-1">
+                    <%= new Date(user.notifications[user.notifications.length - 1].timestamp).toLocaleString() %>
+                </p>
+            </div>
+        </div>
+    </div>
+<% } %>
+
+            
+            <!-- Resumo do Plano -->
+            <section class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold mb-4 text-purple-700">Seu Plano BudZap</h2>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-lg">Plano Atual: <span class="font-bold text-indigo-600"><%= user.plan.charAt(0).toUpperCase() + user.plan.slice(1) %></span></p>
+                        <p>Válido até: <%= new Date(user.validUntil).toLocaleDateString() %></p>
+                    </div>
+                    <a href="/change-plan" class="btn btn-primary animate-pulse">Upgrade de Plano</a>
+                </div>
+            </section>
+
+            <!-- Informações Financeiras (apenas se o Mercado Pago estiver integrado) -->
+            <% if (user.mercadopago && user.mercadopago.integrationActive) { %>
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
+                        <i class="fas fa-wallet mr-2"></i>Saldo do Dia
+                    </h3>
+                    <p class="text-3xl font-bold text-green-600" id="dailyBalance">Carregando...</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
+                        <i class="fas fa-chart-line mr-2"></i>Lucro Mensal
+                    </h3>
+                    <p class="text-3xl font-bold text-blue-600" id="monthlyProfit">Carregando...</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
+                        <i class="fas fa-shopping-cart mr-2"></i>Gasto Mensal
+                    </h3>
+                    <p class="text-3xl font-bold text-red-600" id="monthlyExpense">Carregando...</p>
+                </div>
+            </section>
+            <% } else { %>
+            <section class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-2 text-purple-700">
+                    <i class="fas fa-link-slash mr-2"></i>Integração Mercado Pago
+                </h3>
+                <p class="text-gray-600 mb-4">Conecte sua conta do Mercado Pago para ver informações financeiras detalhadas.</p>
+                <a href="/integrations/mercadopago" class="btn btn-primary btn-sm">Configurar Integração</a>
+            </section>
+            <% } %>
+
+           
+
+            <!-- Estatísticas Rápidas -->
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Instâncias WhatsApp</p>
+                            <p class="text-3xl font-bold text-purple-600"><%= user.whatsappInstances.length %></p>
+                        </div>
+                        <i class="fas fa-mobile-alt text-4xl text-indigo-400 animate-bounce"></i>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Funis Ativos</p>
+                            <p class="text-3xl font-bold text-purple-600"><%= user.funnels.length %></p>
+                        </div>
+                        <i class="fas fa-funnel-dollar text-4xl text-indigo-400 animate-bounce"></i>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2">Spam Realizado</h3>
+                            <p class="text-4xl font-bold"><%= user.funnelUsage.toLocaleString() %></p>
+                            <p class="text-sm opacity-75">números alcançados</p>
+                        </div>
+                        <div class="text-5xl opacity-75">
+                            <i class="fas fa-paper-plane animate-pulse"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="w-full bg-white bg-opacity-20 rounded-full h-2.5">
+                            <div class="bg-white h-2.5 rounded-full" style="width: '<%= (user.funnelUsage / user.funnelLimit) * 100 %>%'"></div>
+                        </div>
+                        <p class="text-xs mt-2 text-right">
+                            <%= Math.round((user.funnelUsage / user.funnelLimit) * 100) %>% do limite utilizado
+                        </p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Autorespostas</p>
+                            <p class="text-3xl font-bold text-purple-600"><%= user.autoResponseCount %>/<%= user.autoResponseLimit %></p>
+                        </div>
+                        <i class="fas fa-reply-all text-4xl text-indigo-400 animate-bounce"></i>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Funções Principais -->
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
+                        <i class="fas fa-comment-dots mr-2"></i>Mensagens em Massa
+                    </h3>
+                    <p class="text-gray-600 mb-4">Envie mensagens personalizadas para múltiplos contatos de uma só vez.</p>
+                    <a href="/mass-message" class="btn btn-primary btn-sm">Iniciar Campanha</a>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
+                        <i class="fas fa-robot mr-2"></i>Autoresposta
+                    </h3>
+                    <p class="text-gray-600 mb-4">Configure respostas automáticas para interagir com seus clientes 24/7.</p>
+                    <a href="/auto-response" class="btn btn-primary btn-sm">Configurar</a>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
+                        <i class="fas fa-funnel-dollar mr-2"></i>Funis de Venda
+                    </h3>
+                    <p class="text-gray-600 mb-4">Crie funis de venda personalizados para aumentar suas conversões.</p>
+                    <a href="/funnels" class="btn btn-primary btn-sm">Gerenciar Funis</a>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
+                        <i class="fas fa-users mr-2"></i>Gerenciar Grupos
+                    </h3>
+                    <p class="text-gray-600 mb-4">Crie e gerencie grupos do WhatsApp para melhor organização.</p>
+                    <a href="/group" class="btn btn-primary btn-sm">Gerenciar Grupos</a>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
+                        <i class="fas fa-chart-line mr-2"></i>Análise de Desempenho
+                    </h3>
+                    <p class="text-gray-600 mb-4">Visualize métricas e insights sobre suas campanhas e interações.</p>
+                    <a href="/analytics" class="btn btn-primary btn-sm">Ver Análises</a>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
+                        <i class="fas fa-cog mr-2"></i>Configurações
+                    </h3>
+                    <p class="text-gray-600 mb-4">Personalize sua experiência BudZap e gerencie suas preferências.</p>
+                    <a href="/settings" class="btn btn-primary btn-sm">Ajustar Configurações</a>
+                </div>
+            </section>
+
+            <!-- Gráfico de Uso -->
+            <section class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold mb-4 text-purple-700">Uso de Recursos</h2>
+                <canvas id="resourceUsageChart" height="200"></canvas>
+            </section>
+        </main>
+    </div>
+
+    <script>
+          let currentPage = 1;
+    let transactions = [];
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    document.addEventListener('DOMContentLoaded', function() {
+        <% if (user.mercadopago && user.mercadopago.integrationActive) { %>
+            loadTransactionsIncrementally();
+        <% } %>
+        
+        // Outros códigos de inicialização, se necessário
+    });
+
+   
+    async function loadFinancialData() {
+        try {
+            const response = await fetch('/banco/mercadopago-activities?page=1');
+            const data = await response.json();
+
+            // Atualizar saldo do dia
+            document.getElementById('dailyBalance').textContent = formatCurrency(data.dailyBalance);
+
+            // Calcular e atualizar lucro mensal e gastos mensais
+            let monthlyProfit = 0;
+            let monthlyExpense = 0;
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+
+            data.results.forEach(transaction => {
+                const transactionDate = new Date(transaction.creationDate);
+                if (transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear) {
+                    const amount = parseFloat(transaction.amount.fraction);
+                    if (amount > 0) {
+                        monthlyProfit += amount;
+                    } else {
+                        monthlyExpense += Math.abs(amount);
+                    }
+                }
+            });
+
+            document.getElementById('monthlyProfit').textContent = formatCurrency(monthlyProfit);
+            document.getElementById('monthlyExpense').textContent = formatCurrency(monthlyExpense);
+
+        } catch (error) {
+            console.error('Erro ao carregar dados financeiros:', error);
+            document.getElementById('dailyBalance').textContent = 'Erro ao carregar';
+            document.getElementById('monthlyProfit').textContent = 'Erro ao carregar';
+            document.getElementById('monthlyExpense').textContent = 'Erro ao carregar';
+        }
+    }
+
+    async function loadTransactionsIncrementally() {
+        try {
+            showLoadingOverlay();
+            while (true) {
+                const response = await fetch(`/banco/mercadopago-activities?page=${currentPage}`);
+                const data = await response.json();
+                const pageTransactions = data.results;
+                
+                if (pageTransactions && pageTransactions.length > 0) {
+                    const filteredTransactions = pageTransactions.filter(transaction => {
+                        const transactionDate = new Date(transaction.creationDate);
+                        return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+                    });
+
+                    if (filteredTransactions.length === 0) {
+                        break; // Sai do loop se não houver mais transações do mês atual
+                    }
+
+                    transactions = transactions.concat(filteredTransactions);
+                    updateFinancialData(data.dailyBalance, transactions);
+                    updateLoadingProgress(currentPage, data.totalResults);
+                    currentPage++;
+                } else {
+                    break; // Sai do loop quando não há mais resultados
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Delay para evitar sobrecarga
+            }
+            hideLoadingOverlay();
+        } catch (error) {
+            console.error('Erro ao carregar transações:', error);
+            showErrorMessage('Não foi possível carregar todas as transações. Por favor, verifique sua conexão e tente novamente.');
+            hideLoadingOverlay();
+        }
+    }
+
+    function updateFinancialData(dailyBalance, transactions) {
+        // Atualizar saldo do dia
+        document.getElementById('dailyBalance').textContent = formatCurrency(dailyBalance);
+
+        // Calcular e atualizar lucro mensal e gastos mensais
+        let monthlyProfit = 0;
+        let monthlyExpense = 0;
+
+        transactions.forEach(transaction => {
+            const amount = parseFloat(transaction.amount.fraction);
+            if (amount > 0) {
+                monthlyProfit += amount;
+            } else {
+                monthlyExpense += Math.abs(amount);
+            }
+        });
+
+        document.getElementById('monthlyProfit').textContent = formatCurrency(monthlyProfit);
+        document.getElementById('monthlyExpense').textContent = formatCurrency(monthlyExpense);
+    }
+
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    }
+
+    function showLoadingOverlay() {
+        // Implementar lógica para mostrar overlay de carregamento
+        console.log('Carregando...');
+    }
+
+    function hideLoadingOverlay() {
+        // Implementar lógica para esconder overlay de carregamento
+        console.log('Carregamento concluído');
+    }
+
+    function updateLoadingProgress(currentPage, totalResults) {
+        // Implementar lógica para atualizar a barra de progresso
+        console.log(`Carregando página ${currentPage} de ${Math.ceil(totalResults / 50)}`);
+    }
+
+    function showErrorMessage(message) {
+        // Implementar lógica para mostrar mensagem de erro
+        console.error(message);
+    }
+
+
+
+    // Função para criar o gráfico de uso de recursos
+    function createResourceUsageChart() {
+        const ctx = document.getElementById('resourceUsageChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Funis', 'Autorespostas', 'Instâncias WhatsApp'],
+                datasets: [{
+                    label: 'Uso Atual',
+                    data: [
+                        '<%= user.funnels.length %>',
+                        '<%= user.autoResponseCount %>',
+                        '<%= user.whatsappInstances.length %>'
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Uso de Recursos'
+                    }
+                }
+            }
+        });
+    }
+
+    // Chamar a função para criar o gráfico quando a página carregar
+    document.addEventListener('DOMContentLoaded', function() {
+        <% if (user.mercadopago && user.mercadopago.integrationActive) { %>
+        loadFinancialData();
+        <% } %>
+        createResourceUsageChart();
+    });
+    </script>
+</body>
+</html>

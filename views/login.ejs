@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BudZap - Revolucione seu Marketing no WhatsApp</title>
+    
+    <!-- Meta tags otimizadas -->
+    <meta name="description" content="BudZap: A solução definitiva para automação e marketing no WhatsApp. Aumente suas vendas, engaje seus clientes e impulsione seu negócio com nossa plataforma intuitiva e poderosa.">
+    <meta name="keywords" content="WhatsApp, marketing, automação, vendas, engajamento, CRM, mensagens em massa">
+    <meta name="author" content="BudZap">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.budzap.com/">
+    <meta property="og:title" content="BudZap - Revolucione seu Marketing no WhatsApp">
+    <meta property="og:description" content="Aumente suas vendas e engaje seus clientes com a plataforma de automação WhatsApp mais poderosa do mercado.">
+    <meta property="og:image" content="https://cdn.pixabay.com/photo/2021/01/11/07/22/whatsapp-5907292_1280.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://www.budzap.com/">
+    <meta property="twitter:title" content="BudZap - Revolucione seu Marketing no WhatsApp">
+    <meta property="twitter:description" content="Aumente suas vendas e engaje seus clientes com a plataforma de automação WhatsApp mais poderosa do mercado.">
+    <meta property="twitter:image" content="https://cdn.pixabay.com/photo/2021/01/11/07/22/whatsapp-5907292_1280.jpg">
+
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-400 to-indigo-600 min-h-screen flex items-center justify-center">
+    <div class="container mx-auto px-4">
+        <div class="max-w-md mx-auto bg-white rounded-xl shadow-2xl overflow-hidden md:max-w-2xl transform hover:scale-105 transition duration-500">
+            <div class="md:flex">
+                <div class="md:shrink-0 bg-purple-600 md:w-48 flex items-center justify-center p-6">
+                    <i class="fas fa-user-circle text-8xl text-white animate-float"></i>
+                </div>
+                <div class="p-8">
+                    <div class="uppercase tracking-wide text-sm text-purple-500 font-semibold mb-1">Bem-vindo de volta</div>
+                    <% if (messages && messages.error) { %>
+                        <div class="alert alert-error shadow-lg mb-4">
+                          <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <span><%= messages.error %></span>
+                          </div>
+                        </div>
+                      <% } %>
+                    <h2 class="text-3xl font-extrabold text-gray-900 mb-6">Faça seu login</h2>
+                  
+                    <form action="/login" method="POST" class="space-y-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text"><i class="fas fa-user mr-2"></i>Nome de usuário</span>
+                            </label>
+                            <input type="text" id="username" name="username" required class="input input-bordered input-primary w-full">
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text"><i class="fas fa-lock mr-2"></i>Senha</span>
+                            </label>
+                            <input type="password" id="password" name="password" required class="input input-bordered input-primary w-full">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label class="label cursor-pointer">
+                                <input type="checkbox" class="checkbox checkbox-primary" />
+                                <span class="label-text ml-2">Lembrar-me</span>
+                            </label>
+                            <a href="#" class="text-sm text-purple-600 hover:text-purple-500">Esqueceu a senha?</a>
+                        </div>
+                        <div class="mt-6">
+                            <button type="submit" class="btn btn-primary w-full">
+                                <i class="fas fa-sign-in-alt mr-2"></i>Entrar
+                            </button>
+                        </div>
+                    </form>
+                   
+                    <div class="mt-6 text-center">
+                        <a href="/register" class="btn btn-secondary">
+                            <i class="fas fa-user-plus mr-2"></i>Criar uma conta
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        gsap.from("form > div", {
+            opacity: 0,
+            y: 50,
+            stagger: 0.2,
+            duration: 1,
+            ease: "power3.out"
+        });
+    </script>
+</body>
+</html>
