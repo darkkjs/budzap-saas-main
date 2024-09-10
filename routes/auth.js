@@ -491,7 +491,7 @@ async function sendTextMessage(num, msg) {
   const config = {
     method: 'post',
     maxBodyLength: Infinity,
-    url: `https://budzap.shop/message/text?key=${admtokenapi}`,
+    url: `http://localhost:3333/message/text?key=${admtokenapi}`,
     headers: { 
       'Content-Type': 'application/json', 
       'Authorization': 'Bearer RANDOM_STRING_HERE', 

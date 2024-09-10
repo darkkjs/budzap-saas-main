@@ -110,7 +110,7 @@ exports.startMassMessage = async (req, res) => {
         res.status(500).json({ error: 'Erro ao iniciar envio em massa' });
     }
 };
-
+const { saveMessage, messageExists, updateChatInfo } = require('../Helpers/redisHelpers');
 async function processJob(job, userId) {
     const { numbers, funnel, instances } = job;
     let currentInstanceIndex = 0;
@@ -129,6 +129,45 @@ async function processJob(job, userId) {
 
             console.log(`Usando instância ${instance.name} para enviar para ${numbers[i]}`);
             
+            const timestamp = Date.now();
+            console.log(timestamp); // Por exemplo: 1633034868123
+            const messageKey = `numbers[i] + "@s.whatsapp.net":${timestamp}`;
+            await saveMessage(instance.key, numbers[i] + "@s.whatsapp.net", {
+                key: messageKey,
+                sender: "SPAM-" + numbers[i] ,
+                info: {
+                    name: numbers[i],
+      chatType: 'individual'
+                },
+                content: "[SPAM REALIZADO]",
+                timestamp: timestamp,
+                fromMe: true,
+                type: "text",
+                senderImage: "https://img.freepik.com/fotos-premium/silueta-minimalista-perfil-persona-contra-fondo-negro_1272475-8941.jpg"
+              });
+    
+              chatInfo = {
+                name: numbers[i],
+  chatType: 'individual'
+            }
+              // Atualizar informações do chat
+              await updateChatInfo(instance.key, numbers[i] + "@s.whatsapp.net", chatInfo, {
+                key: messageKey,
+                sender: "SPAM-" + numbers[i] ,
+                info: {
+                    name: numbers[i],
+      chatType: 'individual'
+                },
+                content: "[SPAM REALIZADO]",
+                timestamp: timestamp,
+                fromMe: true,
+                type: "text",
+                senderImage: "https://img.freepik.com/fotos-premium/silueta-minimalista-perfil-persona-contra-fondo-negro_1272475-8941.jpg"
+              });
+    
+              console.log('Mensagem salva:');
+             
+
             // Inicia a autoresposta para este número
             await handleAutoResponse(instance.key, numbers[i] + "@s.whatsapp.net", 'oi');
 
