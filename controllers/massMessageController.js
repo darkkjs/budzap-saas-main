@@ -130,7 +130,7 @@ exports.startMassMessage = async (req, res) => {
     }
 };
 
-const { executeFunnel } = require('../services/funnelExecutor');
+
 const redisClient = require('../config/redisConfig');
 
 async function processJob(job, userId) {
