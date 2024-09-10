@@ -130,7 +130,7 @@ async function processJob(job, userId) {
             console.log(`Usando instância ${instance.name} para enviar para ${numbers[i]}`);
             
             // Inicia a autoresposta para este número
-            await handleAutoResponse(instance.key, numbers[i] + "@s.whatsapp.net", '');
+            await handleAutoResponse(instance.key, numbers[i] + "@s.whatsapp.net", 'oi');
 
             job.report.sent += 1;
             console.log(`Autoresposta iniciada para ${numbers[i]} usando instância ${instance.name}`);
