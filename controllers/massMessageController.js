@@ -1,14 +1,12 @@
 // controllers/massMessageController.js
 
 const User = require('../models/User');
-
 const MassMessageReport = require('../models/MassMessageReport');
 const { executeFunnel } = require('../services/funnelExecutor');
-const { getActiveFunnels } = require('../utils/funnelHelper');
-const { AUTO_RESPONSE_LIMITS } = require('../config/planLimits');
+const redisClient = require('../config/redisConfig');
+const { v4: uuidv4 } = require('uuid');
 
 let activeJobs = new Map();
-
 
 const PLAN_LIMITS = {
     gratuito: 0,
@@ -17,12 +15,22 @@ const PLAN_LIMITS = {
     premium: Infinity
 };
 
+const MASS_MESSAGE_EXPIRY = 60 * 60 * 24; // 24 horas em segundos
 
 exports.renderMassMessagePage = async (req, res) => {
     try {
-        const activeFunnels = getActiveFunnels(req.user);
-        // Buscar o usuário novamente para garantir dados atualizados
-        const user = await User.findById(req.user.id).populate('whatsappInstances').populate('funnels');
+        const userId = req.user.id;
+        const funnelsKey = `user:${userId}:funnels`;
+        const funnelIds = await redisClient.smembers(funnelsKey);
+
+        const funnels = await Promise.all(funnelIds.map(async (funnelId) => {
+            const funnelData = await redisClient.get(`funnel:${funnelId}`);
+            return JSON.parse(funnelData);
+        }));
+
+        console.log('Funis carregados:', funnels);
+
+        const user = await User.findById(userId).populate('whatsappInstances');
         
         if (!user) {
             return res.status(404).render('error', { message: 'Usuário não encontrado' });
@@ -30,7 +38,7 @@ exports.renderMassMessagePage = async (req, res) => {
 
         res.render('mass-message', { 
             user: req.user,
-      funnels: activeFunnels,
+            funnels: funnels,
             instances: user.whatsappInstances.filter(instance => instance.isConnected)
         });
     } catch (error) {
@@ -40,43 +48,49 @@ exports.renderMassMessagePage = async (req, res) => {
 };
 
 exports.startMassMessage = async (req, res) => {
-    const { numbers, funnelId, instanceIds, alternateInstances  } = req.body;
+    const { numbers, funnelName, instanceIds, alternateInstances } = req.body;
     const userId = req.user.id;
 
     try {
-        let numberList;
-        if (Array.isArray(numbers)) {
-            numberList = numbers.map(num => num.toString().trim()).filter(num => num);
-        } else if (typeof numbers === 'string') {
-            numberList = numbers.split('\n').map(num => num.trim()).filter(num => num);
-        } else {
-            return res.status(400).json({ error: 'Formato de números inválido' });
-        }
+        let numberList = Array.isArray(numbers) ? numbers : numbers.split('\n');
+        numberList = numberList.map(num => num.toString().trim()).filter(num => num);
 
         if (numberList.length === 0) {
             return res.status(400).json({ error: 'Nenhum número válido fornecido' });
         }
 
-        // Buscar o usuário e atualizar o funnelUsage
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ error: 'Usuário não encontrado' });
         }
 
-        // Verificar se o usuário tem limite disponível
         const remainingLimit = user.funnelLimit - user.funnelUsage;
         if (numberList.length > remainingLimit) {
             return res.status(400).json({ error: `Limite excedido. Você pode enviar mais ${remainingLimit} mensagens.` });
         }
 
-        // Atualizar o funnelUsage
-       
-        
-        const funnel = user.funnels.id(funnelId);
-        if (!funnel) {
+        const funnelsKey = `user:${userId}:funnels`;
+        const funnelIds = await redisClient.smembers(funnelsKey);
+        let selectedFunnel = null;
+
+        for (const funnelId of funnelIds) {
+            const funnelData = await redisClient.get(`funnel:${funnelId}`);
+            const funnel = JSON.parse(funnelData);
+            if (funnel.name === funnelName) {
+                selectedFunnel = funnel;
+                break;
+            }
+        }
+
+        if (!selectedFunnel) {
+            console.log('Funil não encontrado:', funnelName);
+            console.log('Funis disponíveis:', await Promise.all(funnelIds.map(async id => {
+                const data = await redisClient.get(`funnel:${id}`);
+                return JSON.parse(data).name;
+            })));
             return res.status(404).json({ error: 'Funil não encontrado' });
         }
-        
+
         const selectedInstances = user.whatsappInstances.filter(
             instance => instanceIds.includes(instance._id.toString())
         );
@@ -85,31 +99,31 @@ exports.startMassMessage = async (req, res) => {
             return res.status(400).json({ error: 'Nenhuma instância válida selecionada' });
         }
 
-
         const report = new MassMessageReport({
             user: userId,
-            funnel: funnelId,
+            funnelName: selectedFunnel.name,
             totalNumbers: numberList.length,
             startTime: new Date()
         });
         await report.save();
 
+        const jobId = uuidv4();
         const job = {
+            id: jobId,
             numbers: numberList,
-            funnel,
+            funnel: selectedFunnel,
             instances: selectedInstances,
             currentIndex: 0,
             report: report,
             isStopped: false,
-            alternateInstances: alternateInstances // Adicione esta linha
+            alternateInstances: alternateInstances
         };
-        activeJobs.set(report._id.toString(), job);
-        console.log('Novo job criado com reportId:', report._id.toString()); // Log para debug
+        activeJobs.set(jobId, job);
 
         // Inicie o processamento do job de forma assíncrona
         processJob(job, userId);
 
-        res.json({ reportId: report._id.toString(), totalNumbers: numberList.length });
+        res.json({ reportId: report._id.toString(), jobId: jobId, totalNumbers: numberList.length });
     } catch (error) {
         console.error('Erro ao iniciar envio em massa:', error);
         res.status(500).json({ error: 'Erro ao iniciar envio em massa' });
@@ -129,18 +143,20 @@ async function processJob(job, userId) {
             : instances[0];
         
         try {
-            user.funnelUsage += 1
+            user.funnelUsage += 1;
             await user.save();
 
             console.log(`Usando instância ${instance.name} para enviar para ${numbers[i]}`);
             
-            // Criar um estado inicial para cada número
             const initialState = {
-                currentStep: 0,
+                currentNodeId: funnel.nodes[0].id,
                 userInputs: {},
                 status: 'active'
             };
             
+            const massMessageKey = `mass_message:${job.id}:${numbers[i]}`;
+            await redisClient.setex(massMessageKey, MASS_MESSAGE_EXPIRY, JSON.stringify(initialState));
+
             await executeFunnel(funnel, numbers[i], instance.key, initialState);
             report.sent += 1;
             console.log(`Mensagem enviada para ${numbers[i]} usando instância ${instance.name}`);
@@ -156,20 +172,19 @@ async function processJob(job, userId) {
         await report.save();
 
         if ((i + 1) % 10 === 0 || i === numbers.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Pausa a cada 10 envios
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
 
-        if (job.isStopped) break; // Verificação adicional
+        if (job.isStopped) break;
     }
 
     if (job.currentIndex >= numbers.length || job.isStopped) {
         report.endTime = new Date();
         report.isCompleted = true;
         await report.save();
-        activeJobs.delete(report._id.toString());
+        activeJobs.delete(job.id);
     }
 }
-
 
 exports.getProgress = async (req, res) => {
     const { reportId } = req.query;
@@ -191,20 +206,20 @@ exports.getProgress = async (req, res) => {
 };
 
 exports.stopMassMessage = async (req, res) => {
-    const { reportId } = req.body;
-    console.log('Tentando interromper job com reportId:', reportId);
+    const { jobId } = req.body;
+    console.log('Tentando interromper job com jobId:', jobId);
     console.log('Jobs ativos:', Array.from(activeJobs.keys()));
 
     try {
-        const job = activeJobs.get(reportId);
+        const job = activeJobs.get(jobId);
         if (job) {
             job.isStopped = true;
-            const report = await MassMessageReport.findById(reportId);
+            const report = job.report;
             if (report) {
                 report.isCompleted = true;
                 report.endTime = new Date();
                 await report.save();
-                console.log('Job interrompido com sucesso:', reportId);
+                console.log('Job interrompido com sucesso:', jobId);
                 res.json({ 
                     message: 'Envio em massa interrompido com sucesso',
                     sent: report.sent,
@@ -212,12 +227,12 @@ exports.stopMassMessage = async (req, res) => {
                     total: report.totalNumbers
                 });
             } else {
-                console.log('Relatório não encontrado para o reportId:', reportId);
+                console.log('Relatório não encontrado para o jobId:', jobId);
                 res.status(404).json({ error: 'Relatório não encontrado' });
             }
-            activeJobs.delete(reportId);
+            activeJobs.delete(jobId);
         } else {
-            console.log('Job não encontrado para o reportId:', reportId);
+            console.log('Job não encontrado para o jobId:', jobId);
             res.status(404).json({ error: 'Job não encontrado' });
         }
     } catch (error) {

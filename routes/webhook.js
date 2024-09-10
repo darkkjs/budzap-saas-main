@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const autoResponseController = require('../controllers/autoResponseController');
+
 const colors = require('colors');
 const { saveMessage, messageExists, updateChatInfo } = require('../Helpers/redisHelpers');
 const fs = require('fs').promises;
@@ -186,8 +186,8 @@ router.post('/:instanceKey', async (req, res) => {
 
           /*/
   // Iniciar a autoresposta
-
-    await autoResponseController.handleAutoResponse(
+  const {updateCampaigns, getCampaigns, getAutoResponseReport, getAutoResponseUsage, handleAutoResponse} = require('../controllers/autoResponseController');
+    await handleAutoResponse(
       req.params.instanceKey,
       dadoschat.id,
       dadoschat.mensagem.conteudomsg

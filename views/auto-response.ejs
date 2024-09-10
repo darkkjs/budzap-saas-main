@@ -237,10 +237,10 @@
                 <label class="label">
                     <span class="label-text">Selecione o Funil</span>
                 </label>
-                <select name="funnelId" class="select select-bordered w-full">
-                    <option disabled selected>Escolha um funil</option>
-                    <% funnels.forEach(funnel => { %>
-                        <option value="<%= funnel._id %>"><%= funnel.name %></option>
+                <select name="funnelId" required>
+                    <option value="">Selecione um funil</option>
+                    <% funnels.forEach(function(funnel) { %>
+                        <option value="<%= funnel.id %>"><%= funnel.name %></option>
                     <% }); %>
                 </select>
             </div>

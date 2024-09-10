@@ -55,6 +55,28 @@ const stepSchema = new mongoose.Schema({
   inputPrompt: String
 });
 
+const nodeSchema = new mongoose.Schema({
+  id: String,
+  type: {
+    type: String,
+    enum: ['message', 'input', 'condition', 'wait', 'image', 'audio', 'video', 'file'],
+    required: true
+  },
+  content: String,
+  position: {
+    x: Number,
+    y: Number
+  },
+  data: mongoose.Schema.Types.Mixed
+});
+
+const connectionSchema = new mongoose.Schema({
+  sourceId: String,
+  targetId: String,
+  sourceHandle: String,
+  targetHandle: String
+});
+
 const funnelSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -62,7 +84,8 @@ const funnelSchema = new mongoose.Schema({
   },
   description: String,
   createdAt: { type: Date, default: Date.now },
-  steps: [stepSchema]
+  nodes: [nodeSchema],
+  connections: [connectionSchema]
 });
 
 

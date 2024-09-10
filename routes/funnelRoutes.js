@@ -67,16 +67,20 @@ router.get('/status', async (req, res) => {
 
 router.get('/editor/:id', ensureAuthenticated, async (req, res) => {
     try {
-        const funnel = await funnelController.getFunnelById(req.params.id, req.user.id);
-        if (!funnel) {
-            return res.status(404).render('error', { message: 'Funil não encontrado' });
+        const funnelId = req.params.id;
+        if (!funnelId) {
+            return res.status(400).render('error', { message: 'ID do funil não fornecido' });
         }
-        res.render('funnel-editor', { funnel: funnel, user: req.user });
+        const funnel = await funnelController.getFunnelById(funnelId, req.user.id);
+        if (!funnel) {
+            return res.status(404).render('error', { message: 'Funil não encontrado', layout: false });
+        }
+        res.render('funnel-editor', { funnel: funnel, user: req.user,  layout: false  });
     } catch (error) {
+        console.error('Erro ao carregar o funil:', error);
         res.status(500).render('error', { message: 'Erro ao carregar o funil' });
     }
 });
-
 // Rotas API
 
 router.get('/user-funnels', ensureAuthenticated, async (req, res) => {

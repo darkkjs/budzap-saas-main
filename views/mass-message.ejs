@@ -31,12 +31,12 @@
                     </div>
                     <div>
                         <label for="funnelSelect" class="block mb-2 font-medium text-gray-700">Selecione o Funil</label>
-                        <select id="funnelSelect" name="funnelId" class="select select-bordered w-full">
+                        <select id="funnelSelect" name="funnelName" class="select select-bordered w-full">
                             <option disabled selected>Escolha um funil</option>
                             <% funnels.forEach(funnel => { %>
-                              <option value="<%= funnel._id %>"><%= funnel.name %></option>
+                                <option value="<%= funnel.name %>"><%= funnel.name %></option>
                             <% }); %>
-                          </select>
+                        </select>
                     </div>
                     <div>
                         <label class="block mb-2 font-medium text-gray-700">Selecione as Instâncias do WhatsApp</label>
@@ -294,27 +294,44 @@
             document.getElementById('numberLimit').textContent = remainingLimit >= 0 ? remainingLimit : 0;
         }
 
-       async function startMassMessage(e) {
+        async function startMassMessage(e) {
     e.preventDefault();
     if (isSpamming) {
         addLog('Já existe um envio em massa em andamento.', 'warning');
         return;
     }
 
-    const numbers = document.getElementById('phoneNumbers').value.split('\n');
-    if (numbers.length > numberLimit) {
-        addLog(`Limite de ${numberLimit} números excedido. Por favor, reduza a quantidade de números.`, 'error');
-        return;
-    }
-
-    const funnelId = document.getElementById('funnelSelect').value;
+    const numbers = document.getElementById('phoneNumbers').value.trim().split('\n').filter(n => n);
+    const funnelSelect = document.getElementById('funnelSelect');
+    const funnelName = funnelSelect.value;
     const instanceIds = Array.from(document.querySelectorAll('input[name="instances"]:checked')).map(el => el.value);
     const alternateInstances = document.getElementById('alternateInstances').checked;
 
-    console.log('Instâncias selecionadas:', instanceIds); // Para debug
+    console.log('Números:', numbers);
+    console.log('Funil selecionado:', funnelName);
+    console.log('Instâncias selecionadas:', instanceIds);
 
-    if (numbers.length === 0 || !funnelId || instanceIds.length === 0) {
-        addLog('Por favor, preencha todos os campos e selecione pelo menos uma instância.', 'error');
+    let errorMessage = '';
+
+    if (numbers.length === 0) {
+        errorMessage += 'Por favor, insira pelo menos um número de telefone. ';
+    }
+    if (!funnelName || funnelName === 'Escolha um funil') {
+        errorMessage += 'Por favor, selecione um funil. ';
+    }
+    if (instanceIds.length === 0) {
+        errorMessage += 'Por favor, selecione pelo menos uma instância do WhatsApp. ';
+    }
+
+    if (errorMessage) {
+        addLog(errorMessage, 'error');
+        return;
+    }
+
+ 
+
+    if (numbers.length > numberLimit) {
+        addLog(`Limite de ${numberLimit} números excedido. Por favor, reduza a quantidade de números.`, 'error');
         return;
     }
 
@@ -325,10 +342,11 @@
     document.getElementById('statusPanel').classList.remove('hidden');
 
     try {
+        funnelname = funnelSelect.options[funnelSelect.selectedIndex].text
         const response = await fetch('/whatsapp/start-mass-message', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ numbers, funnelId, instanceIds, alternateInstances })
+            body: JSON.stringify({ numbers, funnelName, instanceIds, alternateInstances })
         });
 
         if (!response.ok) {
@@ -339,7 +357,7 @@
         const data = await response.json();
         totalNumbers = data.totalNumbers;
         currentReportId = data.reportId;
-        console.log('ReportId recebido:', currentReportId); // Log para debug
+        console.log('ReportId recebido:', currentReportId);
         addLog(`Iniciando envio para ${totalNumbers} números`, 'info');
         startProgressPolling();
         initChart();
@@ -350,7 +368,6 @@
         isSpamming = false;
     }
 }
-
 
 function startProgressPolling() {
     progressPollingInterval = setInterval(async () => {

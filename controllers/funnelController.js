@@ -1,5 +1,6 @@
 // controllers/funnelController.js
-const User = require('../models/User');
+const redisClient = require('../config/redisConfig');
+const { v4: uuidv4 } = require('uuid');
 
 const PLAN_LIMITS = {
     gratuito: 1,
@@ -8,12 +9,20 @@ const PLAN_LIMITS = {
     premium: Infinity
 };
 
+const FUNNEL_EXPIRY = 60 * 60 * 24 * 30; // 30 dias em segundos
+
 exports.listFunnels = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id);
-       // console.log('User:', user);
-        //console.log('Funnels:', user.funnels);
-        res.json(user.funnels);
+        const userId = req.user.id;
+        const funnelsKey = `user:${userId}:funnels`;
+        const funnelIds = await redisClient.smembers(funnelsKey);
+
+        const funnels = await Promise.all(funnelIds.map(async (funnelId) => {
+            const funnelData = await redisClient.get(`funnel:${funnelId}`);
+            return JSON.parse(funnelData);
+        }));
+
+        res.json(funnels);
     } catch (error) {
         console.error('Erro ao listar funis:', error);
         res.status(500).json({ message: 'Erro ao listar funis', error: error.message });
@@ -22,29 +31,34 @@ exports.listFunnels = async (req, res) => {
 
 exports.createFunnel = async (req, res) => {
     try {
-        const { name, description, steps } = req.body;
-        const user = await User.findById(req.user.id);
+        const { name, description } = req.body;
+        const userId = req.user.id;
 
-       // Verificar o limite do plano
-if (user.plan !== 'premium' && user.funnels.length >= PLAN_LIMITS[user.plan]) {
-    return res.status(403).json({
-        message: 'Limite de funis atingido para o seu plano',
-        currentPlan: user.plan,
-        limit: PLAN_LIMITS[user.plan]
-    });
-}
+        const userKey = `user:${userId}`;
+        const userPlan = await redisClient.hget(userKey, 'plan');
+        const funnelsKey = `user:${userId}:funnels`;
+        const funnelCount = await redisClient.scard(funnelsKey);
 
-// Código para continuar caso o limite não tenha sido atingido
+        if (userPlan !== 'premium' && funnelCount >= PLAN_LIMITS[userPlan]) {
+            return res.status(403).json({
+                message: 'Limite de funis atingido para o seu plano',
+                currentPlan: userPlan,
+                limit: PLAN_LIMITS[userPlan]
+            });
+        }
 
+        const funnelId = uuidv4();
         const newFunnel = {
+            id: funnelId,
             name,
             description,
-            steps,
-            createdAt: new Date()
+            nodes: [],
+            connections: [],
+            createdAt: new Date().toISOString()
         };
 
-        user.funnels.push(newFunnel);
-        await user.save();
+        await redisClient.set(`funnel:${funnelId}`, JSON.stringify(newFunnel), 'EX', FUNNEL_EXPIRY);
+        await redisClient.sadd(funnelsKey, funnelId);
 
         res.status(201).json(newFunnel);
     } catch (error) {
@@ -56,53 +70,71 @@ if (user.plan !== 'premium' && user.funnels.length >= PLAN_LIMITS[user.plan]) {
 exports.updateFunnel = async (req, res) => {
     try {
         const { id } = req.params;
-        const updatedFunnel = req.body;
-        
-        const user = await User.findById(req.user.id);
-        const funnelIndex = user.funnels.findIndex(f => f._id.toString() === id);
-        
-        if (funnelIndex === -1) {
-            return res.status(404).json({ error: 'Funil não encontrado' });
-        }
-        
-        user.funnels[funnelIndex] = updatedFunnel;
-        await user.save();
-        
-        res.json({ success: true, message: 'Funil atualizado com sucesso' });
+        const { name, nodes, connections } = req.body;
+        const userId = req.user.id;
+
+        const funnelKey = `funnel:${id}`;
+        const updatedFunnel = {
+            id,
+            name,
+            nodes,
+            connections,
+            updatedAt: new Date().toISOString()
+        };
+
+        await redisClient.set(funnelKey, JSON.stringify(updatedFunnel), 'EX', FUNNEL_EXPIRY);
+
+        console.log(`Funil atualizado no Redis: ${id}`);
+        res.json({ success: true, message: 'Funil atualizado com sucesso', funnel: updatedFunnel });
     } catch (error) {
         console.error('Erro ao atualizar funil:', error);
         res.status(500).json({ error: 'Erro ao atualizar funil' });
     }
 };
 
+
 exports.getFunnelById = async (funnelId, userId) => {
     try {
-        const user = await User.findById(userId);
-        return user.funnels.id(funnelId);
+        const funnelKey = `funnel:${funnelId}`;
+        const funnelData = await redisClient.get(funnelKey);
+
+        if (!funnelData) {
+            return null;
+        }
+
+        const funnel = JSON.parse(funnelData);
+        
+        // Verificar se o funil pertence ao usuário (opcional, dependendo da sua lógica de segurança)
+        const userFunnelsKey = `user:${userId}:funnels`;
+        const isFunnelOwner = await redisClient.sismember(userFunnelsKey, funnelId);
+        
+        if (!isFunnelOwner) {
+            return null;
+        }
+
+        return funnel;
     } catch (error) {
         console.error('Erro ao buscar funil:', error);
         throw error;
     }
 };
 
+
 exports.deleteFunnel = async (req, res) => {
     try {
         const { id } = req.params;
-        const user = await User.findById(req.user.id);
-        
-        // Encontrar o índice do funil no array de funis do usuário
-        const funnelIndex = user.funnels.findIndex(funnel => funnel._id.toString() === id);
-        
-        if (funnelIndex === -1) {
+        const userId = req.user.id;
+
+        const funnelKey = `funnel:${id}`;
+        const funnelsKey = `user:${userId}:funnels`;
+
+        const deleted = await redisClient.del(funnelKey);
+        if (deleted === 0) {
             return res.status(404).json({ error: 'Funil não encontrado' });
         }
-        
-        // Remover o funil do array
-        user.funnels.splice(funnelIndex, 1);
-        
-        // Salvar as alterações no usuário
-        await user.save();
-        
+
+        await redisClient.srem(funnelsKey, id);
+
         res.json({ message: 'Funil deletado com sucesso' });
     } catch (error) {
         console.error('Erro ao deletar funil:', error);

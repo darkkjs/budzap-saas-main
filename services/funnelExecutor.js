@@ -23,138 +23,227 @@ function wait(delay) {
 }
 
 
+async function executeTyping(instanceKey, chatId, duration) {
+     setStatus(instanceKey, 'composing', chatId, duration);
+    const delay = parseInt(duration) * 1000; // Convertendo para milissegundos
+    console.log(`Aguardando ${delay}ms antes do próximo passo`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+}
+
+async function executeRecordAudio(instanceKey, chatId, duration) {
+    await setStatus(instanceKey, 'recording', chatId, duration);
+    const delay = parseInt(duration) * 1000; // Convertendo para milissegundos
+    console.log(`Aguardando ${delay}ms antes do próximo passo`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+}
+
+async function setStatus(instanceKey, status, chatId, duration) {
+    try {
+        await axios.post(`https://budzap.shop/message/setstatus?key=${instanceKey}`, {
+            status: status,
+            id: chatId,
+            delay: duration * 1000, // Converter segundos para milissegundos
+            type: 'user'
+        });
+        console.log(`Aguardando ${duration * 1000}s antes do próximo passo`);
+        
+    } catch (error) {
+        console.error(`Erro ao definir status ${status}:`, error);
+    }
+}
+
+async function addToGroup(instanceKey, groupId, userId) {
+    try {
+        await axios.post('http://localhost:3332/group/invite', {
+            instanceKey,
+            id: groupId,
+            users: [userId]
+        });
+    } catch (error) {
+        console.error('Erro ao adicionar usuário ao grupo:', error);
+    }
+}
+
+async function removeFromGroup(instanceKey, groupId, userId) {
+    try {
+       const response = await axios.post('http://localhost:3332/group/remove', {
+            instanceKey,
+            id: groupId,
+            users: [userId]
+        });
+
+        console.log(response)
+    } catch (error) {
+        console.error('Erro ao remover usuário do grupo:', error);
+    }
+}
+
+async function sendFile(instanceKey, chatId, fileUrl) {
+    try {
+        // Implemente a lógica para enviar o arquivo usando a API do WhatsApp
+        // Você precisará adaptar isso de acordo com a API específica que está usando
+    } catch (error) {
+        console.error('Erro ao enviar arquivo:', error);
+    }
+}
+
+async function visualizeMessage(instanceKey, chatId) {
+    try {
+        // Implemente a lógica para marcar a mensagem como visualizada
+        // Você precisará adaptar isso de acordo com a API específica que está usando
+    } catch (error) {
+        console.error('Erro ao marcar mensagem como visualizada:', error);
+    }
+}
 
 async function executeFunnel(funnel, chatId, instanceKey, state) {
-    console.log('Executando funil:'.cyan, { 
-        funnelName: funnel.name, 
-        chatId, 
-        instanceKey, 
-        currentStep: state.currentStep 
-    });
-
-   
-
-    const urlMap = {
-        text: `${API_BASE_URL}/message/text?key=${instanceKey}`,
-        image: `${API_BASE_URL}/message/imageFile?key=${instanceKey}`,
-        video: `${API_BASE_URL}/message/video?key=${instanceKey}`,
-        audio: `${API_BASE_URL}/message/audiofile?key=${instanceKey}`
-    };
-    
-    if (!funnel || !Array.isArray(funnel.steps) || funnel.steps.length === 0) {
-        console.error(`Funil inválido ou vazio para o chat ${chatId}`.red);
-        return;
-    }
+    console.log('Executando funil:', { funnelName: funnel.name, chatId, instanceKey, currentNodeId: state.currentNodeId });
 
     const autoResponseKey = `auto_response:${instanceKey}:${chatId}`;
 
-    for (let i = state.currentStep; i < funnel.steps.length; i++) {
-        const step = funnel.steps[i];
-        console.log(`Processando passo ${i + 1} de ${funnel.steps.length}:`.yellow, JSON.stringify(step, null, 2));
-
-        try {
-            switch (step.type) {
-                case 'text':
-                    await sendTextMessage(instanceKey, step.content, chatId);
-                    break;
-                case 'image':
-                    await sendMediaMessage(addAdminTokenToUrl(urlMap.image), step.content, chatId, 'image.jpg', step.caption);
-                    break;
-                case 'video':
-                    await sendMediaMessage(addAdminTokenToUrl(urlMap.video), step.content, chatId, 'video.mp4', step.caption);
-                    break;
-                case 'audio':
-                    await sendMediaMessage(addAdminTokenToUrl(urlMap.audio), step.content, chatId, 'audio.mp3');
-                    break;
-                case 'wait':
-                    console.log(`Aguardando ${step.delay}ms antes do próximo passo`.yellow);
-                    await new Promise(resolve => setTimeout(resolve, step.delay));
-                    break;
-                case 'input':
-                    await sendTextMessage(instanceKey, step.inputPrompt, chatId);
-                    state.currentStep = i;
-                    state.status = 'waiting_for_input';
-                    await redisClient.setex(autoResponseKey, AUTO_RESPONSE_EXPIRY, JSON.stringify(state));
-                    console.log(`Aguardando input do usuário para o passo ${i + 1}`.cyan);
-                    return; // Aguarda input do usuário
-                case 'conditional':
-                    const condition = evaluateCondition(step.condition, state.userInputs);
-                    console.log(`Avaliando condição: ${condition ? 'Verdadeira' : 'Falsa'}`.yellow);
-                    if (condition) {
-                        await sendTextMessage(instanceKey, step.thenContent, chatId);
-                    } else {
-                        await sendTextMessage(instanceKey, step.elseContent, chatId);
-                    }
-                    break;
-                default:
-                    console.log(`Tipo de passo desconhecido: ${step.type}`.red);
-            }
-        } catch (error) {
-            console.error(`Erro ao processar passo ${i + 1}:`.red, error);
+    while (state.currentNodeId) {
+        const currentNode = funnel.nodes.find(node => node.id === state.currentNodeId);
+        if (!currentNode) {
+            console.log(`Nó não encontrado: ${state.currentNodeId}`);
+            break;
         }
 
-        // Atualiza o estado após cada passo
-        state.currentStep = i + 1;
-        await redisClient.setex(autoResponseKey, AUTO_RESPONSE_EXPIRY, JSON.stringify(state));
+        console.log(`Processando nó: ${currentNode.type}`, JSON.stringify(currentNode, null, 2));
+        console.log('Estado atual:', JSON.stringify(state, null, 2));
+
+        try {
+            switch (currentNode.type) {
+                case 'message':
+                    // Verifica se o nó anterior era um input e salva a resposta se necessário
+                    if (state.status === 'waiting_for_input' && state.saveResponse && state.lastMessage) {
+                        state.userInputs[state.expectedInput] = state.lastMessage;
+                        state.status = 'in_progress';
+                    }
+
+                    let messageContent = currentNode.content;
+                    // Substituir placeholders com as respostas do usuário
+                    const placeholderRegex = /{{(\w+)}}/g;
+                    messageContent = messageContent.replace(placeholderRegex, (match, key) => {
+                        return state.userInputs[key] || match;
+                    });
+                    await sendTextMessage(instanceKey, messageContent, chatId);
+                    break;
+
+                    case 'typing':
+                        await executeTyping(instanceKey, chatId, currentNode.duration);
+                        
+                        break;
+                    case 'recordAudio':
+                        await executeRecordAudio(instanceKey, chatId, currentNode.duration);
+                        break;
+                    case 'addToGroup':
+                        await addToGroup(currentNode.instanceKey, currentNode.groupId, chatId);
+                        break;
+                    case 'removeFromGroup':
+                        await removeFromGroup(currentNode.instanceKey, currentNode.groupId, chatId);
+                        break;
+                    case 'sendFile':
+                        await sendFile(instanceKey, chatId, currentNode.fileUrl);
+                        break;
+                    case 'visualize':
+                        await visualizeMessage(instanceKey, chatId);
+                        break;
+
+                case 'input':
+                    if (state.status !== 'waiting_for_input') {
+                        await sendTextMessage(instanceKey, currentNode.content, chatId);
+                        state.status = 'waiting_for_input';
+                        state.expectedInput = currentNode.inputKey;
+                        await redisClient.setex(autoResponseKey, AUTO_RESPONSE_EXPIRY, JSON.stringify(state));
+                        return; // Retorna aqui para esperar a entrada do usuário
+                    } else {
+                        // Se já recebemos o input, simplesmente continuamos para o próximo nó
+                        state.status = 'in_progress';
+                    }
+                    break;
+                case 'condition':
+                    const conditionResult = evaluateCondition(currentNode, state.userInputs);
+                    console.log(`Avaliação da condição: ${conditionResult ? 'Verdadeira' : 'Falsa'}`);
+                    const nextConnection = funnel.connections.find(conn => 
+                        conn.sourceId === currentNode.id && 
+                        (conditionResult ? conn.anchors[0] === 'Right' : conn.anchors[0] === 'Bottom')
+                    );
+                    state.currentNodeId = nextConnection ? nextConnection.targetId : null;
+                    continue; // Continua para o próximo nó
+                case 'wait':
+                    const delay = parseInt(currentNode.content) * 1000; // Convertendo para milissegundos
+                    console.log(`Aguardando ${delay}ms antes do próximo passo`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    break;
+                    case 'image':
+                        await sendMediaMessage(instanceKey, currentNode.content, chatId, 'imageFile', 'image.jpg', currentNode.caption);
+                        break;
+                    case 'video':
+                        await sendMediaMessage(instanceKey, currentNode.content, chatId, 'video', 'video.mp4', currentNode.caption);
+                        break;
+                    case 'audio':
+                        await sendMediaMessage(instanceKey, currentNode.content, chatId, 'audiofile', 'audio.mp3');
+                        break;
+                    
+                        case 'blockUser':
+                            return `<p>Bloquear usuário</p>`;
+                        case 'deleteConversation':
+                            break;
+                      
+
+                default:
+                    console.log(`Tipo de nó não suportado: ${currentNode.type}`);
+                    break;
+            }
+
+            // Encontrar a próxima conexão
+            const nextConnection = funnel.connections.find(conn => conn.sourceId === currentNode.id);
+            state.currentNodeId = nextConnection ? nextConnection.targetId : null;
+
+            // Atualizar o estado
+            await redisClient.setex(autoResponseKey, AUTO_RESPONSE_EXPIRY, JSON.stringify(state));
+
+        } catch (error) {
+            console.error(`Erro ao processar nó ${currentNode.id}:`, error);
+            break;
+        }
     }
 
-    console.log(`Funil concluído para ${chatId}`.green);
+    console.log(`Funil concluído para ${chatId}`);
     await redisClient.del(autoResponseKey);
 }
 
-async function updateAutoResponseState(instanceKey, chatId, newState) {
-    const key = `auto_response:${instanceKey}:${chatId}`;
-    console.log(`Atualizando estado da autoresposta para ${key}:`.cyan, JSON.stringify(newState, null, 2));
-    await redisClient.setex(key, AUTO_RESPONSE_EXPIRY, JSON.stringify(newState));
-}
+function evaluateCondition(conditionNode, userInputs) {
+    console.log('Avaliando condição:', JSON.stringify(conditionNode, null, 2));
+    console.log('Inputs do usuário:', JSON.stringify(userInputs, null, 2));
 
+    const userInput = userInputs[conditionNode.inputKey];
+    if (!userInput) {
+        console.log(`Input do usuário não encontrado para a chave: ${conditionNode.inputKey}`);
+        return false;
+    }
 
-function evaluateCondition(condition, userInputs) {
-    // Implementar a lógica de avaliação da condição
-    // Por exemplo:
-    // return userInputs[condition.variable] === condition.value;
-    return true; // Placeholder
-}
+    console.log(`Input do usuário para comparação: "${userInput}"`);
 
-async function processStep(step, number, instanceKey) {
-    const urlMap = {
-        text: `${API_BASE_URL}/message/text?key=${instanceKey}`,
-        image: `${API_BASE_URL}/message/imageFile?key=${instanceKey}`,
-        video: `${API_BASE_URL}/message/video?key=${instanceKey}`,
-        audio: `${API_BASE_URL}/message/audiofile?key=${instanceKey}`
-    };
-
-    let url = '';
-    let data = new FormData();
-
-    try {
-        switch (step.type) {
-            case 'text':
-                url = addAdminTokenToUrl(urlMap.text);
-                await sendTextMessage(instanceKey, step.content, number);
-                break;
-            case 'image':
-                url = addAdminTokenToUrl(urlMap.image);
-                await sendMediaMessage(url, step.content, number, 'image.jpg', step.caption);
-                break;
-            case 'video':
-                url = addAdminTokenToUrl(urlMap.video);
-                await sendMediaMessage(url, step.content, number, 'video.mp4', step.caption);
-                break;
-            case 'audio':
-                url = addAdminTokenToUrl(urlMap.audio);
-                await sendMediaMessage(url, step.content, number, 'audio.mp3');
-                break;
-            case 'wait':
-                await wait(step.delay);
-                break;
-            default:
-                throw new Error(`Unsupported step type: ${step.type}`);
-        }
-    } catch (error) {
-        console.error('Error processing step:', error);
+    switch (conditionNode.conditionType) {
+        case 'equals':
+            return userInput.toLowerCase() === conditionNode.conditionValue.toLowerCase();
+        case 'contains':
+            return userInput.toLowerCase().includes(conditionNode.conditionValue.toLowerCase());
+        case 'startsWith':
+            return userInput.toLowerCase().startsWith(conditionNode.conditionValue.toLowerCase());
+        case 'endsWith':
+            return userInput.toLowerCase().endsWith(conditionNode.conditionValue.toLowerCase());
+        default:
+            console.log(`Operador desconhecido: ${conditionNode.conditionType}`);
+            return false;
     }
 }
+
+
+
+
+
 
 async function sendTextMessage(instance, content, number) {
     url = `https://budzap.shop/message/text?key=${instance}`
@@ -193,16 +282,17 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 
-async function sendMediaMessage(url, mediaUrl, number, filename, caption = '') {
+async function sendMediaMessage(instanceKey, mediaUrl, number, filename, final, caption = '') {
+    let url = `https://budzap.shop/message/${filename}?key=${instanceKey}`
     const mediaBuffer = await downloadMedia(mediaUrl);
     const data = new FormData();
     
     // Salvando o buffer temporariamente como um arquivo
-    const tempFilePath = path.join(__dirname, 'temp_' + filename);
+    const tempFilePath = path.join(__dirname, 'temp_' + final);
     fs.writeFileSync(tempFilePath, mediaBuffer);
 
     // Anexando o arquivo ao FormData
-    data.append('file', fs.createReadStream(tempFilePath), filename);
+    data.append('file', fs.createReadStream(tempFilePath), final);
     
     data.append('id', `${number}`);
     data.append('caption', caption);

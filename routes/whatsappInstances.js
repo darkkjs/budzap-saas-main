@@ -11,13 +11,13 @@ const { getActiveFunnels } = require('../utils/funnelHelper');
 
 // routes/whatsappInstances.js
 
-const autoResponseController = require('../controllers/autoResponseController');
+const {updateCampaigns, getCampaigns, getAutoResponseReport, getAutoResponseUsage, toggleAutoResponse} = require('../controllers/autoResponseController');
 
 
 
 const { checkAutoResponseLimit } = require('../middleware/autoResponseLimit');
 
-router.post('/toggle-auto-response', ensureAuthenticated, checkAutoResponseLimit, autoResponseController.toggleAutoResponse);
+router.post('/toggle-auto-response', ensureAuthenticated, checkAutoResponseLimit, toggleAutoResponse);
 const massMessageController = require('../controllers/massMessageController');
 
 router.get('/mass-message', ensureAuthenticated, massMessageController.renderMassMessagePage);

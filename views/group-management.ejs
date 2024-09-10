@@ -103,6 +103,19 @@
         let selectedInstance = '';
         let groups = {};
 
+
+        function loadUserInstances() {
+    const instanceSelect = document.getElementById('instanceSelect');
+    instanceSelect.innerHTML = '<option value="" disabled selected>Escolha uma instância</option>';
+    
+    <% user.whatsappInstances.forEach(instance => { %>
+        const option = document.createElement('option');
+        option.value = '<%= instance.key %>';
+        option.textContent = '<%= instance.name %>';
+        instanceSelect.appendChild(option);
+    <% }); %>
+}
+
         document.getElementById('instanceSelect').addEventListener('change', function() {
             selectedInstance = this.value;
             document.getElementById('groupActions').classList.remove('hidden');

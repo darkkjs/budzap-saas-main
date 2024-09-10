@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Funil - BudZap</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsplumb@2.15.6/dist/js/jsplumb.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .node-message { background-color: #E3F2FD; }
+        .node-input { background-color: #E8F5E9; }
+        .node-condition { background-color: #FFF3E0; }
+        .node-wait { background-color: #F3E5F5; }
+        .node-image { background-color: #FCE4EC; }
+        .node-audio { background-color: #E8EAF6; }
+        .node-video { background-color: #FFEBEE; }
+        .node-file { background-color: #ECEFF1; }
+
+        .canvas {
+            width: 100%;
+            height: calc(100vh - 64px - 60px);
+            position: relative;
+            overflow: auto;
+            background-color: #f0f4f8;
+            background-image: 
+                linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .node {
+            position: absolute;
+            width: 250px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            cursor: move;
+            user-select: none;
+        }
+        .node-header {
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .node-content {
+            padding: 10px;
+        }
+        .endpoint {
+            width: 12px;
+            height: 12px;
+            background-color: #4299e1;
+            cursor: pointer;
+            border-radius: 50%;
+            position: absolute;
+        }
+        .endpoint-yes {
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #4CAF50;
+        }
+        .endpoint-no {
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #F44336;
+        }
+        .node-footer {
+            position: relative;
+            height: 20px;
+        }
+        .fixed-menu {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <nav class="bg-white shadow-md p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold text-gray-800">
+                <i class="fas fa-project-diagram mr-2"></i>
+                <span id="funnelName"><%= funnel.name %></span>
+            </h1>
+            <div>
+                <button onclick="saveFunnel()" class="btn bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300">
+                    <i class="fas fa-save mr-2"></i>Salvar
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-1 overflow-hidden">
+        <div id="canvas" class="canvas">
+            <!-- Os nós do fluxo serão renderizados aqui -->
+        </div>
+    </main>
+
+    <div class="fixed-menu">
+        <div class="grid grid-cols-4 gap-2">
+            <button onclick="addNode('message')" class="btn bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300">
+                <i class="fas fa-comment mr-2"></i>Mensagem
+            </button>
+            <button onclick="addNode('input')" class="btn bg-green-500 text-white p-2 rounded hover:bg-green-600 transition duration-300">
+                <i class="fas fa-keyboard mr-2"></i>Input
+            </button>
+            <button onclick="addNode('condition')" class="btn bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600 transition duration-300">
+                <i class="fas fa-code-branch mr-2"></i>Condição
+            </button>
+            <button onclick="addNode('wait')" class="btn bg-purple-500 text-white p-2 rounded hover:bg-purple-600 transition duration-300">
+                <i class="fas fa-clock mr-2"></i>Espera
+            </button>
+            <button onclick="addNode('image')" class="btn bg-pink-500 text-white p-2 rounded hover:bg-pink-600 transition duration-300">
+                <i class="fas fa-image mr-2"></i>Imagem
+            </button>
+            <button onclick="addNode('audio')" class="btn bg-indigo-500 text-white p-2 rounded hover:bg-indigo-600 transition duration-300">
+                <i class="fas fa-music mr-2"></i>Áudio
+            </button>
+            <button onclick="addNode('video')" class="btn bg-red-500 text-white p-2 rounded hover:bg-red-600 transition duration-300">
+                <i class="fas fa-video mr-2"></i>Vídeo
+            </button>
+            <button onclick="addNode('file')" class="btn bg-gray-500 text-white p-2 rounded hover:bg-gray-600 transition duration-300">
+                <i class="fas fa-file mr-2"></i>Arquivo
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal para edição de nós -->
+    <div id="editModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitle"></h3>
+                    <div class="mt-2" id="modalContent"></div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button onclick="saveNodeEdit()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Salvar
+                    </button>
+                    <button onclick="closeModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let jsPlumbInstance;
+        let nodes = [];
+        let connections = [];
+        let editingNodeId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            jsPlumbInstance = jsPlumb.getInstance({
+                Connector: ["Bezier", { curviness: 50 }],
+                Anchors: ["Right", "Left"],
+                Endpoint: ["Dot", { radius: 5 }],
+                PaintStyle: { stroke: "#6366F1", strokeWidth: 2 },
+                HoverPaintStyle: { stroke: "#4338CA" },
+                ConnectionOverlays: [
+                    ["Arrow", { 
+                        location: 1,
+                        width: 10,
+                        length: 10,
+                        foldback: 0.7
+                    }]
+                ]
+            });
+
+            jsPlumbInstance.setContainer("canvas");
+            
+            // Carregar o funil existente
+    const savedFunnel = <%- JSON.stringify(funnel) %>;
+    if (savedFunnel && savedFunnel.nodes) {
+        savedFunnel.nodes.forEach(node => addNode(node.type, node));
+        savedFunnel.connections.forEach(conn => {
+            jsPlumbInstance.connect({
+                source: conn.sourceId,
+                target: conn.targetId,
+                anchors: conn.anchors
+            });
+        });
+    }
+});
+
+function addNode(type, data = null) {
+    const nodeId = data ? data.id : 'node_' + Date.now();
+    const nodeDiv = document.createElement('div');
+    nodeDiv.id = nodeId;
+    nodeDiv.className = `node node-${type}`;
+    nodeDiv.style.left = data ? data.position.left : '100px';
+    nodeDiv.style.top = data ? data.position.top : '100px';
+
+    let nodeContent = `
+        <div class="node-header">
+            <span>${getNodeTitle(type)}</span>
+            <div>
+                <button onclick="editNode('${nodeId}')" class="text-blue-500 hover:text-blue-700">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="deleteNode('${nodeId}')" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div class="node-content" id="content_${nodeId}">
+            ${getNodeContent(type, data)}
+        </div>
+        <div class="node-footer"></div>
+    `;
+
+    nodeDiv.innerHTML = nodeContent;
+    document.getElementById('canvas').appendChild(nodeDiv);
+
+            jsPlumbInstance.draggable(nodeDiv);
+            jsPlumbInstance.addEndpoint(nodeDiv, {
+                anchor: "Right",
+                isSource: true,
+                isTarget: false,
+                maxConnections: -1
+            });
+            jsPlumbInstance.addEndpoint(nodeDiv, {
+                anchor: "Left",
+                isSource: false,
+                isTarget: true,
+                maxConnections: -1
+            });
+
+            if (type === 'condition') {
+                jsPlumbInstance.addEndpoint(nodeDiv, {
+                    anchor: "Bottom",
+                    isSource: true,
+                    isTarget: false,
+                    maxConnections: 1,
+                    cssClass: "endpoint-no",
+                    overlays: [
+                        ["Label", {  location: [0.5, 1.5] }]
+                    ]
+                });
+                jsPlumbInstance.addEndpoint(nodeDiv, {
+                    anchor: "Right",
+                    isSource: true,
+                    isTarget: false,
+                    maxConnections: 1,
+                    cssClass: "endpoint-yes",
+                    overlays: [
+                        ["Label", { location: [1.5, 0.5] }]
+                    ]
+                });
+            }
+
+            nodes.push({
+        id: nodeId,
+        type: type,
+        content: data ? data.content : getDefaultContent(type),
+        inputKey: data ? data.inputKey : '',
+        conditionType: data ? data.conditionType : '',
+        conditionValue: data ? data.conditionValue : '',
+        position: { left: nodeDiv.style.left, top: nodeDiv.style.top }
+    });
+
+    updateNodeDisplay(nodes[nodes.length - 1]);
+        }
+
+        function getNodeTitle(type) {
+            const titles = {
+                message: 'Mensagem',
+                input: 'Input',
+                condition: 'Condição',
+                wait: 'Espera',
+                image: 'Imagem',
+                audio: 'Áudio',
+                video: 'Vídeo',
+                file: 'Arquivo'
+            };
+            return titles[type] || 'Nó';
+        }
+
+        function getNodeContent(type, data) {
+    if (data) {
+        switch (type) {
+            case 'input':
+                return `<p>${data.content} (${data.inputKey})</p>`;
+            case 'condition':
+                return `<p>Se ${data.inputKey} ${data.conditionType} "${data.conditionValue}"</p>`;
+            default:
+                return `<p>${data.content}</p>`;
+        }
+    }
+    return '<p>Clique para editar</p>';
+}
+
+        function getDefaultContent(type) {
+            const defaults = {
+                message: 'Nova mensagem',
+                input: 'Digite sua pergunta',
+                condition: 'Condição',
+                wait: '5',
+                image: 'URL da imagem',
+                audio: 'URL do áudio',
+                video: 'URL do vídeo',
+                file: 'URL do arquivo'
+            };
+            return defaults[type] || '';
+        }
+
+        function editNode(nodeId) {
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return;
+
+    editingNodeId = nodeId;
+    document.getElementById('modalTitle').textContent = `Editar ${getNodeTitle(node.type)}`;
+    let content = '';
+
+    switch (node.type) {
+        case 'message':
+        case 'image':
+        case 'audio':
+        case 'video':
+        case 'file':
+            content = `
+                <textarea id="nodeContent" class="w-full p-2 border rounded" rows="4">${node.content}</textarea>
+            `;
+            break;
+        case 'input':
+            content = `
+                <input type="text" id="nodeContent" class="w-full p-2 border rounded mb-2" value="${node.content}" placeholder="Pergunta">
+                <input type="text" id="inputKey" class="w-full p-2 border rounded" value="${node.inputKey || ''}" placeholder="Chave do input (ex: pergunta1)">
+            `;
+            break;
+        case 'condition':
+            const inputOptions = nodes
+                .filter(n => n.type === 'input')
+                .map(n => `<option value="${n.inputKey}" ${node.inputKey === n.inputKey ? 'selected' : ''}>${n.inputKey}</option>`)
+                .join('');
+            
+            content = `
+                <select id="inputKeySelect" class="w-full p-2 border rounded mb-2">
+                    <option value="">Selecione um input</option>
+                    ${inputOptions}
+                </select>
+                <select id="conditionType" class="w-full p-2 border rounded mb-2">
+                    <option value="equals" ${node.conditionType === 'equals' ? 'selected' : ''}>Igual a</option>
+                    <option value="contains" ${node.conditionType === 'contains' ? 'selected' : ''}>Contém</option>
+                    <option value="startsWith" ${node.conditionType === 'startsWith' ? 'selected' : ''}>Começa com</option>
+                    <option value="endsWith" ${node.conditionType === 'endsWith' ? 'selected' : ''}>Termina com</option>
+                </select>
+                <input type="text" id="conditionValue" class="w-full p-2 border rounded mb-2" value="${node.conditionValue || ''}" placeholder="Valor da condição">
+            `;
+            break;
+        case 'wait':
+            content = `
+                <input type="number" id="nodeContent" class="w-full p-2 border rounded" value="${node.content}" min="1" max="300" placeholder="Tempo de espera em segundos">
+            `;
+            break;
+    }
+
+    document.getElementById('modalContent').innerHTML = content;
+    document.getElementById('editModal').classList.remove('hidden');
+}
+
+function saveNodeEdit() {
+    const node = nodes.find(n => n.id === editingNodeId);
+    if (!node) return;
+
+    const contentElement = document.getElementById('nodeContent');
+    if (contentElement) {
+        node.content = contentElement.value;
+    }
+
+    if (node.type === 'input') {
+        const inputKeyElement = document.getElementById('inputKey');
+        if (inputKeyElement) {
+            node.inputKey = inputKeyElement.value;
+        }
+    }
+
+    if (node.type === 'condition') {
+        const inputKeySelect = document.getElementById('inputKeySelect');
+        const conditionTypeElement = document.getElementById('conditionType');
+        const conditionValueElement = document.getElementById('conditionValue');
+        if (inputKeySelect && conditionTypeElement && conditionValueElement) {
+            node.inputKey = inputKeySelect.value;
+            node.conditionType = conditionTypeElement.value;
+            node.conditionValue = conditionValueElement.value;
+        }
+    }
+
+    updateNodeDisplay(node);
+    closeModal();
+}
+
+
+function updateNodeDisplay(node) {
+    const contentElement = document.getElementById(`content_${node.id}`);
+    if (contentElement) {
+        let displayContent = node.content;
+        if (node.type === 'condition') {
+            displayContent = `Se ${node.inputKey} ${node.conditionType} "${node.conditionValue}"`;
+        } else if (node.type === 'input') {
+            displayContent = `${node.content} (${node.inputKey})`;
+        }
+        contentElement.innerHTML = `<p>${displayContent}</p>`;
+    }
+}
+
+        function closeModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            editingNodeId = null;
+        }
+
+        function deleteNode(nodeId) {
+            Swal.fire({
+                title: 'Tem certeza?',
+                text: "Você não poderá reverter isso!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sim, delete!',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    jsPlumbInstance.remove(nodeId);
+                    nodes = nodes.filter(n => n.id !== nodeId);
+                    Swal.fire(
+                        'Deletado!',
+                        'O nó foi deletado.',
+                        'success'
+                    );
+                }
+            });
+        }
+
+        function saveFunnel() {
+    const funnelData = {
+        name: document.getElementById('funnelName').textContent,
+        nodes: nodes.map(node => {
+            const nodeData = {
+                id: node.id,
+                type: node.type,
+                content: node.content,
+                position: {
+                    left: document.getElementById(node.id).style.left,
+                    top: document.getElementById(node.id).style.top
+                }
+            };
+
+            if (node.type === 'input' || node.type === 'condition') {
+                nodeData.inputKey = node.inputKey;
+            }
+
+            if (node.type === 'condition') {
+                nodeData.conditionType = node.conditionType;
+                nodeData.conditionValue = node.conditionValue;
+            }
+
+            return nodeData;
+        }),
+        connections: jsPlumbInstance.getConnections().map(conn => ({
+            sourceId: conn.sourceId,
+            targetId: conn.targetId,
+            anchors: conn.endpoints.map(ep => ep.anchor.type)
+        }))
+    };
+
+    fetch('/funnels/api/update/<%= funnel.id %>', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(funnelData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire(
+                'Salvo!',
+                'Seu funil foi salvo com sucesso.',
+                'success'
+            );
+        } else {
+            throw new Error(data.error || 'Erro ao salvar o funil');
+        }
+    })
+    .catch(error => {
+        Swal.fire(
+            'Erro!',
+            'Ocorreu um erro ao salvar o funil: ' + error.message,
+            'error'
+        );
+    });
+}
+
+        // Adicionar listeners para arrastar e soltar
+        jsPlumbInstance.bind("connection", function(info) {
+            connections.push({
+                sourceId: info.sourceId,
+                targetId: info.targetId,
+                anchors: info.connection.endpoints.map(ep => ep.anchor.type)
+            });
+        });
+
+        jsPlumbInstance.bind("connectionDetached", function(info) {
+            connections = connections.filter(conn =>
+                conn.sourceId !== info.sourceId || conn.targetId !== info.targetId
+            );
+        });
+
+        // Função para atualizar a posição dos nós após arrastar
+        jsPlumbInstance.bind("connectionMoved", function(info) {
+            const nodeElement = document.getElementById(info.newSourceId);
+            const node = nodes.find(n => n.id === info.newSourceId);
+            if (node) {
+                node.position = {
+                    left: nodeElement.style.left,
+                    top: nodeElement.style.top
+                };
+            }
+        });
+    </script>
+</body>
+</html>
