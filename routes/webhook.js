@@ -77,7 +77,7 @@ router.post('/:instanceKey', async (req, res) => {
         }
 
         const event = req.body;
-        console.log(event);
+        //console.log(event);
 
         if (event.type === 'message') {
           console.log(`Processando webhook de mensagem para a instancia ${event.instanceKey}`.cyan);
@@ -167,7 +167,7 @@ router.post('/:instanceKey', async (req, res) => {
             senderImage: dadoschat.imagemPerfil
           });
 
-          console.log('Mensagem salva:'.green, dadoschat.mensagem.conteudomsg);
+       //   console.log('Mensagem salva:'.green, dadoschat.mensagem.conteudomsg);
          
 
           //INICIAR A AUTORESPOSTA AQUI:
