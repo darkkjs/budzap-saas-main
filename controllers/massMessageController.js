@@ -2,7 +2,7 @@
 
 const User = require('../models/User');
 const MassMessageReport = require('../models/MassMessageReport');
-const { executeFunnel } = require('../services/funnelExecutor');
+const { handleAutoResponse } = require('../controllers/autoResponseController');
 const redisClient = require('../config/redisConfig');
 const { v4: uuidv4 } = require('uuid');
 
@@ -14,8 +14,6 @@ const PLAN_LIMITS = {
     plus: 1000,
     premium: Infinity
 };
-
-const AUTO_RESPONSE_EXPIRY = 60 * 60; // 1 hora em segundos
 
 exports.renderMassMessagePage = async (req, res) => {
     try {
@@ -131,30 +129,13 @@ async function processJob(job, userId) {
 
             console.log(`Usando instância ${instance.name} para enviar para ${numbers[i]}`);
             
-            const initialState = {
-                funnelId: funnel.id,
-                currentNodeId: funnel.nodes[0].id,
-                status: 'in_progress',
-                userInputs: {},
-                lastMessage: ''
-            };
-            
-           // const autoResponseKey = `auto_response:${instance.key}:${numbers[i]}`;
-         //   await redisClient.setex(autoResponseKey, AUTO_RESPONSE_EXPIRY, JSON.stringify(initialState));
-
-          //  await executeFunnel(funnel, numbers[i], instance.key, initialState);
-
-          const {updateCampaigns, getCampaigns, getAutoResponseReport, getAutoResponseUsage, handleAutoResponse} = require('../controllers/autoResponseController');
-          await handleAutoResponse(
-            instance.key,
-            numbers[i] + "@s.whatsapp.net",
-            "oi"
-          );
+            // Inicia a autoresposta para este número
+            await handleAutoResponse(instance.key, numbers[i], '');
 
             job.report.sent += 1;
-            console.log(`Mensagem enviada para ${numbers[i]} usando instância ${instance.name}`);
+            console.log(`Autoresposta iniciada para ${numbers[i]} usando instância ${instance.name}`);
         } catch (error) {
-            console.error(`Erro ao enviar mensagem para ${numbers[i]} usando instância ${instance.name}:`, error);
+            console.error(`Erro ao iniciar autoresposta para ${numbers[i]} usando instância ${instance.name}:`, error);
             job.report.errors += 1;
         }
 
