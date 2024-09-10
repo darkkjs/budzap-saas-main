@@ -130,9 +130,6 @@ exports.startMassMessage = async (req, res) => {
     }
 };
 
-
-const redisClient = require('../config/redisConfig');
-
 async function processJob(job, userId) {
     const { numbers, funnel, instances, report } = job;
     let currentInstanceIndex = 0;
