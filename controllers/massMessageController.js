@@ -130,11 +130,13 @@ exports.startMassMessage = async (req, res) => {
     }
 };
 
+const { executeFunnel } = require('../services/funnelExecutor');
+const redisClient = require('../config/redisConfig');
+
 async function processJob(job, userId) {
     const { numbers, funnel, instances, report } = job;
     let currentInstanceIndex = 0;
     const user = await User.findById(userId);
-    const { handleAutoResponse } = require('./autoResponseController');
 
     for (let i = job.currentIndex; i < numbers.length && !job.isStopped; i++) {
         if (job.isStopped) break;
@@ -146,28 +148,28 @@ async function processJob(job, userId) {
         try {
             user.funnelUsage += 1;
             await user.save();
-const chatide = numbers[i] + "@s.whatsap.net"
-            console.log(`Usando instância ${instance.name} para enviar para ${chatide}`);
+
+            console.log(`Processando número ${numbers[i]} usando instância ${instance.name}`);
+            
+            const chatId = `${numbers[i]}@s.whatsapp.net`;
+            const autoResponseKey = `auto_response:${instance.key}:${chatId}`;
             
             const initialState = {
+                funnelId: funnel.id,
                 currentNodeId: funnel.nodes[0].id,
+                status: 'in_progress',
                 userInputs: {},
-                status: 'active'
+                lastMessage: ''
             };
-            
-            const massMessageKey = `mass_message:${job.id}:${chatide}`;
-            await redisClient.setex(massMessageKey, MASS_MESSAGE_EXPIRY, JSON.stringify(initialState));
 
-            // Executar o funil
-            //await executeFunnel(funnel, chatide, instance.key, initialState);
+            await redisClient.setex(autoResponseKey, 3600, JSON.stringify(initialState));
 
-            // Acionar o autoresposta
-            await handleAutoResponse(instance.key, chatide, "Mensagem inicial de massa");
+            await executeFunnel(funnel, chatId, instance.key, initialState);
 
             report.sent += 1;
-            console.log(`Mensagem enviada para ${chatide} usando instância ${instance.name}`);
+            console.log(`Funil iniciado para ${numbers[i]} usando instância ${instance.name}`);
         } catch (error) {
-            console.error(`Erro ao enviar mensagem para ${chatide} usando instância ${instance.name}:`, error);
+            console.error(`Erro ao processar número ${numbers[i]} usando instância ${instance.name}:`, error);
             report.errors += 1;
         }
 
