@@ -2,7 +2,7 @@
 
 const User = require('../models/User');
 const MassMessageReport = require('../models/MassMessageReport');
-const { handleAutoResponse } = require('../controllers/autoResponseController');
+const { executeFunnel } = require('../services/funnelExecutor');
 const redisClient = require('../config/redisConfig');
 const { v4: uuidv4 } = require('uuid');
 
@@ -14,6 +14,8 @@ const PLAN_LIMITS = {
     plus: 1000,
     premium: Infinity
 };
+
+const MASS_MESSAGE_EXPIRY = 60 * 60 * 24; // 24 horas em segundos
 
 exports.renderMassMessagePage = async (req, res) => {
     try {
@@ -67,8 +69,25 @@ exports.startMassMessage = async (req, res) => {
             return res.status(400).json({ error: `Limite excedido. Você pode enviar mais ${remainingLimit} mensagens.` });
         }
 
-        const selectedFunnel = await getFunnelFromRedis(funnelName, userId);
+        const funnelsKey = `user:${userId}:funnels`;
+        const funnelIds = await redisClient.smembers(funnelsKey);
+        let selectedFunnel = null;
+
+        for (const funnelId of funnelIds) {
+            const funnelData = await redisClient.get(`funnel:${funnelId}`);
+            const funnel = JSON.parse(funnelData);
+            if (funnel.name === funnelName) {
+                selectedFunnel = funnel;
+                break;
+            }
+        }
+
         if (!selectedFunnel) {
+            console.log('Funil não encontrado:', funnelName);
+            console.log('Funis disponíveis:', await Promise.all(funnelIds.map(async id => {
+                const data = await redisClient.get(`funnel:${id}`);
+                return JSON.parse(data).name;
+            })));
             return res.status(404).json({ error: 'Funil não encontrado' });
         }
 
@@ -110,11 +129,12 @@ exports.startMassMessage = async (req, res) => {
         res.status(500).json({ error: 'Erro ao iniciar envio em massa' });
     }
 };
-const { saveMessage, messageExists, updateChatInfo } = require('../Helpers/redisHelpers');
+
 async function processJob(job, userId) {
-    const { numbers, funnel, instances } = job;
+    const { numbers, funnel, instances, report } = job;
     let currentInstanceIndex = 0;
     const user = await User.findById(userId);
+    const { handleAutoResponse } = require('./autoResponseController');
 
     for (let i = job.currentIndex; i < numbers.length && !job.isStopped; i++) {
         if (job.isStopped) break;
@@ -126,63 +146,36 @@ async function processJob(job, userId) {
         try {
             user.funnelUsage += 1;
             await user.save();
-
-            console.log(`Usando instância ${instance.name} para enviar para ${numbers[i]}`);
+const chatide = numbers[i] + "@s.whatsap.net"
+            console.log(`Usando instância ${instance.name} para enviar para ${chatide}`);
             
-            const timestamp = Date.now();
-            console.log(timestamp); // Por exemplo: 1633034868123
-            const messageKey = `numbers[i] + "@s.whatsapp.net":${timestamp}`;
-            await saveMessage(instance.key, numbers[i] + "@s.whatsapp.net", {
-                key: messageKey,
-                sender: "SPAM-" + numbers[i] ,
-                info: {
-                    name: numbers[i],
-      chatType: 'individual'
-                },
-                content: "[SPAM REALIZADO]",
-                timestamp: timestamp,
-                fromMe: true,
-                type: "text",
-                senderImage: "https://img.freepik.com/fotos-premium/silueta-minimalista-perfil-persona-contra-fondo-negro_1272475-8941.jpg"
-              });
-    
-              chatInfo = {
-                name: numbers[i],
-  chatType: 'individual'
-            }
-              // Atualizar informações do chat
-              await updateChatInfo(instance.key, numbers[i] + "@s.whatsapp.net", chatInfo, {
-                key: messageKey,
-                sender: "SPAM-" + numbers[i] ,
-                info: {
-                    name: numbers[i],
-      chatType: 'individual'
-                },
-                content: "[SPAM REALIZADO]",
-                timestamp: timestamp,
-                fromMe: true,
-                type: "text",
-                senderImage: "https://img.freepik.com/fotos-premium/silueta-minimalista-perfil-persona-contra-fondo-negro_1272475-8941.jpg"
-              });
-    
-              console.log('Mensagem salva:');
-             
+            const initialState = {
+                currentNodeId: funnel.nodes[0].id,
+                userInputs: {},
+                status: 'active'
+            };
+            
+            const massMessageKey = `mass_message:${job.id}:${chatide}`;
+            await redisClient.setex(massMessageKey, MASS_MESSAGE_EXPIRY, JSON.stringify(initialState));
 
-            // Inicia a autoresposta para este número
-            await handleAutoResponse(instance.key, numbers[i] + "@s.whatsapp.net", 'oi');
+            // Executar o funil
+            //await executeFunnel(funnel, chatide, instance.key, initialState);
 
-            job.report.sent += 1;
-            console.log(`Autoresposta iniciada para ${numbers[i]} usando instância ${instance.name}`);
+            // Acionar o autoresposta
+            await handleAutoResponse(instance.key, chatide, "Mensagem inicial de massa");
+
+            report.sent += 1;
+            console.log(`Mensagem enviada para ${chatide} usando instância ${instance.name}`);
         } catch (error) {
-            console.error(`Erro ao iniciar autoresposta para ${numbers[i]} usando instância ${instance.name}:`, error);
-            job.report.errors += 1;
+            console.error(`Erro ao enviar mensagem para ${chatide} usando instância ${instance.name}:`, error);
+            report.errors += 1;
         }
 
         job.currentIndex = i + 1;
         if (job.alternateInstances) {
             currentInstanceIndex++;
         }
-        await job.report.save();
+        await report.save();
 
         if ((i + 1) % 10 === 0 || i === numbers.length - 1) {
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -192,25 +185,11 @@ async function processJob(job, userId) {
     }
 
     if (job.currentIndex >= numbers.length || job.isStopped) {
-        job.report.endTime = new Date();
-        job.report.isCompleted = true;
-        await job.report.save();
+        report.endTime = new Date();
+        report.isCompleted = true;
+        await report.save();
         activeJobs.delete(job.id);
     }
-}
-
-async function getFunnelFromRedis(funnelName, userId) {
-    const funnelsKey = `user:${userId}:funnels`;
-    const funnelIds = await redisClient.smembers(funnelsKey);
-
-    for (const funnelId of funnelIds) {
-        const funnelData = await redisClient.get(`funnel:${funnelId}`);
-        const funnel = JSON.parse(funnelData);
-        if (funnel.name === funnelName) {
-            return funnel;
-        }
-    }
-    return null;
 }
 
 exports.getProgress = async (req, res) => {
@@ -266,11 +245,4 @@ exports.stopMassMessage = async (req, res) => {
         console.error('Erro ao interromper envio em massa:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
-};
-
-module.exports = {
-    renderMassMessagePage: exports.renderMassMessagePage,
-    startMassMessage: exports.startMassMessage,
-    getProgress: exports.getProgress,
-    stopMassMessage: exports.stopMassMessage
 };
