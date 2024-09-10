@@ -139,10 +139,18 @@ async function processJob(job, userId) {
                 lastMessage: ''
             };
             
-            const autoResponseKey = `auto_response:${instance.key}:${numbers[i]}`;
-            await redisClient.setex(autoResponseKey, AUTO_RESPONSE_EXPIRY, JSON.stringify(initialState));
+           // const autoResponseKey = `auto_response:${instance.key}:${numbers[i]}`;
+         //   await redisClient.setex(autoResponseKey, AUTO_RESPONSE_EXPIRY, JSON.stringify(initialState));
 
-            await executeFunnel(funnel, numbers[i], instance.key, initialState);
+          //  await executeFunnel(funnel, numbers[i], instance.key, initialState);
+
+          const {updateCampaigns, getCampaigns, getAutoResponseReport, getAutoResponseUsage, handleAutoResponse} = require('../controllers/autoResponseController');
+          await handleAutoResponse(
+            instance.key,
+            numbers[i] + "@s.whatsapp.net",
+            "oi"
+          );
+
             job.report.sent += 1;
             console.log(`Mensagem enviada para ${numbers[i]} usando instância ${instance.name}`);
         } catch (error) {
