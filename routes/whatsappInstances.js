@@ -32,7 +32,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
             view: 'whatsapp-instances',  // Adicione esta linha
             title: 'Gerenciar Instâncias WhatsApp',  // E esta linha
             user: req.user,
-            planLimits: { gratuito: 1, plus: 3, premium: 6 }
+            planLimits: { gratuito: 0, basico: 1, plus: 25, premium: 9999 }
         });
     } catch (error) {
         console.error('Erro ao carregar página de instâncias do WhatsApp:', error);

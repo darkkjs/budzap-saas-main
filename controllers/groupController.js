@@ -3,7 +3,7 @@
 const axios = require('axios');
 const User = require('../models/User');
 
-const API_BASE_URL = 'https://budzap.shop'
+const API_BASE_URL = 'http://localhost:3333'
 
 exports.renderGroupManagementPage = async (req, res) => {
     try {

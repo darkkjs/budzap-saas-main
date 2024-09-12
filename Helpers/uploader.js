@@ -79,6 +79,50 @@ async function uploadMediaToGithub(file, type, github) {
   return mediaUrl;
 }
 
+async function uploadbase64(base64File, type, github) {
+
+  let mediaUrl;
+
+  try {
+   
+
+    const filename = uuidv4();
+    let nomearqv;
+    if (type === "image") {
+      nomearqv = filename + ".jpg";
+    } else if (type === "audio") {
+      nomearqv = filename + ".mp3";
+    } else if (type === "video") {
+      nomearqv = filename + ".mp4";
+    } else {
+      nomearqv = filename + "." + type;
+    }
+
+    const response = await axios.put(
+      `https://api.github.com/repos/${github.GITHUB_USERNAME}/${github.GITHUB_REPO}/contents/${nomearqv}`,
+      {
+        message: `Upload de ${type} via API`,
+        content: base64File
+      },
+      {
+        headers: {
+          'Authorization': `token ${github.GITHUB_TOKEN}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    mediaUrl = response.data.content.download_url;
+    console.log(`${type} hospedado com sucesso no GitHub:`, mediaUrl);
+  } catch (error) {
+    console.error(`Erro ao hospedar o arquivo no GitHub:`, error);
+    throw error;
+  }
+
+  return mediaUrl;
+}
+
 module.exports = {
-  downloadAndSaveMedia
+  downloadAndSaveMedia,
+  uploadbase64
 };

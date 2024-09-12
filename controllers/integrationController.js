@@ -4,6 +4,88 @@ const fs = require('fs').promises;
 const path = require('path');
 
 
+const mercadopago = require('mercadopago');
+
+exports.getMercadoPagoAppStatus = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        const accessToken = user.mercadopago.appAccessToken;
+
+        if (accessToken) {
+            const maskedToken = maskAccessToken(accessToken);
+            res.json({ configured: true, maskedToken });
+        } else {
+            res.json({ configured: false });
+        }
+    } catch (error) {
+        console.error('Erro ao obter status do Mercado Pago App:', error);
+        res.status(500).json({ error: 'Erro ao obter status' });
+    }
+};
+
+function maskAccessToken(token) {
+    if (token.length <= 6) return '******';
+    return token.slice(0, 6) + '*'.repeat(token.length - 6);
+}
+
+exports.configureMercadoPagoApp = async (req, res) => {
+    try {
+        const { accessToken } = req.body;
+        const userId = req.user.id;
+
+        // Configurar o cliente Mercado Pago
+        const client = new mercadopago.MercadoPagoConfig({ accessToken: accessToken });
+
+        // Validar o token
+        try {
+            const paymentClient = new mercadopago.Payment(client);
+            await paymentClient.search({ limit: 1 });
+        } catch (error) {
+            return res.status(400).json({ success: false, error: 'Token inválido' });
+        }
+
+        // Salvar o token no banco de dados
+        await User.findByIdAndUpdate(userId, {
+            'mercadopago.appAccessToken': accessToken
+        });
+
+        res.json({ success: true, message: 'Configuração salva com sucesso' });
+    } catch (error) {
+        console.error('Erro ao configurar Mercado Pago App:', error);
+        res.status(500).json({ success: false, error: 'Erro interno do servidor' });
+    }
+};
+
+exports.testMercadoPagoApp = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        const accessToken = user.mercadopago.appAccessToken;
+
+        if (!accessToken) {
+            return res.status(400).json({ success: false, error: 'Access Token não configurado' });
+        }
+
+        const client = new mercadopago.MercadoPagoConfig({ accessToken: accessToken });
+
+        // Tenta criar um pagamento de teste
+        const paymentClient = new mercadopago.Payment(client);
+        const paymentData = {
+            transaction_amount: 1.00, // Certifique-se de que este valor seja um número
+            description: 'Teste de integração',
+            payment_method_id: 'pix',
+            payer: {
+                email: 'test@test.com',
+            }
+        };
+
+        const payment = await paymentClient.create({ body: paymentData });
+console.log(payment)
+        res.json({ success: true, message: 'Teste bem-sucedido', paymentId: payment.id });
+    } catch (error) {
+        console.error('Erro ao testar Mercado Pago App:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
 
 // Função para ler o arquivo JSON de tons
 async function readTonsConfig() {

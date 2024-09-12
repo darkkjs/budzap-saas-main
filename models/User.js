@@ -163,7 +163,13 @@ mercadopago: {
   xCsrfToken: String,
   cookie: String,
   xNewRelicId: String,
-  integrationActive: { type: Boolean, default: false }
+  integrationActive: { type: Boolean, default: false },
+  appAccessToken: String // Novo campo para o Access Token do Mercado Pago App
+},
+paymentMapping: {
+  type: Map,
+  of: String,
+  default: new Map()
 },
   validUntil: Date,
   stripeCustomerId: String,

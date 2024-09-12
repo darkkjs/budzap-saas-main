@@ -40,6 +40,13 @@ exports.getCampaigns = async (req, res) => {
     }
 };
 
+
+async function saveLastMessage(instanceKey, chatId, message) {
+    const key = `last_message:${instanceKey}:${chatId}`;
+    await redisClient.set(key, message);
+    await redisClient.expire(key, AUTO_RESPONSE_EXPIRY);
+}
+
 // Processa autoresposta com base na campanha
 exports.handleAutoResponse = async (instanceKey, chatId, message) => {
     try {
@@ -47,7 +54,7 @@ exports.handleAutoResponse = async (instanceKey, chatId, message) => {
         
         const autoResponseKey = `auto_response:${instanceKey}:${chatId}`;
         const currentState = await redisClient.get(autoResponseKey);
-
+        await saveLastMessage(instanceKey, chatId, message);
         if (currentState) {
             let state = JSON.parse(currentState);
             console.log('Estado atual:'.yellow, JSON.stringify(state, null, 2));

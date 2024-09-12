@@ -419,11 +419,30 @@
         type: type,
         content: data && data.content ? data.content : defaultContent,
         inputKey: data && data.inputKey ? data.inputKey : '',
-        conditionType: data && data.conditionType ? data.conditionType : '',
-        conditionValue: data && data.conditionValue ? data.conditionValue : '',
+        variable: data && data.variable ? data.variable : '',
+    conditionType: data && data.conditionType ? data.conditionType : '',
+    conditionValue: data && data.conditionValue ? data.conditionValue : '',
+    conditionValues: data && data.conditionValues ? data.conditionValues : null,
         position: { left: nodeDiv.style.left, top: nodeDiv.style.top },
         duration: data && data.duration ? data.duration : '',
-        groupId: data && data.groupId  ? data.groupId  : '',
+        groupId: data && data.groupId ? data.groupId : '',
+        amount: data && data.amount ? data.amount : '',
+        description: data && data.description ? data.description : '',
+        paymentId: data && data.paymentId ? data.paymentId : '',
+        paymentToCheck: data && data.paymentToCheck ? data.paymentToCheck : '',
+        caption: data && data.caption ? data.caption : '',
+        messages: data && data.messages ? data.messages : [],
+        aiPrompt: data && data.aiPrompt ? data.aiPrompt : '',
+        aiMemoryId: data && data.aiMemoryId ? data.aiMemoryId : '',
+        aiSystemInstruction: data && data.aiSystemInstruction ? data.aiSystemInstruction : '',
+        aiConditionPrompt: data && data.aiConditionPrompt ? data.aiConditionPrompt : '',
+        aiConditionVariable: data && data.aiConditionVariable ? data.aiConditionVariable : '',
+        apiUrl: data && data.apiUrl ? data.apiUrl : '',
+        requestType: data && data.requestType ? data.requestType : 'GET',
+        requestBody: data && data.requestBody ? data.requestBody : '',
+        responseVariable: data && data.responseVariable ? data.responseVariable : '',
+        selectedFields: data && data.selectedFields ? data.selectedFields : [],
+     
     };
 
     let nodeContent = `
@@ -469,7 +488,7 @@
             maxConnections: -1
         });
 
-        if (type === 'condition') {
+        if (type === 'condition' || type === 'checkPayment') {
             jsPlumbInstance.addEndpoint(nodeDiv, {
             anchor: "Bottom",
             isSource: true,
@@ -532,7 +551,9 @@
         return newNode2;
     }
 
-    function getNodeTitle(type) {
+
+
+function getNodeTitle(type) {
     const titles = {
         message: 'Mensagem',
         input: 'Input',
@@ -547,7 +568,13 @@
         addToGroup: 'Adicionar ao Grupo',
         removeFromGroup: 'Remover do Grupo',
         sendFile: 'Enviar Arquivo',
-        visualize: 'Visualizar'
+        visualize: 'Visualizar',
+        randomMessage: 'Mensagens Aleatórias',
+        apiRequest: 'Requisição API',
+        aiAgent: 'Agente de IA',
+        aiCondition: 'Condição com IA',
+        generatePayment: 'Gerar Pagamento',
+        checkPayment: 'Verificar Pagamento'
     };
     return titles[type] || 'Nó';
 }
@@ -564,25 +591,24 @@ function getNodeContent(type, data) {
             case 'wait':
                 return `<p>Esperar ${data.content || '5'} segundos</p>`;
             case 'image':
-                return `<p>Imagem: ${data.content || 'URL da imagem'}</p>`;
+                return `<p>Imagem: ${data.content || 'URL da imagem'}</p><p>Legenda: ${data.caption || ''}</p>`;
             case 'audio':
                 return `<p>Áudio: ${data.content || 'URL do áudio'}</p>`;
             case 'video':
-                return `<p>Vídeo: ${data.content || 'URL do vídeo'}</p>`;
-            case 'file':
-                return `<p>Arquivo: ${data.content || 'URL do arquivo'}</p>`;
-            case 'typing':
-                return `<p>Digitando por ${data.duration || '5'} segundos</p>`;
-            case 'recordAudio':
-                return `<p>Gravando áudio por ${data.duration || '5'} segundos</p>`;
-            case 'addToGroup':
-                return `<p>Adicionar ao grupo: ${data.groupId || 'Não selecionado'}</p>`;
-            case 'removeFromGroup':
-                return `<p>Remover do grupo: ${data.groupId || 'Não selecionado'}</p>`;
-            case 'sendFile':
-                return `<p>Enviar arquivo: ${data.fileUrl || 'URL não definida'}</p>`;
-            case 'visualize':
-                return `<p>Visualizar mensagem</p>`;
+                return `<p>Vídeo: ${data.content || 'URL do vídeo'}</p><p>Legenda: ${data.caption || ''}</p>`;
+            case 'randomMessage':
+                return `<p>Mensagens aleatórias: ${data.messages ? data.messages.length : 0}</p>`;
+            case 'apiRequest':
+                return `<p>API: ${data.apiUrl || 'URL não definida'}</p>`;
+            case 'aiAgent':
+                return `<p>Prompt: ${data.aiPrompt || 'Não definido'}</p>`;
+            case 'aiCondition':
+                return `<p>Condição IA: ${data.aiConditionPrompt || 'Não definida'}</p>`;
+            case 'generatePayment':
+                return `<p>Gerar pagamento: R$ ${data.amount || '0'}</p>`;
+            case 'checkPayment':
+                return `<p>Verificar pagamento: ${data.paymentToCheck || 'Não selecionado'}</p>`;
+            // Adicione outros casos conforme necessário
             default:
                 return `<p>${data.content || 'Novo conteúdo'}</p>`;
         }
@@ -590,21 +616,158 @@ function getNodeContent(type, data) {
     return '<p>Clique para editar</p>';
 }
 
-    function getDefaultContent(type) {
-        const defaults = {
-            message: 'Nova mensagem',
-            input: 'Digite sua pergunta',
-            condition: 'Condição',
-            wait: '5',
-            image: 'URL da imagem',
-            audio: 'URL do áudio',
-            video: 'URL do vídeo',
-            file: 'URL do arquivo'
-        };
-        return defaults[type] || '';
-    }
+function getDefaultContent(type) {
+    const defaults = {
+        message: 'Nova mensagem',
+        input: 'Digite sua pergunta',
+        condition: 'Condição',
+        wait: '5',
+        image: 'URL da imagem',
+        audio: 'URL do áudio',
+        video: 'URL do vídeo',
+        file: 'URL do arquivo',
+        randomMessage: [],
+        apiRequest: { url: '', method: 'GET', body: '' },
+        aiAgent: { prompt: '', memoryId: '' },
+        aiCondition: { systemInstruction: '', prompt: '', variable: '' },
+        generatePayment: { amount: 0, description: '' },
+        checkPayment: { paymentToCheck: '' }
+    };
+    return defaults[type] || '';
+}
 
     
+    function getPaymentOptions() {
+    return nodes
+        .filter(n => n.type === 'generatePayment' && n.paymentId)
+        .map(n => `<option value="${n.paymentId}">${n.paymentId} - R$ ${n.amount} - ${n.description || 'Sem descrição'}</option>`)
+        .join('');
+}
+
+
+function addMessageInput() {
+    const messageList = document.getElementById('messageList');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'messageInput w-full p-2 border rounded mt-2';
+    messageList.appendChild(input);
+}
+
+
+async function testApiRequest() {
+    const url = document.getElementById('apiUrl').value;
+    const method = document.getElementById('requestType').value;
+    const body = document.getElementById('requestBody').value;
+    const headers = {}; // Você pode adicionar um campo para headers se necessário
+
+    try {
+        const response = await fetch('/test-api-request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url, method, body, headers })
+        });
+        const data = await response.json();
+        
+        let resultHtml = '';
+        if (data.success) {
+            resultHtml = `
+                <h3 class="text-lg font-semibold mb-2">Resposta da API:</h3>
+                <p><strong>Status:</strong> ${data.status} ${data.statusText}</p>
+                <h4 class="font-semibold mt-2">Dados:</h4>
+                <pre class="bg-gray-100 p-2 rounded mt-1 overflow-auto max-h-40">${JSON.stringify(data.data, null, 2)}</pre>
+                <h4 class="font-semibold mt-4">Selecione os campos para usar como variáveis:</h4>
+                <div id="apiDataFields" class="mt-2">
+                    ${generateApiDataFields(data.data)}
+                </div>
+            `;
+        } else {
+            resultHtml = `
+                <h3 class="text-lg font-semibold mb-2 text-red-600">Erro na requisição:</h3>
+                <p>${data.error}</p>
+                ${data.response ? `
+                    <p><strong>Status:</strong> ${data.response.status} ${data.response.statusText}</p>
+                    <h4 class="font-semibold mt-2">Resposta do servidor:</h4>
+                    <pre class="bg-gray-100 p-2 rounded mt-1 overflow-auto max-h-40">${JSON.stringify(data.response.data, null, 2)}</pre>
+                ` : ''}
+            `;
+        }
+
+        document.getElementById('apiResponse').innerHTML = resultHtml;
+        document.getElementById('apiResponse').classList.remove('hidden');
+    } catch (error) {
+        console.error('Erro ao testar requisição:', error);
+        document.getElementById('apiResponse').innerHTML = `<p class="text-red-600">Erro ao enviar requisição: ${error.message}</p>`;
+        document.getElementById('apiResponse').classList.remove('hidden');
+    }
+}
+
+function generateApiDataFields(data, prefix = '') {
+    let html = '';
+    for (const [key, value] of Object.entries(data)) {
+        const fullKey = prefix ? `${prefix}.${key}` : key;
+        if (typeof value === 'object' && value !== null) {
+            html += generateApiDataFields(value, fullKey);
+        } else {
+            html += `
+                <div class="flex items-center mt-1">
+                    <input type="checkbox" id="${fullKey}" name="apiDataField" value="${fullKey}" class="mr-2">
+                    <label for="${fullKey}">${fullKey}: ${value}</label>
+                </div>
+            `;
+        }
+    }
+    return html;
+}
+
+function generateApiDataFields(data, prefix = '') {
+    let html = '';
+    for (const [key, value] of Object.entries(data)) {
+        const fullKey = prefix ? `${prefix}.${key}` : key;
+        if (typeof value === 'object' && value !== null) {
+            html += generateApiDataFields(value, fullKey);
+        } else {
+            html += `
+                <div class="flex items-center mt-1">
+                    <input type="checkbox" id="${fullKey}" name="apiDataField" value="${fullKey}" class="mr-2">
+                    <label for="${fullKey}">${fullKey}: ${value}</label>
+                </div>
+            `;
+        }
+    }
+    return html;
+}
+
+function getVariableOptions() {
+    const inputVariables = nodes
+        .filter(n => n.type === 'input' && n.saveResponse)
+        .map(n => `<option value="input:${n.inputKey}">${n.inputKey} (Input)</option>`);
+    
+    const apiVariables = nodes
+        .filter(n => n.type === 'apiRequest')
+        .flatMap(n => {
+            if (n.selectedFields && n.selectedFields.length > 0) {
+                return n.selectedFields.map(field => `<option value="api:${n.id}:${field}">${field} (API: ${n.responseVariable || n.id})</option>`);
+            } else {
+                return [`<option value="api:${n.id}">${n.responseVariable || 'API Response'} (API: ${n.id})</option>`];
+            }
+        });
+    
+    const aiVariables = nodes
+        .filter(n => n.type === 'aiAgent' || n.type === 'aiCondition')
+        .map(n => `<option value="ai:${n.id}">${n.aiConditionVariable || 'AI Response'} (AI: ${n.id})</option>`);
+
+    return [...inputVariables, ...apiVariables, ...aiVariables].join('');
+}
+
+function insertVariable(targetId) {
+    const select = document.getElementById('variableSelect');
+    const textarea = document.getElementById(targetId);
+    if (select.value) {
+        const placeholder = `{{${select.value}}}`;
+        insertAtCursor(textarea, placeholder);
+    }
+}
+
     function editNode(nodeId) {
         const node = nodes.find(n => n.id === nodeId);
         if (!node) return;
@@ -614,17 +777,122 @@ function getNodeContent(type, data) {
         let content = '';
 
         switch (node.type) {
-         
+            case 'aiAgent':
+    content = `
+        <textarea id="aiPrompt" class="w-full p-2 border rounded mb-2" rows="4" placeholder="Prompt para a IA">${node.aiPrompt || ''}</textarea>
+        <input type="text" id="aiMemoryId" class="w-full p-2 border rounded mb-2" placeholder="ID da memória" value="${node.aiMemoryId || ''}">
+        <div class="flex items-center space-x-2 mt-2">
+            <div class="flex-grow">
+                <label for="variableSelect" class="block text-sm font-medium text-gray-700 mb-1">Inserir variável</label>
+                <select id="variableSelect" class="w-full p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">Selecione uma variável</option>
+                    ${getVariableOptions()}
+                </select>
+            </div>
+            <button onclick="insertVariable('aiPrompt')" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out mt-6">
+                Inserir
+            </button>
+        </div>
+    `;
+    break;
+
+case 'aiCondition':
+    content = `
+        <textarea id="aiSystemInstruction" class="w-full p-2 border rounded mb-2" rows="4" placeholder="Instruções do sistema para a IA">${node.aiSystemInstruction || ''}</textarea>
+        <textarea id="aiConditionPrompt" class="w-full p-2 border rounded mb-2" rows="4" placeholder="Prompt para a condição IA">${node.aiConditionPrompt || ''}</textarea>
+        <input type="text" id="aiConditionVariable" class="w-full p-2 border rounded mb-2" placeholder="Variável para armazenar resultado" value="${node.aiConditionVariable || ''}">
+        <div class="flex items-center space-x-2 mt-2">
+            <div class="flex-grow">
+                <label for="variableSelect" class="block text-sm font-medium text-gray-700 mb-1">Inserir variável</label>
+                <select id="variableSelect" class="w-full p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">Selecione uma variável</option>
+                    ${getVariableOptions()}
+                </select>
+            </div>
+            <button onclick="insertVariable('aiConditionPrompt')" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out mt-6">
+                Inserir
+            </button>
+        </div>
+    `;
+    break;
+            case 'apiRequest':
+    content = `
+        <select id="requestType" class="w-full p-2 border rounded mb-2">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+        </select>
+        <input type="text" id="apiUrl" class="w-full p-2 border rounded mb-2" placeholder="URL da API" value="${node.apiUrl || ''}">
+        <textarea id="requestBody" class="w-full p-2 border rounded mb-2" placeholder="Corpo da requisição (JSON)">${node.requestBody || ''}</textarea>
+        <input type="text" id="responseVariable" class="w-full p-2 border rounded mb-2" placeholder="Nome da variável para armazenar resposta" value="${node.responseVariable || ''}">
+        <button onclick="testApiRequest()" class="bg-green-500 text-white px-4 py-2 rounded">Testar Requisição</button>
+        <div id="apiResponse" class="mt-2 p-2 border rounded hidden"></div>
+    `;
+    break;
+  
             case 'image':
+case 'video':
+    content = `
+        <textarea id="nodeContent" class="w-full p-2 border rounded" rows="4">${node.content}</textarea>
+        <input type="text" id="nodeCaption" class="w-full p-2 border rounded mt-2" placeholder="Legenda" value="${node.caption || ''}">
+    `;
+    break;
+    case 'randomMessage':
+    content = `
+        <div id="messageList" class="space-y-2"></div>
+        <button onclick="addMessageInput()" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded">Adicionar Mensagem</button>
+    `;
+    if (node.messages && node.messages.length > 0) {
+        node.messages.forEach((msg, index) => {
+            content += `<input type="text" class="messageInput w-full p-2 border rounded" value="${msg}">`;
+        });
+    }
+    break;
             case 'audio':
-            case 'video':
+         
             case 'file':
                 content = `
                     <textarea id="nodeContent" class="w-full p-2 border rounded" rows="4">${node.content}</textarea>
                     
                 `;
                 break;
-                case 'message':
+                case 'generatePayment':
+    content = `
+        <div class="form-control">
+            <label class="label">
+                <span class="label-text">ID do Pagamento</span>
+            </label>
+            <input type="text" id="paymentId" class="input input-bordered" value="${node.paymentId || ''}" placeholder="ID único para este pagamento">
+        </div>
+        <div class="form-control mt-4">
+            <label class="label">
+                <span class="label-text">Valor do Pagamento (R$)</span>
+            </label>
+            <input type="number" id="paymentAmount" class="input input-bordered" value="${node.amount || ''}" min="0.01" step="0.01">
+        </div>
+        <div class="form-control mt-4">
+            <label class="label">
+                <span class="label-text">Descrição do Pagamento</span>
+            </label>
+            <input type="text" id="paymentDescription" class="input input-bordered" value="${node.description || ''}">
+        </div>
+    `;
+    break;
+    case 'checkPayment':
+    content = `
+        <div class="form-control">
+            <label class="label">
+                <span class="label-text">ID do Pagamento a Verificar</span>
+            </label>
+            <select id="paymentToCheck" class="select select-bordered w-full">
+                <option value="">Selecione um pagamento</option>
+                ${getPaymentOptions()}
+            </select>
+        </div>
+    `;
+    break;
+    case 'message':
     content = `
     <div class="space-y-4">
         <div>
@@ -634,19 +902,19 @@ function getNodeContent(type, data) {
         
         <div class="flex items-center space-x-2">
             <div class="flex-grow">
-                <label for="placeholderSelect" class="block text-sm font-medium text-gray-700 mb-1">Inserir resposta salva</label>
-                <select id="placeholderSelect" class="w-full p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                    <option value="">Selecione uma resposta</option>
-                    ${getSavedResponseOptions()}
+                <label for="variableSelect" class="block text-sm font-medium text-gray-700 mb-1">Inserir variável</label>
+                <select id="variableSelect" class="w-full p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">Selecione uma variável</option>
+                    ${getVariableOptions()}
                 </select>
             </div>
-            <button onclick="insertPlaceholder()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out mt-6">
+            <button onclick="insertVariable('nodeContent')" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out mt-6">
                 Inserir
             </button>
         </div>
         
         <div>
-            <p class="text-sm text-gray-500 mt-2">Respostas de inputs disponíveis:</p>
+            <p class="text-sm text-gray-500 mt-2">Variáveis disponíveis:</p>
             <div id="availablePlaceholders" class="mt-1 flex flex-wrap gap-2">
                 ${getAvailablePlaceholders()}
             </div>
@@ -669,22 +937,34 @@ function getNodeContent(type, data) {
                 break;
                 case 'condition':
     const inputNodes = nodes.filter(n => n.type === 'input');
-    const inputOptions = inputNodes
-        .map(n => `<option value="${n.inputKey}" ${node.inputKey === n.inputKey ? 'selected' : ''}>${n.inputKey}</option>`)
-        .join('');
-    
+    const apiNodes = nodes.filter(n => n.type === 'apiRequest');
+    const aiNodes = nodes.filter(n => n.type === 'aiAgent' || n.type === 'aiCondition');
+
+    const variableOptions = [
+        ...inputNodes.map(n => `<option value="input:${n.inputKey}" ${node.variable === `input:${n.inputKey}` ? 'selected' : ''}>${n.inputKey} (Input)</option>`),
+        ...apiNodes.flatMap(n => n.selectedFields ? n.selectedFields.map(field => `<option value="api:${n.id}:${field}" ${node.variable === `api:${n.id}:${field}` ? 'selected' : ''}>${field} (API)</option>`) : []),
+        ...aiNodes.map(n => `<option value="ai:${n.id}" ${node.variable === `ai:${n.id}` ? 'selected' : ''}>${n.aiConditionVariable || 'AI Response'} (AI)</option>`)
+    ].join('');
+
     content = `
-        <select id="inputKeySelect" class="w-full p-2 border rounded mb-2">
-            <option value="">Selecione um input</option>
-            ${inputOptions}
+        <select id="variableSelect" class="w-full p-2 border rounded mb-2">
+            <option value="">Selecione uma variável</option>
+            ${variableOptions}
         </select>
         <select id="conditionType" class="w-full p-2 border rounded mb-2">
             <option value="equals" ${node.conditionType === 'equals' ? 'selected' : ''}>Igual a</option>
             <option value="contains" ${node.conditionType === 'contains' ? 'selected' : ''}>Contém</option>
             <option value="startsWith" ${node.conditionType === 'startsWith' ? 'selected' : ''}>Começa com</option>
             <option value="endsWith" ${node.conditionType === 'endsWith' ? 'selected' : ''}>Termina com</option>
+            <option value="containsAny" ${node.conditionType === 'containsAny' ? 'selected' : ''}>Contém as mensagens</option>
         </select>
-        <input type="text" id="conditionValue" class="w-full p-2 border rounded mb-2" value="${node.conditionValue || ''}" placeholder="Valor da condição">
+        <div id="conditionValueContainer">
+            ${node.conditionType === 'containsAny' 
+                ? `<div id="messageList" class="space-y-2"></div>
+                   <button onclick="addConditionMessage()" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded">Adicionar Mensagem</button>`
+                : `<input type="text" id="conditionValue" class="w-full p-2 border rounded mb-2" value="${node.conditionValue || ''}" placeholder="Valor da condição">`
+            }
+        </div>
     `;
     break;
             case 'wait':
@@ -756,6 +1036,56 @@ function getNodeContent(type, data) {
     }
     }
 
+// Adicione este código após a criação do conteúdo do modal
+if (node.type === 'condition') {
+    setTimeout(() => {
+        const conditionTypeSelect = document.getElementById('conditionType');
+        conditionTypeSelect.addEventListener('change', function() {
+            const container = document.getElementById('conditionValueContainer');
+            if (this.value === 'containsAny') {
+                container.innerHTML = `
+                    <div id="messageList" class="space-y-2"></div>
+                    <button onclick="addConditionMessage()" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded">Adicionar Mensagem</button>
+                `;
+                if (node.conditionValues) {
+                    node.conditionValues.forEach(value => addConditionMessage(value));
+                }
+            } else {
+                container.innerHTML = `
+                    <input type="text" id="conditionValue" class="w-full p-2 border rounded mb-2" value="${node.conditionValue || ''}" placeholder="Valor da condição">
+                `;
+            }
+        });
+    }, 0);
+}
+
+    // Adicione um event listener para o select
+document.getElementById('conditionType').addEventListener('change', function() {
+    const container = document.getElementById('conditionValueContainer');
+    if (this.value === 'containsAny') {
+        container.innerHTML = `
+            <div id="messageList" class="space-y-2"></div>
+            <button onclick="addConditionMessage()" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded">Adicionar Mensagem</button>
+        `;
+        if (node.conditionValues) {
+            node.conditionValues.forEach(value => addConditionMessage(value));
+        }
+    } else {
+        container.innerHTML = `
+            <input type="text" id="conditionValue" class="w-full p-2 border rounded mb-2" value="${node.conditionValue || ''}" placeholder="Valor da condição">
+        `;
+    }
+});
+
+function addConditionMessage(value = '') {
+    const messageList = document.getElementById('messageList');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'conditionMessage w-full p-2 border rounded mt-2';
+    input.value = value;
+    messageList.appendChild(input);
+}
+
     function loadUserInstances() {
     const instanceSelect = document.getElementById('instanceSelect');
     instanceSelect.innerHTML = '<option value="" disabled selected>Escolha uma instância</option>';
@@ -803,10 +1133,26 @@ function loadGroups(selectedGroupId) {
         });
 }
 
-    function getAvailablePlaceholders() {
+function getAvailablePlaceholders() {
     return nodes
         .filter(n => n.type === 'input' && n.saveResponse)
-        .map(n => `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 cursor-pointer hover:bg-indigo-200" onclick="insertSpecificPlaceholder('${n.inputKey}')">{{${n.inputKey}}}</span>`)
+        .map(n => `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 cursor-pointer hover:bg-indigo-200" onclick="insertSpecificPlaceholder('input:${n.inputKey}')">{{${n.inputKey}}}</span>`)
+        .concat(nodes
+            .filter(n => n.type === 'apiRequest')
+            .flatMap(n => {
+                if (n.selectedFields && n.selectedFields.length > 0) {
+                    return n.selectedFields.map(field => 
+                        `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 cursor-pointer hover:bg-green-200" onclick="insertSpecificPlaceholder('api:${n.id}:${field}')">{{${field}}}</span>`
+                    );
+                } else {
+                    return [`<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 cursor-pointer hover:bg-green-200" onclick="insertSpecificPlaceholder('api:${n.id}')">{{${n.responseVariable || 'API Response'}}}</span>`];
+                }
+            })
+        )
+        .concat(nodes
+            .filter(n => n.type === 'aiAgent' || n.type === 'aiCondition')
+            .map(n => `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 cursor-pointer hover:bg-purple-200" onclick="insertSpecificPlaceholder('ai:${n.id}')">{{${n.aiConditionVariable || 'AI Response'}}}</span>`)
+        )
         .join('');
 }
 
@@ -832,12 +1178,10 @@ function getSavedResponseOptions() {
         .join('');
 }
 
-function insertPlaceholder() {
-    const select = document.getElementById('placeholderSelect');
+function insertSpecificPlaceholder(key) {
     const textarea = document.getElementById('nodeContent');
-    if (select.value) {
-        insertSpecificPlaceholder(select.value);
-    }
+    const placeholder = `{{${key}}}`;
+    insertAtCursor(textarea, placeholder);
 }
 
     function saveNodeEdit() {
@@ -852,6 +1196,26 @@ function insertPlaceholder() {
     
     switch (node.type) {
         // ... (mantenha os casos existentes)
+        case 'randomMessage':
+            node.messages = Array.from(document.querySelectorAll('.messageInput')).map(input => input.value);
+            break;
+        case 'aiAgent':
+            node.aiPrompt = document.getElementById('aiPrompt').value;
+            node.aiMemoryId = document.getElementById('aiMemoryId').value;
+            break;
+        case 'aiCondition':
+            node.aiSystemInstruction = document.getElementById('aiSystemInstruction').value;
+            node.aiConditionPrompt = document.getElementById('aiConditionPrompt').value;
+            node.aiConditionVariable = document.getElementById('aiConditionVariable').value;
+            break;
+        case 'apiRequest':
+            node.apiUrl = document.getElementById('apiUrl').value;
+            node.requestType = document.getElementById('requestType').value;
+            node.requestBody = document.getElementById('requestBody').value;
+            node.responseVariable = document.getElementById('responseVariable').value;
+            node.selectedFields = Array.from(document.querySelectorAll('input[name="apiDataField"]:checked')).map(input => input.value);
+            break;
+
         case 'input':
         const inputKeyElement = document.getElementById('inputKey');
         const saveResponseElement = document.getElementById('saveResponse');
@@ -862,17 +1226,29 @@ function insertPlaceholder() {
             node.saveResponse = saveResponseElement.checked;
         }
             break
-
+            case 'image':
+case 'video':
+    node.caption = document.getElementById('nodeCaption').value;
+    break;
+            case 'generatePayment':
+            node.paymentId = document.getElementById('paymentId').value || `payment_${Date.now()}`;
+            node.amount = parseFloat(document.getElementById('paymentAmount').value);
+            node.description = document.getElementById('paymentDescription').value;
+            break;
+        case 'checkPayment':
+            node.paymentToCheck = document.getElementById('paymentToCheck').value;
+            break;
             case 'condition':
-            const inputKeySelect = document.getElementById('inputKeySelect');
-        const conditionTypeElement = document.getElementById('conditionType');
-        const conditionValueElement = document.getElementById('conditionValue');
-        if (inputKeySelect && conditionTypeElement && conditionValueElement) {
-            node.inputKey = inputKeySelect.value;
-            node.conditionType = conditionTypeElement.value;
-            node.conditionValue = conditionValueElement.value;
-        }
-                break
+    node.variable = document.getElementById('variableSelect').value;
+    node.conditionType = document.getElementById('conditionType').value;
+    if (node.conditionType === 'containsAny') {
+        node.conditionValues = Array.from(document.querySelectorAll('.conditionMessage')).map(input => input.value);
+        node.conditionValue = null; // Limpar conditionValue quando usar containsAny
+    } else {
+        node.conditionValue = document.getElementById('conditionValue').value;
+        node.conditionValues = null; // Limpar conditionValues quando não usar containsAny
+    }
+    break;
 
 
         case 'typing':
@@ -924,7 +1300,12 @@ function updateNodeDisplay(node) {
             case 'removeFromGroup':
                 displayContent = `Remover do grupo: ${node.groupId || 'Não selecionado'} (Instância: ${node.instanceKey || 'Não selecionada'})`;
                 break;
-
+                case 'generatePayment':
+                displayContent = `Gerar pagamento: R$ ${node.amount} - ${node.description}`;
+                break;
+            case 'checkPayment':
+                displayContent = `Verificar pagamento: ${node.paymentToCheck || 'Não selecionado'}`;
+                break;
             case 'sendFile':
                 displayContent = `Enviar arquivo: ${node.fileUrl}`;
                 break;
@@ -932,8 +1313,10 @@ function updateNodeDisplay(node) {
                 displayContent = 'Visualizar mensagem';
                 break;
                 case 'condition':
-                displayContent = `Se ${node.inputKey} ${node.conditionType} "${node.conditionValue}"`;
-                break;
+    const [varType, varId, varField] = node.variable.split(':');
+    let varName = varField || varId;
+    displayContent = `Se ${varName} ${node.conditionType} "${node.conditionValue || node.conditionValues?.join(', ')}"`;
+    break;
             case 'input':
             displayContent = `${node.content} (${node.inputKey})`;
                 break;
@@ -1018,10 +1401,38 @@ function updateMediaPreview(nodeId, url) {
                     nodeData.inputKey = node.inputKey;
                     nodeData.saveResponse = node.saveResponse;
                     break;
-                case 'condition':
-                    nodeData.inputKey = node.inputKey;
+                    case 'condition':
+                    nodeData.variable = node.variable;
                     nodeData.conditionType = node.conditionType;
                     nodeData.conditionValue = node.conditionValue;
+                    nodeData.conditionValues = node.conditionValues;
+                    break;
+                    case 'randomMessage':
+                    nodeData.messages = node.messages;
+                    break;
+                case 'apiRequest':
+                    nodeData.apiUrl = node.apiUrl;
+                    nodeData.requestType = node.requestType;
+                    nodeData.requestBody = node.requestBody;
+                    nodeData.responseVariable = node.responseVariable;
+                    node.id = node.id; // Garanta que o ID do nó esteja sendo salvo
+                    break;
+                case 'aiAgent':
+                    nodeData.aiPrompt = node.aiPrompt;
+                    nodeData.aiMemoryId = node.aiMemoryId;
+                    break;
+                case 'aiCondition':
+                    nodeData.aiSystemInstruction = node.aiSystemInstruction;
+                    nodeData.aiConditionPrompt = node.aiConditionPrompt;
+                    nodeData.aiConditionVariable = node.aiConditionVariable;
+                    break;
+                    case 'generatePayment':
+                    nodeData.amount = node.amount;
+                    nodeData.description = node.description;
+                    nodeData.paymentId = node.paymentId;
+                    break;
+                case 'checkPayment':
+                    nodeData.paymentToCheck = node.paymentToCheck;
                     break;
                 case 'typing':
                 case 'recordAudio':
@@ -1079,13 +1490,13 @@ function updateMediaPreview(nodeId, url) {
     });
 }
 
-    function createConnection(source, target, anchors) {
+function createConnection(source, target, anchors) {
     const sourceNode = nodes.find(n => n.id === source);
-    const isCondition = sourceNode && sourceNode.type === 'condition';
+    const isConditionOrCheckPayment = sourceNode && (sourceNode.type === 'condition' || sourceNode.type === 'checkPayment');
     const isNoConnection = anchors && anchors[0] === 'Bottom';
 
     let color = '#6366F1'; // cor padrão
-    if (isCondition) {
+    if (isConditionOrCheckPayment) {
         color = isNoConnection ? '#F56565' : '#48BB78';
     }
 
@@ -1099,14 +1510,13 @@ function updateMediaPreview(nodeId, url) {
     });
 }
 
-    function getConnectionColor(connection) {
-        const sourceNode = nodes.find(n => n.id === connection.sourceId);
-        if (sourceNode && sourceNode.type === 'condition') {
-            return connection.anchors[0] === 'Bottom' ? '#F56565' : '#48BB78';
-        }
-        return '#6366F1';
+function getConnectionColor(connection) {
+    const sourceNode = nodes.find(n => n.id === connection.sourceId);
+    if (sourceNode && (sourceNode.type === 'condition' || sourceNode.type === 'checkPayment')) {
+        return connection.anchors[0] === 'Bottom' ? '#F56565' : '#48BB78';
     }
-
+    return '#6366F1';
+}
     function zoomIn() {
         zoom(0.1);
     }
@@ -1267,14 +1677,22 @@ function updateMediaPreview(nodeId, url) {
             { type: 'image', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z', label: 'Imagem' },
             { type: 'audio', icon: 'M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3', label: 'Áudio' },
             { type: 'video', icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z', label: 'Vídeo' },
-         //   { type: 'file', icon: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z', label: 'Arquivo' },
+            { type: 'randomMessage', icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15', label: 'Mensagens Aleatórias' },
+            //   { type: 'file', icon: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z', label: 'Arquivo' },
         ],
         logic: [
             { type: 'input', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z', label: 'Input' },
             { type: 'condition', icon: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Condição' },
+            { type: 'aiCondition', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Condição com IA' },
+
             { type: 'wait', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Espera' },
         ],
         actions: [
+            
+        { type: 'aiAgent', icon: 'M13 10V3L4 14h7v7l9-11h-7z', label: 'Agente de IA' },
+        { type: 'apiRequest', icon: 'M13 10V3L4 14h7v7l9-11h-7z', label: 'Requisição API' },
+        { type: 'generatePayment', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', label: 'Gerar Pagamento' },
+        { type: 'checkPayment', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Verificar Pagamento' },
         { type: 'typing', icon: 'M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129', label: 'Digitar' },
         { type: 'recordAudio', icon: 'M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z', label: 'Gravar Áudio' },
         { type: 'addToGroup', icon: 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z', label: 'Add ao Grupo' },

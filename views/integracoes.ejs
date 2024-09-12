@@ -163,6 +163,55 @@
         </div>
     </div>
 </div>
+
+<!-- Mercado Pago App Card -->
+<div class="integration-card bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-2xl transition-shadow duration-300">
+    <div class="px-6 py-6">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full p-3 shadow-md">
+                    <i class="fas fa-shopping-cart text-white text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-xl font-semibold text-gray-900">Mercado Pago App</h3>
+                    <p class="text-sm text-yellow-600 font-medium">Geração e Verificação de Pagamentos</p>
+                </div>
+            </div>
+            <span id="mpAppStatus" class="px-3 py-1 text-sm font-semibold text-gray-800 bg-gray-200 rounded-full flex items-center">
+                <i class="fas fa-question-circle mr-1"></i> Não configurado
+            </span>
+            
+        </div>
+        <div class="mt-4 space-y-2">
+            <p class="text-sm text-gray-600 leading-relaxed">
+                Integre pagamentos diretamente em seu fluxo de autoresposta:
+            </p>
+            <ul class="text-sm text-gray-700 space-y-1">
+                <li class="flex items-center">
+                    <i class="fas fa-qrcode text-yellow-500 mr-2"></i>
+                    <span>Geração de pagamentos PIX</span>
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check-double text-green-500 mr-2"></i>
+                    <span>Verificação de status de pagamento</span>
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-cogs text-blue-500 mr-2"></i>
+                    <span>Integração direta com o fluxo de autoresposta</span>
+                </li>
+            </ul>
+        </div>
+        <div class="mt-6 flex justify-between items-center">
+            <button id="configureMPApp" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-white bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-all duration-300 transform hover:scale-105">
+                <i class="fas fa-cog mr-2"></i> Configurar App
+            </button>
+            <button id="testMPApp" class="text-yellow-600 hover:text-yellow-800 transition-colors duration-200 focus:outline-none" style="display: none;">
+                <i class="fas fa-vial mr-1"></i> Testar Integração
+            </button>
+        </div>
+    </div>
+</div>
+
                 <!-- Placeholder para futuras integrações -->
                 <div class="integration-card bg-white overflow-hidden shadow rounded-lg border-2 border-dashed border-gray-300">
                     <div class="px-4 py-5 sm:p-6 text-center">
@@ -211,6 +260,77 @@
     
 
     <script>
+
+           // Funções para Mercado Pago App
+           async function updateMercadoPagoAppStatus() {
+        try {
+            const response = await fetch('/integrations/mercadopago-app/status');
+            const data = await response.json();
+            const statusElement = document.getElementById('mpAppStatus');
+            const configureButton = document.getElementById('configureMPApp');
+            const testButton = document.getElementById('testMPApp');
+
+            if (data.configured) {
+                statusElement.innerHTML = `<i class="fas fa-check-circle mr-1"></i> Configurado: ${data.maskedToken}`;
+                statusElement.className = 'px-3 py-1 text-sm font-semibold text-green-800 bg-green-100 rounded-full flex items-center';
+                configureButton.textContent = 'Reconfigurar';
+                testButton.style.display = 'inline-flex';
+            } else {
+                statusElement.innerHTML = '<i class="fas fa-question-circle mr-1"></i> Não configurado';
+                statusElement.className = 'px-3 py-1 text-sm font-semibold text-gray-800 bg-gray-200 rounded-full flex items-center';
+                configureButton.textContent = 'Configurar App';
+                testButton.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar status:', error);
+        }
+    }
+
+    // Chamar a função ao carregar a página
+    document.addEventListener('DOMContentLoaded', updateMercadoPagoAppStatus);
+
+    // Atualizar a função de configuração para chamar updateMercadoPagoAppStatus após a configuração
+    document.getElementById('configureMPApp').addEventListener('click', async () => {
+        const accessToken = prompt("Por favor, insira seu Access Token do Mercado Pago:");
+        if (accessToken) {
+            try {
+                const response = await fetch('/integrations/mercadopago-app/configure', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ accessToken }),
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Configuração salva com sucesso!');
+                    updateMercadoPagoAppStatus();
+                } else {
+                    alert('Erro ao salvar configuração: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao salvar configuração');
+            }
+        }
+    });
+
+
+    document.getElementById('testMPApp').addEventListener('click', async () => {
+        try {
+            const response = await fetch('/integrations/mercadopago-app/test');
+            const data = await response.json();
+            if (data.success) {
+                alert('Teste bem-sucedido! Sua integração está funcionando corretamente.');
+            } else {
+                alert('Erro no teste: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro ao realizar o teste');
+        }
+    });
+
         // JavaScript para controlar o modal
         const modal = document.getElementById('integrationModal');
         const openModalBtn = document.getElementById('openModalBtn');

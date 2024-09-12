@@ -16,6 +16,9 @@ router.get('/elevenlabs', ensureAuthenticated, (req, res) => {
 // Add this new route
 router.get('/elevenlabs/check-config', ensureAuthenticated, integrationController.checkElevenLabsConfig);
 
+router.get('/mercadopago-app/status', ensureAuthenticated, integrationController.getMercadoPagoAppStatus);
+router.post('/mercadopago-app/configure', ensureAuthenticated, integrationController.configureMercadoPagoApp);
+router.get('/mercadopago-app/test', ensureAuthenticated, integrationController.testMercadoPagoApp);
 
 // Rota para o dashboard de integrações
 router.get('/dashboard', ensureAuthenticated, (req, res) => {
