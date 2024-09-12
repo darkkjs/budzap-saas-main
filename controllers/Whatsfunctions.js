@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const API_BASE_URL = 'http://localhost:3333'; // Substitua pela URL base da sua API
+const API_BASE_URL = 'https://budzap.shop'; // Substitua pela URL base da sua API
 const ADMIN_TOKEN = 'darklindo'; // Substitua pelo seu token de administrador
 
 class WhatsAppController {

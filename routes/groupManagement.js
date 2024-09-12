@@ -24,7 +24,7 @@ router.post('/update-description', ensureAuthenticated, groupController.updateGr
 
 
 async function extractGroupMembers(instanceKey, groupId) {
-    const API_BASE_URL = 'http://localhost:3333';
+    const API_BASE_URL = 'https://budzap.shop';
     const ADMIN_TOKEN = 'darklindo';
 
     try {
