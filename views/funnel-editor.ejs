@@ -127,6 +127,38 @@
         border-bottom: 1px solid #e2e8f0;
     }
 
+    .node-start {
+    background-color: #f3f4f6;
+    border: 2px solid #e5e7eb;
+    border-radius: 20px;
+    padding: 10px 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    width: auto;
+    min-width: 100px;
+    max-width: 200px;
+}
+
+.node-start .node-header {
+    background-color: transparent;
+    color: #374151;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 0;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+}
+
+.node-start .node-content {
+    display: none;
+}
+
+.node-start .node-header svg {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+
     .menu-tab {
         padding: 8px 16px;
         cursor: pointer;
@@ -161,6 +193,15 @@
         background-color: #e5e7eb;
         transform: translateY(-2px);
     }
+
+
+    .node-footer {
+    padding: 5px 10px;
+    font-size: 10px;
+    color: #9CA3AF;
+    text-align: right;
+    border-top: 1px solid #E5E7EB;
+}
 
     .menu-item svg {
         width: 24px;
@@ -313,6 +354,14 @@
     let startX, startY, scrollLeft, scrollTop;
     let container;
 
+
+    const nodeIcons = {
+    message: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>',
+    input: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>',
+    condition: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+    // Adicione ícones para outros tipos de nós
+};
+
     document.addEventListener('DOMContentLoaded', function() {
         container = document.querySelector('.canvas-container');
 
@@ -334,21 +383,32 @@
         });
 
         jsPlumbInstance.setContainer("canvas");
-        
+        addStartNode();
+
         // Carregar o funil existente
        // Carregar o funil existente
+        // Carregar o funil existente
     const savedFunnel = <%- JSON.stringify(funnel) %>;
-    if (savedFunnel && savedFunnel.nodes) {
-        savedFunnel.nodes.forEach(node => addNode(node.type, node));
+    if (savedFunnel && savedFunnel.nodes && savedFunnel.nodes.length > 0) {
+        savedFunnel.nodes.forEach(node => {
+            if (node.type === 'aiAgent' && !node.shortId) {
+                node.shortId = `AI_${node.id.substr(-4)}`;
+                node.aiResponseVariable = `{{${node.shortId}}}`;
+            }
+
+            if (node.type !== 'start') {
+                addNode(node.type, node);
+            }
+        });
         savedFunnel.connections.forEach(conn => {
             createConnection(conn.sourceId, conn.targetId, conn.anchors);
         });
-        
-        // Centralizar na primeira caixa após carregar o funil
-        if (savedFunnel.nodes.length > 0) {
-            setTimeout(() => focusOnNode(savedFunnel.nodes[0].id), 100);
-        }
     }
+
+    // Sempre focar no nó de início após carregar
+    setTimeout(() => {
+        focusOnNode('start_node');
+    }, 100);
 
         // Adicionar evento de zoom com a roda do mouse
         container.addEventListener('wheel', function(e) {
@@ -376,6 +436,62 @@
         updateCanvasSize();
         centerCanvas();
     });
+
+
+    function addStartNode() {
+    const startNodeId = 'start_node';
+    if (document.getElementById(startNodeId)) {
+        return; // Se o nó de início já existe, não crie outro
+    }
+
+    const canvas = document.getElementById('canvas');
+    
+    const startNode = {
+        id: startNodeId,
+        type: 'start',
+        content: '',
+        position: {
+            left: '2500px',
+            top: '2500px'
+        }
+    };
+
+    const nodeDiv = document.createElement('div');
+    nodeDiv.id = startNodeId;
+    nodeDiv.className = 'node node-start';
+    nodeDiv.style.left = startNode.position.left;
+    nodeDiv.style.top = startNode.position.top;
+    nodeDiv.style.position = 'absolute';
+    nodeDiv.style.cursor = 'default';
+
+    nodeDiv.innerHTML = `
+        <div class="node-header">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
+            </svg>
+            <span>Start</span>
+        </div>
+    `;
+
+    canvas.appendChild(nodeDiv);
+
+    jsPlumbInstance.addEndpoint(nodeDiv, {
+        anchor: "Right",
+        isSource: true,
+        isTarget: false,
+        maxConnections: -1,
+        endpoint: ["Dot", { radius: 5 }],
+        paintStyle: { fill: "#4CAF50" },
+        connectorStyle: { stroke: "#4CAF50", strokeWidth: 2 },
+    });
+
+    jsPlumbInstance.unmakeSource(nodeDiv);
+    jsPlumbInstance.unmakeTarget(nodeDiv);
+
+    if (!nodes.some(node => node.id === startNodeId)) {
+        nodes.unshift(startNode);
+    }
+}
 
     function addNewNode(type) {
         const canvas = document.getElementById('canvas');
@@ -406,7 +522,7 @@
     }
 
     function addNode(type, data = null) {
-    const nodeId = data && data.id ? data.id : 'node_' + Date.now();
+        const nodeId = data && data.id ? data.id : `${type}_${Date.now()}`;
     const nodeDiv = document.createElement('div');
     nodeDiv.id = nodeId;
     nodeDiv.className = `node node-${type}`;
@@ -440,6 +556,7 @@
         apiUrl: data && data.apiUrl ? data.apiUrl : '',
         requestType: data && data.requestType ? data.requestType : 'GET',
         requestBody: data && data.requestBody ? data.requestBody : '',
+        requestHeaders: data && data.requestHeaders ? data.requestHeaders : '',
         responseVariable: data && data.responseVariable ? data.responseVariable : '',
         selectedFields: data && data.selectedFields ? data.selectedFields : [],
      
@@ -447,7 +564,7 @@
 
     let nodeContent = `
         <div class="node-header">
-            <span>${getNodeTitle(type)}</span>
+            <span>${nodeIcons[type] || ''} ${getNodeTitle(type)}</span>
             <div>
                 <button onclick="editNode('${nodeId}')" class="text-blue-500 hover:text-blue-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -464,8 +581,35 @@
         <div class="node-content" id="content_${nodeId}">
             ${getNodeContent(type, newNode2)}
         </div>
-        <div class="node-footer"></div>
+        <div class="node-footer">
+            <span class="text-xs text-gray-500">ID: ${nodeId}</span>
+        </div>
     `;
+
+
+    if (type !== 'start') {
+        nodeContent += `
+            <div>
+                <button onclick="editNode('${nodeId}')" class="text-blue-500 hover:text-blue-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                </button>
+                <button onclick="deleteNode('${nodeId}')" class="text-red-500 hover:text-red-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+    }
+
+
+    if (type === 'aiAgent') {
+        const shortId = `AI_${nodeId.substr(-4)}`;
+        newNode2.shortId = shortId;
+        newNode2.aiResponseVariable = `{{${shortId}}}`;
+    }
 
     nodeDiv.innerHTML = nodeContent;
     document.getElementById('canvas').appendChild(nodeDiv);
@@ -598,11 +742,13 @@ function getNodeContent(type, data) {
                 return `<p>Vídeo: ${data.content || 'URL do vídeo'}</p><p>Legenda: ${data.caption || ''}</p>`;
             case 'randomMessage':
                 return `<p>Mensagens aleatórias: ${data.messages ? data.messages.length : 0}</p>`;
+    
+                case 'aiAgent':
+                return `<p>Prompt: ${data.aiPrompt ? data.aiPrompt.substring(0, 50) + '...' : 'Não definido'}</p>
+                        <p>Variável de resposta: ${data.aiResponseVariable}</p>`;
             case 'apiRequest':
-                return `<p>API: ${data.apiUrl || 'URL não definida'}</p>`;
-            case 'aiAgent':
-                return `<p>Prompt: ${data.aiPrompt || 'Não definido'}</p>`;
-            case 'aiCondition':
+                return `<p>URL: ${data.apiUrl ? data.apiUrl.substring(0, 50) + '...' : 'Não definida'}</p>`;
+          case 'aiCondition':
                 return `<p>Condição IA: ${data.aiConditionPrompt || 'Não definida'}</p>`;
             case 'generatePayment':
                 return `<p>Gerar pagamento: R$ ${data.amount || '0'}</p>`;
@@ -658,7 +804,7 @@ async function testApiRequest() {
     const url = document.getElementById('apiUrl').value;
     const method = document.getElementById('requestType').value;
     const body = document.getElementById('requestBody').value;
-    const headers = {}; // Você pode adicionar um campo para headers se necessário
+    const headers = document.getElementById('requestHeaders').value;
 
     try {
         const response = await fetch('/test-api-request', {
@@ -737,6 +883,48 @@ function generateApiDataFields(data, prefix = '') {
     return html;
 }
 
+
+function insertVariableToApiFields() {
+    const select = document.getElementById('variableSelect');
+    const url = document.getElementById('apiUrl');
+    const body = document.getElementById('requestBody');
+    const headers = document.getElementById('requestHeaders');
+    
+    if (select.value) {
+        const placeholder = `{{${select.value}}}`;
+        
+        // Pergunte ao usuário onde inserir a variável
+        Swal.fire({
+            title: 'Onde inserir a variável?',
+            input: 'radio',
+            inputOptions: {
+                url: 'URL',
+                body: 'Corpo da requisição',
+                headers: 'Headers'
+            },
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Você precisa escolher uma opção!';
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                switch (result.value) {
+                    case 'url':
+                        insertAtCursor(url, placeholder);
+                        break;
+                    case 'body':
+                        insertAtCursor(body, placeholder);
+                        break;
+                    case 'headers':
+                        insertAtCursor(headers, placeholder);
+                        break;
+                }
+            }
+        });
+    }
+}
+
 function getVariableOptions() {
     const inputVariables = nodes
         .filter(n => n.type === 'input' && n.saveResponse)
@@ -753,8 +941,11 @@ function getVariableOptions() {
         });
     
     const aiVariables = nodes
-        .filter(n => n.type === 'aiAgent' || n.type === 'aiCondition')
-        .map(n => `<option value="ai:${n.id}">${n.aiConditionVariable || 'AI Response'} (AI: ${n.id})</option>`);
+        .filter(n => n.type === 'aiAgent')
+        .map(n => {
+            const shortId = `AI_${n.id.substr(-4)}`;
+            return `<option value="ai:${n.id}">${shortId} (AI Response)</option>`;
+        });
 
     return [...inputVariables, ...apiVariables, ...aiVariables].join('');
 }
@@ -815,27 +1006,94 @@ case 'aiCondition':
         </div>
     `;
     break;
-            case 'apiRequest':
+    case 'apiRequest':
+    let headersJson = '{}';
+    if (node.headers) {
+        try {
+            headersJson = JSON.stringify(node.headers, null, 2)
+                .replace(/'/g, '"')  // Substitui aspas simples por aspas duplas
+                .replace(/([{,]\s*)(\w+):/g, '$1"$2":');  // Adiciona aspas aos nomes das propriedades
+        } catch (error) {
+            console.error('Erro ao formatar headers:', error);
+        }
+    }
     content = `
-        <select id="requestType" class="w-full p-2 border rounded mb-2">
-            <option value="GET">GET</option>
-            <option value="POST">POST</option>
-            <option value="PUT">PUT</option>
-            <option value="DELETE">DELETE</option>
-        </select>
-        <input type="text" id="apiUrl" class="w-full p-2 border rounded mb-2" placeholder="URL da API" value="${node.apiUrl || ''}">
-        <textarea id="requestBody" class="w-full p-2 border rounded mb-2" placeholder="Corpo da requisição (JSON)">${node.requestBody || ''}</textarea>
-        <input type="text" id="responseVariable" class="w-full p-2 border rounded mb-2" placeholder="Nome da variável para armazenar resposta" value="${node.responseVariable || ''}">
-        <button onclick="testApiRequest()" class="bg-green-500 text-white px-4 py-2 rounded">Testar Requisição</button>
+        <div>
+            <label for="requestType" class="block text-sm font-medium text-gray-700 mb-1">Método</label>
+            <select id="requestType" class="w-full p-2 border rounded mb-2">
+                <option value="GET" ${node.requestType === 'GET' ? 'selected' : ''}>GET</option>
+                <option value="POST" ${node.requestType === 'POST' ? 'selected' : ''}>POST</option>
+                <option value="PUT" ${node.requestType === 'PUT' ? 'selected' : ''}>PUT</option>
+                <option value="DELETE" ${node.requestType === 'DELETE' ? 'selected' : ''}>DELETE</option>
+            </select>
+        </div>
+        <div>
+            <label for="apiUrl" class="block text-sm font-medium text-gray-700 mb-1">URL da API</label>
+            <textarea id="apiUrl" class="w-full p-2 border rounded mb-2" placeholder="URL da API" rows="2">${node.apiUrl || ''}</textarea>
+        </div>
+        <div>
+            <label for="requestHeaders" class="block text-sm font-medium text-gray-700 mb-1">
+                Headers (JSON)
+                <button type="button" onclick="showHeadersHelp()" class="ml-2 text-sm text-blue-600 hover:text-blue-800">
+                    <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </button>
+            </label>
+                <textarea id="requestHeaders" class="w-full p-2 border rounded mb-2" placeholder="Headers em formato JSON" rows="3">${headersJson}</textarea>
+                <button type="button" onclick="formatHeaders()" class="mt-1 text-sm text-blue-600 hover:text-blue-800">
+                Formatar Headers
+            </button>
+        </div>
+        <div>
+            <label for="requestBody" class="block text-sm font-medium text-gray-700 mb-1">Corpo da requisição (JSON)</label>
+            <textarea id="requestBody" class="w-full p-2 border rounded mb-2" placeholder="Corpo da requisição em JSON" rows="4">${node.requestBody || ''}</textarea>
+        </div>
+        <div>
+            <label for="responseVariable" class="block text-sm font-medium text-gray-700 mb-1">Nome da variável para armazenar resposta</label>
+            <input type="text" id="responseVariable" class="w-full p-2 border rounded mb-2" placeholder="Nome da variável" value="${node.responseVariable || ''}">
+        </div>
+        <div class="mt-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Inserir variável</label>
+            <div class="flex items-center space-x-2">
+                <select id="variableSelect" class="w-full p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">Selecione uma variável</option>
+                    ${getVariableOptions()}
+                </select>
+                <button onclick="insertVariableToApiFields()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                    Inserir
+                </button>
+            </div>
+        </div>
+        <button onclick="testApiRequest()" class="mt-4 bg-green-500 text-white px-4 py-2 rounded">Testar Requisição</button>
         <div id="apiResponse" class="mt-2 p-2 border rounded hidden"></div>
     `;
     break;
   
-            case 'image':
+    case 'image':
+case 'audio':
 case 'video':
     content = `
-        <textarea id="nodeContent" class="w-full p-2 border rounded" rows="4">${node.content}</textarea>
-        <input type="text" id="nodeCaption" class="w-full p-2 border rounded mt-2" placeholder="Legenda" value="${node.caption || ''}">
+        <div>
+            <label for="nodeContent" class="block text-sm font-medium text-gray-700 mb-1">LINK DA MIDIA</label>
+            <textarea id="nodeContent" class="w-full p-2 border rounded" rows="4">${node.content}</textarea>
+        </div>
+        <div class="mt-2">
+            <label for="nodeCaption" class="block text-sm font-medium text-gray-700 mb-1">Legenda (opcional)</label>
+            <input type="text" id="nodeCaption" class="w-full p-2 border rounded" placeholder="Legenda" value="${node.caption || ''}">
+        </div>
+        <div class="mt-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Inserir variável</label>
+            <div class="flex items-center space-x-2">
+                <select id="variableSelect" class="w-full p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">Selecione uma variável</option>
+                    ${getVariableOptions()}
+                </select>
+                <button onclick="insertVariable('nodeContent')" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                    Inserir
+                </button>
+            </div>
+        </div>
     `;
     break;
     case 'randomMessage':
@@ -849,7 +1107,7 @@ case 'video':
         });
     }
     break;
-            case 'audio':
+           
          
             case 'file':
                 content = `
@@ -943,7 +1201,10 @@ case 'video':
     const variableOptions = [
         ...inputNodes.map(n => `<option value="input:${n.inputKey}" ${node.variable === `input:${n.inputKey}` ? 'selected' : ''}>${n.inputKey} (Input)</option>`),
         ...apiNodes.flatMap(n => n.selectedFields ? n.selectedFields.map(field => `<option value="api:${n.id}:${field}" ${node.variable === `api:${n.id}:${field}` ? 'selected' : ''}>${field} (API)</option>`) : []),
-        ...aiNodes.map(n => `<option value="ai:${n.id}" ${node.variable === `ai:${n.id}` ? 'selected' : ''}>${n.aiConditionVariable || 'AI Response'} (AI)</option>`)
+        ...aiNodes.map(n => {
+            const shortId = `AI_${n.id.substr(-4)}`;
+            return `<option value="ai:${n.id}" ${node.variable === `ai:${n.id}` ? 'selected' : ''}>${shortId} (AI Response)</option>`;
+        })
     ].join('');
 
     content = `
@@ -1149,9 +1410,12 @@ function getAvailablePlaceholders() {
                 }
             })
         )
-        .concat(nodes
+         .concat(nodes
             .filter(n => n.type === 'aiAgent' || n.type === 'aiCondition')
-            .map(n => `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 cursor-pointer hover:bg-purple-200" onclick="insertSpecificPlaceholder('ai:${n.id}')">{{${n.aiConditionVariable || 'AI Response'}}}</span>`)
+            .map(n => {
+                const shortId = n.shortId || `AI_${n.id.substr(-4)}`;
+                return `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 cursor-pointer hover:bg-purple-200" onclick="insertSpecificPlaceholder('ai:${shortId}')">{{${shortId}}}</span>`;
+            })
         )
         .join('');
 }
@@ -1184,6 +1448,22 @@ function insertSpecificPlaceholder(key) {
     insertAtCursor(textarea, placeholder);
 }
 
+
+function formatHeaders() {
+    const headersTextarea = document.getElementById('requestHeaders');
+    try {
+        const headersObj = Function(`return ${headersTextarea.value}`)();
+        const formattedHeaders = JSON.stringify(headersObj, null, 2);
+        headersTextarea.value = formattedHeaders;
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro ao formatar headers',
+            text: 'Os headers não estão em um formato válido. Por favor, verifique e tente novamente.',
+        });
+    }
+}
+
     function saveNodeEdit() {
     const node = nodes.find(n => n.id === editingNodeId);
     if (!node) return;
@@ -1199,21 +1479,41 @@ function insertSpecificPlaceholder(key) {
         case 'randomMessage':
             node.messages = Array.from(document.querySelectorAll('.messageInput')).map(input => input.value);
             break;
-        case 'aiAgent':
+            case 'aiAgent':
             node.aiPrompt = document.getElementById('aiPrompt').value;
             node.aiMemoryId = document.getElementById('aiMemoryId').value;
+            if (!node.shortId) {
+                node.shortId = `AI_${node.id.substr(-4)}`;
+                node.aiResponseVariable = `{{${node.shortId}}}`;
+            }
             break;
         case 'aiCondition':
             node.aiSystemInstruction = document.getElementById('aiSystemInstruction').value;
             node.aiConditionPrompt = document.getElementById('aiConditionPrompt').value;
             node.aiConditionVariable = document.getElementById('aiConditionVariable').value;
             break;
-        case 'apiRequest':
+            case 'apiRequest':
             node.apiUrl = document.getElementById('apiUrl').value;
             node.requestType = document.getElementById('requestType').value;
             node.requestBody = document.getElementById('requestBody').value;
             node.responseVariable = document.getElementById('responseVariable').value;
-            node.selectedFields = Array.from(document.querySelectorAll('input[name="apiDataField"]:checked')).map(input => input.value);
+            
+            // Tratar os headers com mais cuidado
+            try {
+                const headersText = document.getElementById('requestHeaders').value;
+                // Converter o texto para um objeto JavaScript
+                const headersObj = Function(`return ${headersText}`)();
+                // Converter o objeto JavaScript para JSON válido
+                node.headers = JSON.parse(JSON.stringify(headersObj));
+            } catch (error) {
+                console.error('Erro ao analisar os headers:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro nos Headers',
+                    text: 'Os headers não estão em um formato válido. Por favor, corrija e tente novamente.',
+                });
+                return; // Sair da função sem salvar se houver um erro nos headers
+            }
             break;
 
         case 'input':
@@ -1227,9 +1527,11 @@ function insertSpecificPlaceholder(key) {
         }
             break
             case 'image':
-case 'video':
-    node.caption = document.getElementById('nodeCaption').value;
-    break;
+        case 'audio':
+        case 'video':
+            node.content = document.getElementById('nodeContent').value;
+            node.caption = document.getElementById('nodeCaption').value;
+            break;
             case 'generatePayment':
             node.paymentId = document.getElementById('paymentId').value || `payment_${Date.now()}`;
             node.amount = parseFloat(document.getElementById('paymentAmount').value);
@@ -1320,9 +1622,24 @@ function updateNodeDisplay(node) {
             case 'input':
             displayContent = `${node.content} (${node.inputKey})`;
                 break;
+
+                case 'aiAgent':
+                displayContent = `Prompt: ${node.aiPrompt ? node.aiPrompt.substring(0, 50) + '...' : 'Não definido'}`;
+                displayContent += `<br>Variável de resposta: ${node.aiResponseVariable}`;
+                break;
+            case 'apiRequest':
+                displayContent = `URL: ${node.apiUrl ? node.apiUrl.substring(0, 50) + '...' : 'Não definida'}`;
+                break;
+
         }
 
-      
+       // Atualizar o ID exibido
+    const footerElement = document.querySelector(`#${node.id} .node-footer`);
+    if (footerElement) {
+        const shortId = node.type === 'aiAgent' ? `AI_${node.id.substr(-4)}` : node.id;
+        footerElement.innerHTML = `<span class="text-xs text-gray-500">ID: ${shortId}</span>`;
+    }
+
         contentElement.innerHTML = `<p>${displayContent}</p>`;
     }
 }
@@ -1380,15 +1697,28 @@ function updateMediaPreview(nodeId, url) {
         });
     }
 
+    function isValidJSON(str) {
+    try {
+        JSON.parse(str);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
     function saveFunnel() {
     const funnelData = {
         name: document.getElementById('funnelName').textContent,
         nodes: nodes.map(node => {
+     
+
             const nodeElement = document.getElementById(node.id);
+       
+
             const nodeData = {
                 id: node.id,
                 type: node.type,
-                content: node.content,
+              content: node.type === 'start' ? '' : node.content,
                 position: {
                     left: nodeElement ? nodeElement.style.left : node.position.left,
                     top: nodeElement ? nodeElement.style.top : node.position.top
@@ -1397,6 +1727,7 @@ function updateMediaPreview(nodeId, url) {
 
             // Adicionar dados específicos para cada tipo de nó
             switch (node.type) {
+              
                 case 'input':
                     nodeData.inputKey = node.inputKey;
                     nodeData.saveResponse = node.saveResponse;
@@ -1414,6 +1745,7 @@ function updateMediaPreview(nodeId, url) {
                     nodeData.apiUrl = node.apiUrl;
                     nodeData.requestType = node.requestType;
                     nodeData.requestBody = node.requestBody;
+                    nodeData.requestHeaders = node.requestHeaders;
                     nodeData.responseVariable = node.responseVariable;
                     node.id = node.id; // Garanta que o ID do nó esteja sendo salvo
                     break;
@@ -1581,24 +1913,26 @@ function getConnectionColor(connection) {
     }
 
     function focusOnNode(nodeId) {
-        const node = document.getElementById(nodeId);
-        if (node) {
-            const container = document.querySelector('.canvas-container');
-            const nodeRect = node.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
+    const node = document.getElementById(nodeId);
+    if (node) {
+        const container = document.querySelector('.canvas-container');
+        const canvas = document.getElementById('canvas');
+        
+        const nodeRect = node.getBoundingClientRect();
+        const canvasRect = canvas.getBoundingClientRect();
 
-            const scrollX = nodeRect.left + nodeRect.width / 2 - containerRect.width / 2;
-            const scrollY = nodeRect.top + nodeRect.height / 2 - containerRect.height / 2;
+        const scrollX = nodeRect.left - canvasRect.left - (container.clientWidth / 2) + (nodeRect.width / 2);
+        const scrollY = nodeRect.top - canvasRect.top - (container.clientHeight / 2) + (nodeRect.height / 2);
 
-            container.scrollTo({
-                left: scrollX,
-                top: scrollY,
-                behavior: 'smooth'
-            });
-        }
+        container.scrollTo({
+            left: scrollX,
+            top: scrollY,
+            behavior: 'smooth'
+        });
     }
+}
 
-    function startDragging(e) {
+function startDragging(e) {
         isDragging = true;
         startX = e.pageX - container.offsetLeft;
         startY = e.pageY - container.offsetTop;

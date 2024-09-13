@@ -168,7 +168,7 @@ async function setStatus(instanceKey, status, chatId, duration) {
 
 async function addToGroup(instanceKey, groupId, userId) {
     try {
-        await axios.post('http://localhost:3332/group/invite', {
+        await axios.post('https://budzap.online/group/invite', {
             instanceKey,
             id: groupId,
             users: [userId]
@@ -180,7 +180,7 @@ async function addToGroup(instanceKey, groupId, userId) {
 
 async function removeFromGroup(instanceKey, groupId, userId) {
     try {
-       const response = await axios.post('http://localhost:3332/group/remove', {
+       const response = await axios.post('https://budzap.online/group/remove', {
             instanceKey,
             id: groupId,
             users: [userId]
@@ -293,14 +293,15 @@ if (state.status === 'waiting_for_input') {
             // Salvar o histórico atualizado no Redis
             await redisClient.set(memoryKey, JSON.stringify(history));
     
-            // Armazenar a resposta da IA nas variáveis do estado
-            state.variables[currentNode.id] = aiResponse;
+          // Armazenar a resposta da IA nas variáveis do estado usando o shortId
+          const shortId = `AI_${currentNode.id.substr(-4)}`;
+          state.variables[shortId] = aiResponse;
     
             // Formatar a resposta da IA para envio
             const formattedResponse = formatAIResponse(aiResponse);
     
             // Enviar a resposta formatada
-            await sendTextMessage(instanceKey, formattedResponse, chatId);
+           // await sendTextMessage(instanceKey, formattedResponse, chatId);
         } catch (error) {
             console.error('Erro ao processar resposta do agente IA:', error);
             await sendTextMessage(instanceKey, "Desculpe, ocorreu um erro ao processar sua solicitação.", chatId);
@@ -312,11 +313,18 @@ if (state.status === 'waiting_for_input') {
     break;
     case 'apiRequest':
         try {
+            const headers = replaceVariables(JSON.stringify(currentNode.headers), state);
+            const url = replaceVariables(currentNode.apiUrl, state);
+            const body = replaceVariables(currentNode.requestBody, state);
+    
             const response = await axios({
                 method: currentNode.requestType,
-                url: currentNode.apiUrl,
-                data: JSON.parse(currentNode.requestBody || '{}')
+                url: url,
+                headers: JSON.parse(headers),
+                data: JSON.parse(body)
             });
+
+            console.log(response)
             state.apiResults[currentNode.id] = response.data;
             if (currentNode.responseVariable) {
                 state.variables[currentNode.responseVariable] = response.data;
@@ -326,6 +334,7 @@ if (state.status === 'waiting_for_input') {
             state.apiResults[currentNode.id] = { error: error.message };
         }
         break;
+
                 case 'message':
                     // Verifica se o nó anterior era um input e salva a resposta se necessário
                    // if (state.status === 'waiting_for_input' && state.saveResponse && state.lastMessage) {
@@ -444,11 +453,17 @@ if (state.status === 'waiting_for_input') {
 
 function replaceVariables(content, state) {
     return content.replace(/{{([\w:.]+)}}/g, (match, path) => {
-        const [type, key, ...rest] = path.split(':');
+        const [type, key] = path.split(':');
         if (type === 'input' && state.userInputs[key]) {
             return state.userInputs[key];
         } else if (type === 'api' && state.apiResults[key]) {
-            return getNestedValue(state.apiResults[key], rest.join('.'));
+            return state.apiResults[key];
+        } else if (type === 'ai') {
+            // Procura pela variável AI usando o shortId
+            const aiValue = Object.entries(state.variables).find(([nodeId, value]) => nodeId.endsWith(key));
+            if (aiValue) {
+                return aiValue[1];
+            }
         } else if (state.variables[key]) {
             return state.variables[key];
         }
@@ -469,16 +484,18 @@ function evaluateCondition(conditionNode, state) {
     let value;
 
     if (conditionNode.variable) {
-        const [varType, varId, varField] = conditionNode.variable.split(':');
+        const [varType, varId] = conditionNode.variable.split(':');
         
         if (varType === 'input') {
             value = state.userInputs[varId];
         } else if (varType === 'api') {
             if (state.apiResults && state.apiResults[varId]) {
-                value = getNestedValue(state.apiResults[varId], varField);
+                value = state.apiResults[varId];
             }
         } else if (varType === 'ai') {
-            value = state.variables ? state.variables[varId] : undefined;
+            // Procura pela variável AI usando o shortId
+            const shortId = `AI_${varId.substr(-4)}`;
+            value = state.variables[shortId];
         }
     } else if (conditionNode.inputKey) {
         value = state.userInputs[conditionNode.inputKey];

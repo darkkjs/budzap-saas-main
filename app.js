@@ -207,38 +207,46 @@ app.use('/payments', paymentRoutes);
 app.use('/api/webhook', webhookRoutes);
 
 
-
 app.post('/test-api-request', async (req, res) => {
   const { url, method, body, headers } = req.body;
-
+  let parsedHeaders;
+  
   try {
-      const response = await axios({
-          method: method,
-          url: url,
-          data: body ? JSON.parse(body) : undefined,
-          headers: headers || {},
-          timeout: 10000 // 10 segundos de timeout
-      });
+    // Se headers forem enviados como string JSON, parse para um objeto
+    if (headers) {
+      parsedHeaders = JSON.parse(headers); // Corrigido para transformar a string JSON em objeto
+    }
 
-      res.json({
-          success: true,
-          status: response.status,
-          statusText: response.statusText,
-          data: response.data,
-          headers: response.headers
-      });
+    const response = await axios({
+      method: method,
+      url: url,
+      data: body ? JSON.parse(body) : undefined,
+      headers: parsedHeaders || {},  // Usa headers parseados
+      timeout: 10000 // 10 segundos de timeout
+    });
+
+    res.json({
+      success: true,
+      status: response.status,
+      statusText: response.statusText,
+      data: response.data,
+      headers: response.headers
+    });
   } catch (error) {
-      res.status(500).json({
-          success: false,
-          error: error.message,
-          response: error.response ? {
-              status: error.response.status,
-              statusText: error.response.statusText,
-              data: error.response.data
-          } : null
-      });
+    console.log(error);
+    console.log(parsedHeaders)
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      response: error.response ? {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data
+      } : null
+    });
   }
 });
+
 
 const PORT = process.env.PORT || 3332;
 http.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
