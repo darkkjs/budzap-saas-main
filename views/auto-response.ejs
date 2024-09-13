@@ -1,258 +1,258 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Autoresposta Avançada - BudZap</title>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
         
+        :root {
+            --primary-color: #4F46E5;
+            --secondary-color: #10B981;
+            --accent-color: #F59E0B;
+            --background-color: #F3F4F6;
+            --text-color: #1F2937;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            background-color: var(--background-color);
+            color: var(--text-color);
         }
+
         .bg-gradient-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
         }
+
         .card-hover {
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
+
         .card-hover:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
         }
+
         .animate-float {
             animation: float 6s ease-in-out infinite;
         }
+
         @keyframes float {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-20px); }
             100% { transform: translateY(0px); }
         }
+
         .animate-pulse {
             animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: .5; }
         }
+
         .campaign-card {
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
+
         .campaign-card:hover {
             transform: scale(1.03);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #4338CA;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #059669;
+        }
+
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) var(--background-color);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: var(--background-color);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: var(--primary-color);
+            border-radius: 20px;
+            border: 3px solid var(--background-color);
         }
     </style>
 </head>
-<body class="min-h-screen">
-    <div class="drawer lg:drawer-open">
-        <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
-        <div class="drawer-content flex flex-col">
+<body class="min-h-screen custom-scrollbar">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+       
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Navbar -->
-            <nav class="bg-gradient-primary text-white p-4 shadow-lg">
-                <div class="container mx-auto flex justify-between items-center">
-                    <h1 class="text-2xl font-bold flex items-center">
-                        <svg class="w-8 h-8 mr-2 animate-float" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M8 14C8 14 9.5 16 12 16C14.5 16 16 14 16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M9 9H9.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M15 9H15.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <header class="bg-white shadow-sm">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                    <h1 class="text-2xl font-semibold text-gray-900">Autoresposta Avançada</h1>
+                    <button class="lg:hidden text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600" aria-label="Open sidebar">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
-                        Autoresposta Avançada
-                    </h1>
-                    <label for="my-drawer-2" class="btn btn-primary drawer-button lg:hidden">
-                        <i class="fas fa-bars"></i>
-                    </label>
+                    </button>
                 </div>
-            </nav>
+            </header>
 
-            <!-- Main Content -->
-            <main class="container mx-auto mt-8 p-4">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Configurações -->
-                    <div class="lg:col-span-2">
-                        <div class="card bg-base-100 shadow-xl card-hover mb-8">
-                            <div class="card-body">
-                                <h2 class="card-title text-2xl mb-6 text-purple-700">
-                                    <i class="fas fa-cog mr-2"></i>Configurações de Autoresposta
-                                </h2>
-                                <div class="mb-8 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-lg shadow-md p-6">
-                                    <h3 class="text-2xl font-bold text-purple-700 mb-4">
-                                        <i class="fas fa-robot mr-2"></i>Seu Poder de Autoresposta
-                                    </h3>
-                                    <div id="autoResponseUsage" class="flex flex-col items-center">
-                                        <div id="limitedPlanContent">
-                                            <div class="w-full bg-gray-200 rounded-full h-4 mb-4">
-                                                <div id="usageBar" class="bg-purple-600 h-4 rounded-full transition-all duration-500 ease-in-out" style="width: 0%"></div>
-                                            </div>
-                                            <p class="text-lg font-semibold text-gray-700 mb-2">
-                                                Você usou <span id="usedResponses" class="text-purple-600">0</span> de <span id="totalResponses" class="text-purple-600">0</span> respostas automáticas
-                                            </p>
-                                            <p id="limitMessage" class="text-sm text-gray-600 mb-4">Carregando informações do plano...</p>
-                                            <div class="flex justify-center">
-                                                <a href="/change-plan" class="btn btn-primary animate-pulse hover:animate-none transition duration-300">
-                                                    <i class="fas fa-rocket mr-2"></i>Aumente seu Limite Agora!
-                                                </a>
-                                            </div>
-                                        </div>
-                                        <div id="premiumPlanContent" class="hidden">
-                                            <p class="text-lg font-semibold text-purple-700 mb-2">
-                                                <i class="fas fa-infinity mr-2"></i>Você tem respostas automáticas ilimitadas!
-                                            </p>
-                                            <p class="text-sm text-gray-600 mb-4">Aproveite ao máximo seu plano Premium</p>
-                                        </div>
-                                    </div>
+            <!-- Page Content -->
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <!-- Uso de Autoresposta -->
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                        <h2 class="text-2xl font-semibold mb-4">Uso de Autoresposta</h2>
+                        <div id="autoResponseUsage" class="space-y-4">
+                            <div id="limitedPlanContent">
+                                <div class="w-full bg-gray-200 rounded-full h-4">
+                                    <div id="usageBar" class="bg-blue-600 h-4 rounded-full transition-all duration-500 ease-in-out" style="width: 0%"></div>
                                 </div>
-                                <form id="autoResponseForm" class="space-y-6">
-                                    <div class="form-control">
-                                        <label class="label">
-                                            <span class="label-text">Selecione a Instância</span>
-                                        </label>
-                                        <select id="instanceSelect" name="instanceKey" class="select select-bordered w-full">
-                                            <option disabled selected>Escolha uma instância</option>
-                                            <% user.whatsappInstances.forEach(instance => { %>
-                                                <option value="<%= instance.key %>"><%= instance.name %></option>
-                                            <% }); %>
-                                        </select>
-                                    </div>
-
-                                    <div id="campaignsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <!-- Campanhas serão adicionadas aqui dinamicamente -->
-                                    </div>
-
-                                    <button type="button" id="addCampaignBtn" class="btn btn-secondary w-full">
-                                        <i class="fas fa-plus mr-2"></i>Adicionar Nova Campanha
-                                    </button>
-
-                                    <button type="submit" class="btn btn-primary w-full">
-                                        <i class="fas fa-save mr-2"></i>Salvar Configurações
-                                    </button>
-                                </form>
+                                <p class="text-lg font-medium mt-2">
+                                    <span id="usedResponses" class="text-blue-600">0</span> de <span id="totalResponses" class="text-blue-600">0</span> respostas automáticas usadas
+                                </p>
+                                <p id="limitMessage" class="text-sm text-gray-600 mt-1"></p>
+                                <button class="btn btn-primary mt-4">Aumentar Limite</button>
+                            </div>
+                            <div id="premiumPlanContent" class="hidden">
+                                <p class="text-lg font-semibold text-green-600">
+                                    <i class="fas fa-infinity mr-2"></i>Respostas automáticas ilimitadas!
+                                </p>
+                                <p class="text-sm text-gray-600 mt-1">Aproveite seu plano Premium</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Relatório e Gráficos -->
-                    <div class="lg:col-span-1">
-                        <div id="autoResponseReport" class="card bg-base-100 shadow-xl card-hover mb-8">
-                            <div class="card-body">
-                                <h2 class="card-title text-2xl mb-6 text-purple-700">
-                                    <i class="fas fa-chart-bar mr-2"></i>Relatório
-                                </h2>
-                                <div id="reportContent" class="space-y-4">
-                                    <!-- Conteúdo do relatório será preenchido dinamicamente -->
+                    <!-- Configurações de Campanha -->
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                        <h2 class="text-2xl font-semibold mb-4">Configurações de Campanha</h2>
+                        <form id="autoResponseForm" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1" for="instanceSelect">
+                                        Selecione a Instância
+                                    </label>
+                                    <select id="instanceSelect" name="instanceKey" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                        <option disabled selected>Escolha uma instância</option>
+                                        <% user.whatsappInstances.forEach(instance => { %>
+                                            <option value="<%= instance.key %>"><%= instance.name %></option>
+                                        <% }); %>
+                                    </select>
                                 </div>
-                                <div class="mt-6">
-                                    <canvas id="responseChart"></canvas>
-                                </div>
+                            </div>
+
+                            <div id="campaignsList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Campanhas serão adicionadas aqui dinamicamente -->
+                            </div>
+
+                            <div class="flex justify-between">
+                                <button type="button" id="addCampaignBtn" class="btn btn-secondary">
+                                    <i class="fas fa-plus mr-2"></i>Adicionar Nova Campanha
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save mr-2"></i>Salvar Configurações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Relatórios -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h2 class="text-2xl font-semibold mb-4">Respostas Recentes</h2>
+                            <div id="reportContent" class="space-y-4">
+                                <!-- Conteúdo do relatório será preenchido dinamicamente -->
                             </div>
                         </div>
-
-                        <div class="card bg-base-100 shadow-xl card-hover">
-                            <div class="card-body">
-                                <h2 class="card-title text-2xl mb-6 text-purple-700">
-                                    <i class="fas fa-fire mr-2"></i>Campanhas Mais Ativadas
-                                </h2>
-                                <canvas id="campaignActivationChart"></canvas>
-                            </div>
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h2 class="text-2xl font-semibold mb-4">Evolução das Respostas</h2>
+                            <canvas id="responseChart"></canvas>
                         </div>
                     </div>
-                </div>
 
-                <!-- Mini Tutoriais -->
-                <div class="mt-12">
-                    <h2 class="text-2xl font-bold text-purple-700 mb-6">
-                        <i class="fas fa-graduation-cap mr-2"></i>Mini Tutoriais
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="card bg-base-100 shadow-xl">
-                            <div class="card-body">
-                                <h3 class="card-title text-lg">Como criar uma campanha</h3>
-                                <p>1. Clique em "Adicionar Nova Campanha"</p>
-                                <p>2. Preencha os detalhes da campanha</p>
-                                <p>3. Escolha a condição de ativação</p>
-                                <p>4. Selecione o funil desejado</p>
-                                <p>5. Salve as configurações</p>
-                            </div>
-                        </div>
-                        <div class="card bg-base-100 shadow-xl">
-                            <div class="card-body">
-                                <h3 class="card-title text-lg">Condições de ativação</h3>
-                                <p><strong>Todas as mensagens:</strong> Ativa para qualquer mensagem</p>
-                                <p><strong>Começa com:</strong> Ativa se a mensagem começar com o texto especificado</p>
-                                <p><strong>Contém:</strong> Ativa se a mensagem contiver o texto especificado</p>
-                                <p><strong>É igual a:</strong> Ativa se a mensagem for exatamente igual ao texto especificado</p>
-                                <p><strong>Expressão Regular:</strong> Ativa se a mensagem corresponder à expressão regular</p>
-                            </div>
-                        </div>
-                        <div class="card bg-base-100 shadow-xl">
-                            <div class="card-body">
-                                <h3 class="card-title text-lg">Dicas para otimização</h3>
-                                <p>1. Use condições específicas para evitar ativações indesejadas</p>
-                                <p>2. Crie funis curtos e objetivos para melhor engajamento</p>
-                                <p>3. Teste suas campanhas regularmente</p>
-                                <p>4. Analise os relatórios para melhorar o desempenho</p>
-                                <p>5. Atualize suas campanhas com base no feedback dos usuários</p>
-                            </div>
-                        </div>
+                    <div class="mt-8 bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-2xl font-semibold mb-4">Campanhas Mais Ativadas</h2>
+                        <canvas id="campaignActivationChart"></canvas>
                     </div>
                 </div>
             </main>
-        </div> 
+        </div>
     </div>
 
-    <!-- Template for campaign -->
+    <!-- Template para campanha -->
     <template id="campaignTemplate">
-        <div class="campaign-card card bg-base-200 shadow-sm p-4">
-            <div class="form-control">
-                <label class="label">
-                    <span class="label-text">Nome da Campanha</span>
-                </label>
-                <input type="text" name="campaignName" class="input input-bordered" required placeholder="Nome da campanha">
+        <div class="campaign-card bg-gray-50 rounded-lg shadow-sm p-6">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="campaignName">
+                        Nome da Campanha
+                    </label>
+                    <input type="text" name="campaignName" id="campaignName" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required placeholder="Nome da campanha">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="condition">
+                        Condição
+                    </label>
+                    <select name="condition" id="condition" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="all">Todas as mensagens</option>
+                        <option value="startsWith">Começa com</option>
+                        <option value="contains">Contém</option>
+                        <option value="equals">É igual a</option>
+                        <option value="regex">Expressão Regular</option>
+                    </select>
+                </div>
+                <div class="condition-value hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="conditionValue">
+                        Valor da Condição
+                    </label>
+                    <input type="text" name="conditionValue" id="conditionValue" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" placeholder="Valor da condição">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="funnelId">
+                        Selecione o Funil
+                    </label>
+                    <select name="funnelId" id="funnelId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        <option value="">Selecione um funil</option>
+                        <% funnels.forEach(function(funnel) { %>
+                            <option value="<%= funnel.id %>"><%= funnel.name %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="isActive" id="isActive" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" checked>
+                    <label for="isActive" class="ml-2 block text-sm text-gray-900">
+                        Ativar Campanha
+                    </label>
+                </div>
+                <button type="button" class="btn btn-error btn-sm mt-4 remove-campaign-btn w-full">
+                    <i class="fas fa-trash mr-2"></i>Remover Campanha
+                </button>
             </div>
-            <div class="form-control">
-                <label class="label">
-                    <span class="label-text">Condição</span>
-                </label>
-                <select name="condition" class="select select-bordered w-full">
-                    <option value="all">Todas as mensagens</option>
-                    <option value="startsWith">Começa com</option>
-                    <option value="contains">Contém</option>
-                    <option value="equals">É igual a</option>
-                    <option value="regex">Expressão Regular</option>
-                </select>
-            </div>
-            <div class="form-control condition-value hidden">
-                <label class="label">
-                    <span class="label-text">Valor da Condição</span>
-                </label>
-                <input type="text" name="conditionValue" class="input input-bordered" placeholder="Valor da condição">
-            </div>
-            <div class="form-control">
-                <label class="label">
-                    <span class="label-text">Selecione o Funil</span>
-                </label>
-                <select name="funnelId" required>
-                    <option value="">Selecione um funil</option>
-                    <% funnels.forEach(function(funnel) { %>
-                        <option value="<%= funnel.id %>"><%= funnel.name %></option>
-                    <% }); %>
-                </select>
-            </div>
-            <div class="form-control">
-                <label class="cursor-pointer label">
-                    <span class="label-text">Ativar Campanha</span> 
-                    <input type="checkbox" name="isActive" class="toggle toggle-primary" checked />
-                </label>
-            </div>
-            <button type="button" class="btn btn-error btn-sm mt-2 remove-campaign-btn">
-                <i class="fas fa-trash mr-2"></i>Remover Campanha
-            </button>
         </div>
     </template>
 
@@ -263,6 +263,18 @@
     const campaignTemplate = document.getElementById('campaignTemplate');
 
     let campaigns = [];
+
+
+
+    function startPeriodicUpdates() {
+    setInterval(() => {
+        if (instanceSelect && instanceSelect.value) {
+            loadAutoResponseReport(instanceSelect.value);
+            updateAutoResponseUsage();
+        }
+    }, 60000); // Atualiza a cada minuto
+}
+
 
     if (instanceSelect) {
         instanceSelect.addEventListener('change', loadCampaigns);
@@ -478,67 +490,66 @@
     }
 
     function updateCampaignActivationChart(data) {
-        const ctx = document.getElementById('campaignActivationChart');
-        if (!ctx) {
-            console.error('Elemento do gráfico de ativações de campanha não encontrado');
-            return;
-        }
+    const ctx = document.getElementById('campaignActivationChart');
+    if (!ctx) {
+        console.error('Elemento do gráfico de ativações de campanha não encontrado');
+        return;
+    }
 
-        if (window.campaignActivationChart && typeof window.campaignActivationChart.destroy === 'function') {
-            window.campaignActivationChart.destroy();
-        }
-        
-        const sortedCampaigns = Object.entries(data.campaignActivations)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5); // Pegar as 5 campanhas mais ativadas
+    if (window.campaignActivationChart && typeof window.campaignActivationChart.destroy === 'function') {
+        window.campaignActivationChart.destroy();
+    }
+    
+    const sortedCampaigns = Object.entries(data.campaignActivations)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5); // Pegar as 5 campanhas mais ativadas
 
-        window.campaignActivationChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: sortedCampaigns.map(campaign => campaign[0]),
-                datasets: [{
-                    label: 'Ativações',
-                    data: sortedCampaigns.map(campaign => campaign[1]),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.8)',
-                        'rgba(54, 162, 235, 0.8)',
-                        'rgba(255, 206, 86, 0.8)',
-                        'rgba(75, 192, 192, 0.8)',
-                        'rgba(153, 102, 255, 0.8)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    title: {
-                        display: true,
-                        text: 'Campanhas Mais Ativadas'
-                    }
+    window.campaignActivationChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sortedCampaigns.map(campaign => campaign[0]),
+            datasets: [{
+                label: 'Ativações',
+                data: sortedCampaigns.map(campaign => campaign[1]),
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(153, 102, 255, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false,
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
-                        }
+                title: {
+                    display: true,
+                    text: 'Campanhas Mais Ativadas'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
                     }
                 }
             }
-        });
-    }
-
+        }
+    });
+}
     function updateAutoResponseUsage() {
         const instanceKey = instanceSelect.value;
         if (!instanceKey) {
@@ -589,13 +600,17 @@
     
     // Inicialização
     document.addEventListener('DOMContentLoaded', () => {
+        startPeriodicUpdates();
         updateAutoResponseUsage();
         setInterval(updateAutoResponseUsage, 300000); // Atualiza a cada 5 minutos
         
-        if (instanceSelect && instanceSelect.value) {
-            loadCampaigns();
-            loadAutoResponseReport(instanceSelect.value);
-        }
+        if (instanceSelect) {
+    instanceSelect.addEventListener('change', () => {
+        loadCampaigns();
+        loadAutoResponseReport(instanceSelect.value);
+        updateAutoResponseUsage();
+    });
+}
 
         if (instanceSelect) {
             instanceSelect.addEventListener('change', () => {

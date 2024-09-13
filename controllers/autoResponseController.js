@@ -151,16 +151,16 @@ async function recordCampaignActivation(instanceKey, campaignName, chatId) {
     const userUsageKey = `user_auto_response_usage:${instanceKey}`;
 
     try {
-        await redisClient.incr(activationsKey);
-        await redisClient.incr(userUsageKey);
-
-        const report = JSON.stringify({
-            campaignName,
-            chatId,
-            timestamp: new Date().toISOString(),
-        });
-        await redisClient.lpush(reportsKey, report);
-        await redisClient.ltrim(reportsKey, 0, 99);
+        await Promise.all([
+            redisClient.incr(activationsKey),
+            redisClient.incr(userUsageKey),
+            redisClient.lpush(reportsKey, JSON.stringify({
+                campaignName,
+                chatId,
+                timestamp: new Date().toISOString(),
+            })),
+            redisClient.ltrim(reportsKey, 0, 99)
+        ]);
 
         console.log(`Ativação de campanha registrada: ${campaignName}`.green);
         console.log(`Uso de autoresposta incrementado para a instância: ${instanceKey}`.green);
@@ -191,6 +191,10 @@ async function executeCampaign(instanceKey, chatId, message, campaign) {
     }
 
     console.log(`Iniciando execução do funil:`.green, funnel.name);
+
+
+     // Registra a ativação da campanha
+     await recordCampaignActivation(instanceKey, campaign.name, chatId);
 
     const initialState = {
         funnelId: funnel.id,

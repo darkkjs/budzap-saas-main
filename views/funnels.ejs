@@ -9,31 +9,36 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
-        @media (max-width: 640px) {
-            .mobile-full-width {
-                width: 100% !important;
-            }
+        .modal {
+            z-index: 1000;
+        }
+        .modal-box {
+            max-height: 80vh;
+            overflow-y: auto;
         }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
-    <nav class="bg-purple-600 text-white p-4">
+    <nav class="bg-purple-600 text-white p-4 shadow-md">
         <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
             <h1 class="text-2xl font-bold mb-2 sm:mb-0">Funis</h1>
-            <div class="flex flex-col sm:flex-row items-center">
-                <span id="funnelCount" class="mb-2 sm:mb-0 sm:mr-4"></span>
-                <button id="createFunnelBtn" class="btn btn-outline btn-white w-full sm:w-auto">
+            <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                <span id="funnelCount" class="text-sm"></span>
+                <button id="createFunnelBtn" class="btn btn-outline btn-white">
                     <i class="fas fa-plus mr-2"></i>Criar Novo Funil
+                </button>
+                <button onclick="showImportModal()" class="btn btn-outline btn-white">
+                    <i class="fas fa-file-import mr-2"></i>Importar
                 </button>
             </div>
         </div>
     </nav>
-
+    
     <main class="container mx-auto p-4 flex-grow">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-            <h2 class="text-2xl sm:text-3xl font-bold text-purple-800 mb-4 sm:mb-0">Seus Funis</h2>
-            <div class="flex flex-col sm:flex-row items-center w-full sm:w-auto">
-                <input type="text" id="searchInput" placeholder="Buscar funis..." class="input input-bordered w-full sm:w-auto mb-2 sm:mb-0 sm:mr-2">
+        <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+            <h2 class="text-2xl font-bold text-purple-800">Seus Funis</h2>
+            <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                <input type="text" id="searchInput" placeholder="Buscar funis..." class="input input-bordered w-full sm:w-64">
                 <select id="sortSelect" class="select select-bordered w-full sm:w-auto">
                     <option value="name">Ordenar por Nome</option>
                     <option value="date">Ordenar por Data</option>
@@ -41,12 +46,12 @@
                 </select>
             </div>
         </div>
-        <div id="funnelList" class="grid grid-cols-1 gap-4"></div>
+        <div id="funnelList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </main>
 
     <!-- Modal para criar/editar funil -->
     <div id="funnelModal" class="modal">
-        <div class="modal-box w-11/12 max-w-md">
+        <div class="modal-box">
             <h3 class="font-bold text-lg" id="modalTitle">Criar Novo Funil</h3>
             <form id="funnelForm" class="py-4">
                 <input type="text" id="funnelName" placeholder="Nome do Funil" class="input input-bordered w-full mb-4" required>
@@ -59,6 +64,21 @@
         </div>
     </div>
 
+   
+<!-- Modal para importação de funis -->
+<div id="importModal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">Importar Funil</h3>
+        <form id="importForm" class="py-4">
+            <input type="file" id="importFile" accept=".json" class="file-input file-input-bordered w-full" />
+        </form>
+        <div class="modal-action">
+            <button onclick="importFunnel()" class="btn btn-primary">Importar</button>
+            <button onclick="closeImportModal()" class="btn">Cancelar</button>
+        </div>
+    </div>
+</div>
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
     <script>
   let funnels = [];
@@ -69,6 +89,53 @@ const PLAN_LIMITS = {
     premium: Infinity
 };
 const funnelLimit = PLAN_LIMITS[currentPlan];
+
+function showImportModal() {
+            document.getElementById('importModal').classList.add('modal-open');
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.remove('modal-open');
+        }
+
+        async function importFunnel() {
+    const fileInput = document.getElementById('importFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showNotification('Erro', 'Por favor, selecione um arquivo para importar.', 'error');
+        return;
+    }
+
+    try {
+        const fileContent = await file.text();
+        const funnelData = JSON.parse(fileContent);
+        
+        const response = await fetch('/funnels/api/import', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ funnelData }),
+        });
+        
+        const result = await response.json();
+        
+        if (result.funnelId) {
+            showNotification('Sucesso', 'Funil importado com sucesso!', 'success');
+            closeImportModal();
+            await loadFunnels();
+        } else {
+            throw new Error(result.error || 'Erro desconhecido ao importar funil');
+        }
+    } catch (error) {
+        console.error('Erro ao importar funil:', error);
+        showNotification('Erro', 'Erro ao importar funil. Verifique se o arquivo é válido e tente novamente.', 'error');
+    }
+
+    // Limpar o input de arquivo após a importação
+    fileInput.value = '';
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     loadFunnels();
@@ -107,37 +174,63 @@ function updateFunnelCount(count, limit) {
     funnelCountElement.className = count >= limit ? 'text-red-300' : 'text-white';
 }
 
-function renderFunnels() {
-    const funnelList = document.getElementById('funnelList');
-    funnelList.innerHTML = '';
-    funnels.forEach((funnel, index) => {
-        const isBlocked = currentPlan !== 'premium' && index >= funnelLimit;
-        const funnelElement = document.createElement('div');
-        funnelElement.className = `card ${isBlocked ? 'bg-gray-200' : 'bg-white'} shadow-lg hover:shadow-xl transition-shadow duration-300`;
-        funnelElement.innerHTML = `
-            <div class="card-body p-4">
-                <h3 class="card-title text-lg ${isBlocked ? 'text-gray-500' : 'text-purple-700'}">${funnel.name}</h3>
-                <p class="text-sm ${isBlocked ? 'text-gray-500' : 'text-gray-600'}">${funnel.description || 'Sem descrição'}</p>
-                <div class="flex justify-between items-center mt-4">
-                    <span class="text-sm ${isBlocked ? 'text-gray-500' : 'text-purple-600'}">Passos: ${funnel.nodes ? funnel.nodes.length : 0}</span>
-                    <span class="text-xs ${isBlocked ? 'text-gray-500' : 'text-gray-400'}">Criado em: ${new Date(funnel.createdAt).toLocaleDateString()}</span>
-                </div>
-                <div class="card-actions justify-end mt-4">
-                    <button onclick="${isBlocked ? 'showUpgradeNotification()' : `editFunnel('${funnel.id}')`}" 
-                            class="btn btn-sm ${isBlocked ? 'btn-disabled' : 'btn-primary'}">
-                        <i class="fas fa-edit mr-1"></i>Editar
-                    </button>
-                    <button onclick="${isBlocked ? 'showUpgradeNotification()' : `deleteFunnel('${funnel.id}')`}" 
-                            class="btn btn-sm ${isBlocked ? 'btn-disabled' : 'btn-error'}">
-                        <i class="fas fa-trash mr-1"></i>Deletar
-                    </button>
-                </div>
-                ${isBlocked ? '<div class="mt-2 text-xs text-red-500">Faça upgrade para editar este funil</div>' : ''}
-            </div>
-        `;
-        funnelList.appendChild(funnelElement);
-    });
-}
+ function renderFunnels() {
+            const funnelList = document.getElementById('funnelList');
+            funnelList.innerHTML = '';
+            funnels.forEach((funnel, index) => {
+                const isBlocked = currentPlan !== 'premium' && index >= funnelLimit;
+                const funnelElement = document.createElement('div');
+                funnelElement.className = `card ${isBlocked ? 'bg-gray-200' : 'bg-white'} shadow-lg hover:shadow-xl transition-shadow duration-300`;
+                funnelElement.innerHTML = `
+                    <div class="card-body">
+                        <h3 class="card-title ${isBlocked ? 'text-gray-500' : 'text-purple-700'}">${funnel.name}</h3>
+                        <p class="${isBlocked ? 'text-gray-500' : 'text-gray-600'}">${funnel.description || 'Sem descrição'}</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="${isBlocked ? 'text-gray-500' : 'text-purple-600'}">Passos: ${funnel.nodes ? funnel.nodes.length : 0}</span>
+                            <span class="text-xs ${isBlocked ? 'text-gray-500' : 'text-gray-400'}">Criado em: ${new Date(funnel.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div class="card-actions justify-end mt-4">
+                            <button onclick="exportFunnel('${funnel.id}')" class="btn btn-sm btn-outline btn-primary">
+                                <i class="fas fa-file-export mr-1"></i>Exportar
+                            </button>
+                            <button onclick="${isBlocked ? 'showUpgradeNotification()' : `editFunnel('${funnel.id}')`}" 
+                                    class="btn btn-sm ${isBlocked ? 'btn-disabled' : 'btn-primary'}">
+                                <i class="fas fa-edit mr-1"></i>Editar
+                            </button>
+                            <button onclick="${isBlocked ? 'showUpgradeNotification()' : `deleteFunnel('${funnel.id}')`}" 
+                                    class="btn btn-sm ${isBlocked ? 'btn-disabled' : 'btn-error'}">
+                                <i class="fas fa-trash mr-1"></i>Deletar
+                            </button>
+                        </div>
+                        ${isBlocked ? '<div class="mt-2 text-xs text-red-500">Faça upgrade para editar este funil</div>' : ''}
+                    </div>
+                `;
+                funnelList.appendChild(funnelElement);
+            });
+        }
+
+        async function exportFunnel(funnelId) {
+        try {
+            const response = await fetch(`/funnels/api/export/${funnelId}`);
+            if (!response.ok) {
+                throw new Error('Falha ao exportar funil');
+            }
+            const funnelData = await response.json();
+            const dataStr = JSON.stringify(funnelData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = `funnel_${funnelId}.json`;
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            showNotification('Sucesso', 'Funil exportado com sucesso!', 'success');
+        } catch (error) {
+            console.error('Erro ao exportar funil:', error);
+            showNotification('Erro', 'Erro ao exportar funil. Por favor, tente novamente.', 'error');
+        }
+    }
+
 
 function showUpgradeNotification() {
     Swal.fire({

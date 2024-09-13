@@ -1,75 +1,58 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= typeof title !== 'undefined' ? title : 'BudZap' %></title>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-
+        .dark {
+            --primary-gradient: linear-gradient(135deg, #434343 0%, #000000 100%);
+        }
         body {
             font-family: 'Poppins', sans-serif;
         }
-
         .bg-gradient {
             background: var(--primary-gradient);
         }
-
         .text-gradient {
             background: var(--primary-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
         .glassmorphism {
             background: rgba(255, 255, 255, 0.25);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
             backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
             border: 1px solid rgba(255, 255, 255, 0.18);
         }
-
         .card-zoom {
             transition: transform 0.3s ease-in-out;
         }
         .card-zoom:hover {
             transform: scale(1.05);
         }
-
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out;
-        }
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
-        }
-        .animate-slide-in {
-            animation: slideIn 0.5s ease-out;
         }
         @keyframes slideIn {
             from { transform: translateX(-20px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-
-        /* Dark mode styles */
-        [data-theme="dark"] {
-            --primary-gradient: linear-gradient(135deg, #434343 0%, #000000 100%);
-        }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+        .animate-slide-in { animation: slideIn 0.5s ease-out; }
     </style>
     <%- defineContent('head') %>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
-    <div class="flex h-screen overflow-hidden">
+    <div class="flex flex-col h-screen lg:flex-row">
         <!-- Sidebar -->
-        <aside id="sidebar" class="bg-gradient text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out z-20">
+        <aside id="sidebar" class="bg-gradient text-white w-full lg:w-64 space-y-6 py-7 px-2 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out z-20">
             <div class="flex flex-col items-center mb-8">
                 <div class="w-20 h-20 overflow-hidden rounded-full border-2 border-white shadow-lg mb-4">
                     <img src="<%= (user && user.profileImage) || '/img/logo1.jpeg' %>" alt="BudZap Mascot" class="w-full h-full object-cover">
@@ -93,7 +76,7 @@
                     { href: '/profile', icon: 'fas fa-id-badge', text: 'Perfil' },
                     { href: '/notifications', icon: 'fas fa-bell', text: 'Notificações' },
                     { href: '/whatsapp', icon: 'fab fa-whatsapp', text: 'Instâncias' },
-                    { href: '/chat', icon: 'fas fa-comment-dots', text: 'Whatsapp Web' }, // Alterado aqui
+                    { href: '/chat', icon: 'fas fa-comment-dots', text: 'Whatsapp Web' },
                     { href: '/integrations/dashboard', icon: 'fas fa-desktop', text: 'Integrações' },
                     { href: '/banco/extrato', icon: 'fas fa-university', text: 'Conta Bancária' },
                     { href: '/funnels', icon: 'fas fa-chart-line', text: 'Funis' },
@@ -115,19 +98,29 @@
         <!-- Content area -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Navbar -->
-            <div class="navbar glassmorphism sticky top-0 z-30">
-                <div class="flex-none lg:hidden">
-                    <button id="sidebarToggle" class="text-gray-600 hover:text-gray-800 focus:outline-none" aria-label="Toggle sidebar">
-                        <i class="fas fa-bars text-2xl"></i>
-                    </button>
-                </div> 
-                <div class="flex-1 px-2 mx-2">
-                    <span class="text-xl font-bold text-gradient"><%= typeof title !== 'undefined' ? title : 'BudZap' %></span>
+            <nav class="bg-white dark:bg-gray-800 shadow-md">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between h-16">
+                        <div class="flex">
+                            <div class="flex-shrink-0 flex items-center">
+                                <button id="sidebarToggle" class="text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600 lg:hidden" aria-label="Toggle sidebar">
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                                    </svg>
+                                </button>
+                                <span class="ml-2 text-xl font-bold text-gradient"><%= typeof title !== 'undefined' ? title : 'BudZap' %></span>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <button id="themeToggle" class="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:shadow-outline">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex-none">
-                    <!-- Add navbar elements here if needed -->
-                </div>
-            </div>
+            </nav>
 
             <!-- Main content -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-800 p-6">
@@ -164,7 +157,6 @@
 
         sidebarToggle.addEventListener('click', function() {
             sidebar.classList.toggle('-translate-x-full');
-            content.classList.toggle('md:ml-64');
         });
 
         // Close sidebar when clicking outside of it on mobile
@@ -172,29 +164,15 @@
             const isClickInsideSidebar = sidebar.contains(event.target);
             const isClickOnToggle = sidebarToggle.contains(event.target);
             
-            if (!isClickInsideSidebar && !isClickOnToggle && window.innerWidth < 768) {
+            if (!isClickInsideSidebar && !isClickOnToggle && window.innerWidth < 1024) {
                 sidebar.classList.add('-translate-x-full');
-                content.classList.remove('md:ml-64');
-            }
-        });
-
-        // Adjust layout on window resize
-        window.addEventListener('resize', function() {
-            if (window.innerWidth >= 768) {
-                sidebar.classList.remove('-translate-x-full');
-                content.classList.add('md:ml-64');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                content.classList.remove('md:ml-64');
             }
         });
 
         // Theme toggle
         const themeToggle = document.getElementById('themeToggle');
         themeToggle.addEventListener('click', function() {
-            document.documentElement.setAttribute('data-theme', 
-                document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light'
-            );
+            document.documentElement.classList.toggle('dark');
         });
     </script>
 </body>

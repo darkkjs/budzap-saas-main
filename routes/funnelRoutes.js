@@ -99,5 +99,35 @@ router.post('/api/create', ensureAuthenticated, funnelController.createFunnel);
 router.put('/api/update/:id', ensureAuthenticated, funnelController.updateFunnel);
 router.delete('/api/delete/:id', ensureAuthenticated, funnelController.deleteFunnel);
 
+const communityFunnelController = require('../controllers/communityFunnelController');
+
+
+// Exportação e importação
+router.get('/api/export/:id', ensureAuthenticated, funnelController.exportFunnel);
+router.post('/api/import', ensureAuthenticated, funnelController.importFunnel);
+
+router.get('/community', ensureAuthenticated, (req, res) => {
+    const escapeJSON = (json) => {
+        return JSON.stringify(json).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+    };
+    
+    // Quando você estiver renderizando a página:
+    res.render('community-funnels', {
+        user: escapeJSON(req.user),
+        // ... outras variáveis
+    });
+});
+router.get('/api/community/list', ensureAuthenticated, communityFunnelController.listCommunityFunnels);
+router.post('/api/community/share', ensureAuthenticated, communityFunnelController.shareFunnel);
+router.get('/api/community/download/:id', ensureAuthenticated, communityFunnelController.downloadCommunityFunnel);
+router.post('/api/community/comment/:id', ensureAuthenticated, communityFunnelController.addComment);
+router.get('/api/community/categories', ensureAuthenticated, communityFunnelController.getCategories);
+router.get('/api/community/comments/:id', ensureAuthenticated, communityFunnelController.getComments);
+router.post('/api/community/add-to-user/:id', ensureAuthenticated, communityFunnelController.addToUserFunnels);
+router.get('/api/details/:id', ensureAuthenticated, funnelController.getFunnelDetails);
+router.post('/api/community/like/:id', ensureAuthenticated, communityFunnelController.likeFunnel);
+router.get('/api/community/my-posts', ensureAuthenticated, communityFunnelController.getMyPosts);
+router.get('/api/community/liked-posts', ensureAuthenticated, communityFunnelController.getLikedPosts);
+router.delete('/api/community/delete/:id', ensureAuthenticated, communityFunnelController.deleteFunnel);
 
 module.exports = router;

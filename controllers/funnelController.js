@@ -11,6 +11,32 @@ const PLAN_LIMITS = {
 
 const FUNNEL_EXPIRY = 60 * 60 * 24 * 30; // 30 dias em segundos
 
+
+exports.downloadCommunityFunnel = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const communityFunnelKey = `community:funnel:${id}`;
+        const funnelData = await redisClient.get(communityFunnelKey);
+
+        if (!funnelData) {
+            return res.status(404).json({ error: 'Funil da comunidade não encontrado' });
+        }
+
+        const funnel = JSON.parse(funnelData);
+
+        // Incrementar o contador de downloads
+        await redisClient.hincrby(communityFunnelKey, 'downloads', 1);
+
+        // Remover campos sensíveis ou desnecessários antes de enviar
+        const { _id, author, downloads, ...downloadableFunnel } = funnel;
+
+        res.json(downloadableFunnel);
+    } catch (error) {
+        console.error('Erro ao baixar funil da comunidade:', error);
+        res.status(500).json({ error: 'Erro ao baixar funil da comunidade' });
+    }
+};
+
 exports.listFunnels = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -26,6 +52,100 @@ exports.listFunnels = async (req, res) => {
     } catch (error) {
         console.error('Erro ao listar funis:', error);
         res.status(500).json({ message: 'Erro ao listar funis', error: error.message });
+    }
+};
+
+
+exports.exportFunnel = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        const funnelKey = `funnel:${id}`;
+        const funnelData = await redisClient.get(funnelKey);
+
+        if (!funnelData) {
+            return res.status(404).json({ error: 'Funil não encontrado' });
+        }
+
+        const funnel = JSON.parse(funnelData);
+        
+        // Remover informações sensíveis ou específicas do usuário
+        delete funnel.userId;
+        delete funnel.createdAt;
+        delete funnel.updatedAt;
+
+        // Adicionar metadados de exportação
+        funnel.exportedAt = new Date().toISOString();
+        funnel.exportVersion = '1.0';
+
+        res.json(funnel);
+    } catch (error) {
+        console.error('Erro ao exportar funil:', error);
+        res.status(500).json({ error: 'Erro ao exportar funil' });
+    }
+};
+
+exports.shareFunnel = async (req, res) => {
+    try {
+        const { funnelId, name, description, category, tags } = req.body;
+        const userId = req.user.id;
+
+        // Buscar o funil no Redis
+        const funnelKey = `funnel:${funnelId}`;
+        const funnelData = await redisClient.get(funnelKey);
+
+        if (!funnelData) {
+            return res.status(404).json({ error: 'Funil não encontrado' });
+        }
+
+        const funnel = JSON.parse(funnelData);
+
+        // Criar um novo funil na comunidade
+        const newCommunityFunnel = new CommunityFunnel({
+            name,
+            description,
+            author: userId,
+            nodes: funnel.nodes,
+            connections: funnel.connections,
+            category,
+            tags
+        });
+
+        await newCommunityFunnel.save();
+
+        res.status(201).json({ message: 'Funil compartilhado com sucesso', funnelId: newCommunityFunnel._id });
+    } catch (error) {
+        console.error('Erro ao compartilhar funil:', error);
+        res.status(500).json({ error: 'Erro ao compartilhar funil' });
+    }
+};
+
+exports.importFunnel = async (req, res) => {
+    try {
+        const { funnelData } = req.body;
+        const userId = req.user.id;
+
+        if (!funnelData || !funnelData.name || !funnelData.nodes || !funnelData.connections) {
+            return res.status(400).json({ error: 'Dados do funil inválidos' });
+        }
+
+        const funnelId = uuidv4();
+        const newFunnel = {
+            ...funnelData,
+            id: funnelId,
+            userId: userId,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        await redisClient.set(`funnel:${funnelId}`, JSON.stringify(newFunnel), 'EX', FUNNEL_EXPIRY);
+        await redisClient.sadd(`user:${userId}:funnels`, funnelId);
+
+        res.status(201).json({ message: 'Funil importado com sucesso', funnelId });
+    } catch (error) {
+        console.error('Erro ao importar funil:', error);
+        res.status(500).json({ error: 'Erro ao importar funil' });
     }
 };
 
@@ -139,5 +259,45 @@ exports.deleteFunnel = async (req, res) => {
     } catch (error) {
         console.error('Erro ao deletar funil:', error);
         res.status(500).json({ error: 'Erro ao deletar funil' });
+    }
+};
+
+exports.getFunnelDetails = async (req, res) => {
+    try {
+        const funnelId = req.params.id;
+        const userId = req.user.id;
+
+        // Verificar se o funil pertence ao usuário
+        const userFunnelsKey = `user:${userId}:funnels`;
+        const isFunnelOwner = await redisClient.sismember(userFunnelsKey, funnelId);
+
+        if (!isFunnelOwner) {
+            return res.status(403).json({ error: 'Você não tem permissão para acessar este funil' });
+        }
+
+        // Buscar os detalhes do funil no Redis
+        const funnelKey = `funnel:${funnelId}`;
+        const funnelData = await redisClient.get(funnelKey);
+
+        if (!funnelData) {
+            return res.status(404).json({ error: 'Funil não encontrado' });
+        }
+
+        const funnel = JSON.parse(funnelData);
+
+        // Retornar apenas os dados necessários para o frontend
+        const funnelDetails = {
+            id: funnel.id,
+            name: funnel.name,
+            description: funnel.description,
+            category: funnel.category || '', // Assumindo que você tem uma categoria
+            tags: funnel.tags || [], // Assumindo que você tem tags
+            // Adicione outros campos relevantes aqui
+        };
+
+        res.json(funnelDetails);
+    } catch (error) {
+        console.error('Erro ao buscar detalhes do funil:', error);
+        res.status(500).json({ error: 'Erro ao buscar detalhes do funil' });
     }
 };
