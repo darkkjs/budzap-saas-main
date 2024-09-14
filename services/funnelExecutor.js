@@ -261,17 +261,7 @@ if (state.status === 'waiting_for_input') {
         let history = JSON.parse(await redisClient.get(memoryKey)) || [];
     
         // Preparar o prompt substituindo variáveis
-        const preparedPrompt = currentNode.aiPrompt.replace(/{{([\w:.]+)}}/g, (match, path) => {
-            const [type, key, ...rest] = path.split(':');
-            if (type === 'input' && state.userInputs[key]) {
-                return state.userInputs[key];
-            } else if (type === 'api' && state.apiResults[key]) {
-                return getNestedValue(state.apiResults[key], rest.join('.'));
-            } else if (state.variables[key]) {
-                return state.variables[key];
-            }
-            return match; // Retorna o placeholder original se não encontrar um valor
-        });
+        let preparedPrompt = replaceVariables(currentNode.aiPrompt, state);
     
         console.log('Prompt preparado para o agente IA:', preparedPrompt);
     
@@ -313,18 +303,23 @@ if (state.status === 'waiting_for_input') {
     break;
     case 'apiRequest':
         try {
-            const headers = replaceVariables(JSON.stringify(currentNode.headers), state);
+            console.log('Processing API Request node:', currentNode); // Log para debug
             const url = replaceVariables(currentNode.apiUrl, state);
-            const body = replaceVariables(currentNode.requestBody, state);
+            console.log('Processed URL:', url); // Log para debug
+    
+            if (!url) {
+                throw new Error('URL da API não configurada');
+            }
     
             const response = await axios({
-                method: currentNode.requestType,
+                method: currentNode.requestType || 'GET',
                 url: url,
-                headers: JSON.parse(headers),
-                data: JSON.parse(body)
+                headers: currentNode.headers ? JSON.parse(replaceVariables(JSON.stringify(currentNode.headers), state)) : {},
+                data: currentNode.requestBody ? JSON.parse(replaceVariables(currentNode.requestBody, state)) : {}
             });
-
-            console.log(response)
+    
+            console.log('API Response:', response.data); // Log para debug
+    
             state.apiResults[currentNode.id] = response.data;
             if (currentNode.responseVariable) {
                 state.variables[currentNode.responseVariable] = response.data;
@@ -451,20 +446,58 @@ if (state.status === 'waiting_for_input') {
     await redisClient.del(autoResponseKey);
 }
 
-function replaceVariables(content, state) {
+/*/function replaceVariables(content, state) {
     return content.replace(/{{([\w:.]+)}}/g, (match, path) => {
-        const [type, key] = path.split(':');
+        const [type, key, field] = path.split(':');
         if (type === 'input' && state.userInputs[key]) {
             return state.userInputs[key];
-        } else if (type === 'api' && state.apiResults[key]) {
-            return state.apiResults[key];
-        } else if (type === 'ai') {
+        } else if (type === 'api') {
+            if (field && state.variables[`${key}_${field}`]) {
+                return state.variables[`${key}_${field}`];
+            } else if (state.apiResults[key]) {
+                return JSON.stringify(state.apiResults[key]);
+            }
+        }else if (type === 'ai') {
             // Procura pela variável AI usando o shortId
             const aiValue = Object.entries(state.variables).find(([nodeId, value]) => nodeId.endsWith(key));
             if (aiValue) {
                 return aiValue[1];
             }
         } else if (state.variables[key]) {
+            return state.variables[key];
+        }
+        return match; // Retorna o placeholder original se não encontrar um valor
+    });
+}/*/
+
+function replaceVariables(content, state) {
+    if (typeof content !== 'string') {
+        console.error('Content is not a string:', content);
+        return content;
+    }
+    return content.replace(/{{([\w:.]+)}}/g, (match, path) => {
+        const [type, key, field] = path.split(':');
+        console.log('Replacing variable:', { type, key, field, state }); // Log para debug
+
+        if (type === 'input' && state.userInputs && state.userInputs[key]) {
+            return state.userInputs[key];
+        } else if (type === 'api') {
+            if (state.apiResults) {
+                // Se não houver um key específico, procure em todos os resultados da API
+                for (const apiKey in state.apiResults) {
+                    if (state.apiResults[apiKey][field]) {
+                        return state.apiResults[apiKey][field];
+                    }
+                }
+            }
+            return "Dados não encontrados";
+        } else if (type === 'ai') {
+            // Procura pela variável AI usando o shortId
+            const aiValue = Object.entries(state.variables).find(([nodeId, value]) => nodeId.endsWith(key));
+            if (aiValue) {
+                return aiValue[1];
+            }
+        } else if (state.variables && state.variables[key]) {
             return state.variables[key];
         }
         return match; // Retorna o placeholder original se não encontrar um valor
@@ -476,7 +509,6 @@ function getNestedValue(obj, path) {
         return prev ? prev[curr] : undefined;
     }, obj);
 }
-
 function evaluateCondition(conditionNode, state) {
     console.log('Avaliando condição:', JSON.stringify(conditionNode, null, 2));
     console.log('Estado atual:', JSON.stringify(state, null, 2));

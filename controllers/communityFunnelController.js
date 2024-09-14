@@ -32,7 +32,7 @@ exports.listCommunityFunnels = async (req, res) => {
             .sort(sortOption)
             .skip((page - 1) * limit)
             .limit(Number(limit))
-            .populate('author', 'name');
+            .populate('author', 'name profileImage'); // Adicionando profileImage aqui
 
         const total = await CommunityFunnel.countDocuments(query);
 
@@ -170,16 +170,23 @@ exports.likeFunnel = async (req, res) => {
             return res.status(404).json({ error: 'Funil não encontrado' });
         }
 
-        const likeIndex = funnel.likes.indexOf(userId);
-        if (likeIndex > -1) {
-            funnel.likes.splice(likeIndex, 1);
-        } else {
+        const userIndex = funnel.likes.indexOf(userId);
+        let liked = false;
+
+        if (userIndex === -1) {
             funnel.likes.push(userId);
+            liked = true;
+        } else {
+            funnel.likes.splice(userIndex, 1);
         }
 
         await funnel.save();
 
-        res.json({ message: 'Ação realizada com sucesso', likes: funnel.likes.length });
+        res.json({ 
+            message: liked ? 'Funil curtido com sucesso' : 'Curtida removida com sucesso', 
+            likes: funnel.likes.length,
+            liked: liked
+        });
     } catch (error) {
         console.error('Erro ao curtir/descurtir funil:', error);
         res.status(500).json({ error: 'Erro ao curtir/descurtir funil' });

@@ -10,6 +10,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"/>
     <style>
         @keyframes float {
             0% { transform: translateY(0px); }
@@ -17,37 +18,53 @@
             100% { transform: translateY(0px); }
         }
         .float { animation: float 3s ease-in-out infinite; }
+        .select2-container .select2-selection--single {
+            height: 38px;
+            line-height: 38px;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
-    <nav class="bg-purple-600 text-white p-4">
+    <nav class="bg-purple-600 text-white p-4 sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-bold">Comunidade de Funis</h1>
-            <div class="space-x-4">
-                <a href="#" id="myPostsBtn" class="hover:text-purple-200 transition">Meus Posts</a>
-                <a href="#" id="likedPostsBtn" class="hover:text-purple-200 transition">Curtidos</a>
-                <a href="#" id="shareButton" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition">
-                    Compartilhar Funil
+            <div class="space-x-4 flex items-center">
+                <a href="#" id="myPostsBtn" class="hover:text-purple-200 transition">
+                    <i class="fas fa-user-circle mr-1"></i> Meus Posts
                 </a>
+                <a href="#" id="likedPostsBtn" class="hover:text-purple-200 transition">
+                    <i class="fas fa-heart mr-1"></i> Curtidos
+                </a>
+                <button id="shareButton" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition">
+                    <i class="fas fa-share-alt mr-1"></i> Compartilhar Funil
+                </button>
             </div>
         </div>
     </nav>
 
     <div class="container mx-auto px-4 py-8">
-        <div class="mb-6 flex flex-wrap items-center justify-between bg-white p-4 rounded-lg shadow animate__animated animate__fadeIn">
-            <div class="w-full md:w-1/3 mb-4 md:mb-0">
-                <input type="text" id="searchInput" placeholder="Buscar funis..." class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500">
-            </div>
-            <div class="w-full md:w-1/3 mb-4 md:mb-0">
-                <select id="categoryFilter" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <option value="">Todas as categorias</option>
-                </select>
-            </div>
-            <div class="w-full md:w-1/3">
-                <select id="sortFilter" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <option value="recent">Mais recentes</option>
-                    <option value="popular">Mais populares</option>
-                </select>
+        <div class="mb-6 bg-white p-6 rounded-lg shadow animate__animated animate__fadeIn">
+            <h2 class="text-xl font-semibold mb-4">Filtros e Busca</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-1">Buscar funis</label>
+                    <input type="text" id="searchInput" placeholder="Digite para buscar..." class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label for="categoryFilter" class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                    <select id="categoryFilter" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">Todas as categorias</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="sortFilter" class="block text-sm font-medium text-gray-700 mb-1">Ordenar por</label>
+                    <select id="sortFilter" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="recent">Mais recentes</option>
+                        <option value="popular">Mais populares</option>
+                        <option value="downloads">Mais baixados</option>
+                        <option value="likes">Mais curtidos</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -56,7 +73,9 @@
         </div>
 
         <div class="mt-6 flex justify-center">
-            <button id="loadMoreBtn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition">Carregar mais</button>
+            <button id="loadMoreBtn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition">
+                <i class="fas fa-sync-alt mr-1"></i> Carregar mais
+            </button>
         </div>
     </div>
 
@@ -67,17 +86,32 @@
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
                         Compartilhar Funil
                     </h3>
-                    <div class="mt-2">
-                        <select id="funnelSelect" class="w-full mt-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                            <option value="">Selecione um funil</option>
-                        </select>
-                        <input id="funnelName" class="w-full mt-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Nome do Funil">
-                        <textarea id="funnelDescription" class="w-full mt-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Descrição" rows="3"></textarea>
-                        <input id="funnelCategory" class="w-full mt-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Categoria">
-                        <input id="funnelTags" class="w-full mt-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Tags (separadas por vírgula)">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="funnelSelect" class="block text-sm font-medium text-gray-700 mb-1">Selecione um funil</label>
+                            <select id="funnelSelect" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <option value="">Selecione um funil</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="funnelName" class="block text-sm font-medium text-gray-700 mb-1">Nome do Funil</label>
+                            <input id="funnelName" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Nome do Funil">
+                        </div>
+                        <div>
+                            <label for="funnelDescription" class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                            <textarea id="funnelDescription" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Descrição" rows="3"></textarea>
+                        </div>
+                        <div>
+                            <label for="funnelCategory" class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                            <input id="funnelCategory" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Categoria">
+                        </div>
+                        <div>
+                            <label for="funnelTags" class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                            <input id="funnelTags" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Tags (separadas por vírgula)">
+                        </div>
                     </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
@@ -95,7 +129,7 @@
     <script>
         let currentPage = 1;
         let totalPages = 1;
-        const currentUser = '<%= user %>'
+        const currentUser = <%- user %>
 
         document.addEventListener('DOMContentLoaded', () => {
             fetchCategories();
@@ -122,7 +156,8 @@
             // Inicializar Select2
             $(funnelSelect).select2({
                 placeholder: "Selecione um funil",
-                allowClear: true
+                allowClear: true,
+                dropdownParent: $('#shareFunnelModal')
             });
 
             // Carregar funis do usuário
@@ -142,6 +177,7 @@
                 });
             } catch (error) {
                 console.error('Erro ao buscar categorias:', error);
+                showErrorToast('Erro ao carregar categorias');
             }
         }
 
@@ -169,54 +205,55 @@
                 document.getElementById('loadMoreBtn').style.display = currentPage >= totalPages ? 'none' : 'block';
             } catch (error) {
                 console.error('Erro ao buscar funis da comunidade:', error);
+                showErrorToast('Erro ao carregar funis');
             }
         }
 
         function displayFunnels(funnels) {
-            const funnelList = document.getElementById('funnelList');
-            funnels.forEach(funnel => {
-                const funnelElement = document.createElement('div');
-                funnelElement.className = 'bg-white rounded-lg shadow-md p-6 animate__animated animate__fadeIn';
-                funnelElement.innerHTML = `
-                    <div class="flex items-center mb-4">
-                        <img src="${funnel.author.profileImage || '/img/default-avatar.png'}" alt="${funnel.author.name}" class="w-10 h-10 rounded-full mr-3">
-                        <div>
-                            <h2 class="text-xl font-semibold">${funnel.name}</h2>
-                            <p class="text-sm text-gray-500">Por ${funnel.author.name}</p>
-                        </div>
+    const funnelList = document.getElementById('funnelList');
+    funnelList.innerHTML = ''; // Limpa a lista antes de adicionar novos funis
+    funnels.forEach(funnel => {
+        const isLiked = funnel.likes.includes(currentUser._id);
+        const funnelElement = document.createElement('div');
+        funnelElement.className = 'bg-white rounded-lg shadow-md p-6 animate__animated animate__fadeIn';
+        funnelElement.innerHTML = `
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    <img src="${funnel.author.profileImage || '/img/default-avatar.png'}" alt="${funnel.author.name}" class="w-10 h-10 rounded-full mr-3 object-cover">
+                    <div>
+                        <h2 class="text-xl font-semibold">${funnel.name}</h2>
+                        <p class="text-sm text-gray-500">Por ${funnel.author.name}</p>
                     </div>
-                    <p class="text-gray-600 mb-4">${funnel.description}</p>
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-sm text-gray-500">${funnel.downloads} downloads</span>
-                        <span class="text-sm text-gray-500">${funnel.likes} curtidas</span>
-                    </div>
-                    <div class="flex flex-wrap mb-4">
-                        ${funnel.tags.map(tag => `<span class="bg-purple-100 text-purple-800 text-xs font-semibold mr-2 mb-2 px-2.5 py-0.5 rounded">${tag}</span>`).join('')}
-                    </div>
-                    <div class="mt-4 flex justify-between items-center">
-                        <button onclick="downloadFunnel('${funnel._id}')" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition">
-                            <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            Baixar
-                        </button>
-                        <button onclick="likeFunnel('${funnel._id}')" class="text-purple-500 hover:text-purple-700 transition">
-                            <svg class="w-6 h-6 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
-                            Curtir
-                        </button>
-                        <button onclick="showComments('${funnel._id}')" class="text-blue-500 hover:text-blue-700 transition">
-                            <svg class="w-6 h-6 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
-                            Comentários
-                        </button>
-                    </div>
-                  ${currentUser.role === 'admin' || currentUser._id === funnel.author._id ? `
-                        <button onclick="deleteFunnel('${funnel._id}')" class="mt-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">
-                            <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            Apagar Funil
-                        </button>
-                    ` : ''}
-                `;
-                funnelList.appendChild(funnelElement);
-            });
-        }
+                </div>
+                <span class="text-sm text-gray-500">${new Date(funnel.createdAt).toLocaleDateString()}</span>
+            </div>
+            <p class="text-gray-600 mb-4">${funnel.description}</p>
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm text-gray-500"><i class="fas fa-download mr-1"></i> ${funnel.downloads} downloads</span>
+                <button onclick="likeFunnel('${funnel._id}')" class="text-gray-500 hover:text-red-500 transition ${isLiked ? 'text-red-500' : ''}">
+                    <i class="${isLiked ? 'fas' : 'far'} fa-heart mr-1"></i> <span class="like-count">${funnel.likes.length}</span>
+                </button>
+            </div>
+            <div class="flex flex-wrap mb-4">
+                ${funnel.tags.map(tag => `<span class="bg-purple-100 text-purple-800 text-xs font-semibold mr-2 mb-2 px-2.5 py-0.5 rounded">${tag}</span>`).join('')}
+            </div>
+            <div class="mt-4 flex justify-between items-center">
+                <button onclick="downloadFunnel('${funnel._id}')" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition">
+                    <i class="fas fa-download mr-1"></i> Baixar
+                </button>
+                <button onclick="showComments('${funnel._id}')" class="text-blue-500 hover:text-blue-700 transition">
+                    <i class="fas fa-comment mr-1"></i> Comentários
+                </button>
+            </div>
+            ${currentUser.role === 'admin' || currentUser._id === funnel.author._id ? `
+                <button onclick="deleteFunnel('${funnel._id}')" class="mt-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">
+                    <i class="fas fa-trash mr-1"></i> Apagar Funil
+                </button>
+            ` : ''}
+        `;
+        funnelList.appendChild(funnelElement);
+    });
+}
 
         async function downloadFunnel(funnelId) {
             try {
@@ -238,46 +275,43 @@
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
 
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Funil baixado com sucesso!',
-                    text: 'O arquivo JSON do funil foi baixado.',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
+                showSuccessToast('Funil baixado com sucesso!');
             } catch (error) {
                 console.error('Erro ao baixar funil:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro ao baixar funil',
-                    text: 'Por favor, tente novamente.',
-                });
+                showErrorToast('Erro ao baixar funil');
             }
         }
 
         async function likeFunnel(funnelId) {
-            try {
-                const response = await fetch(`/funnels/api/community/like/${funnelId}`, { method: 'POST' });
-                if (!response.ok) {
-                    throw new Error('Falha ao curtir o funil');
-                }
-                const data = await response.json();
-                Swal.fire({
-                    icon: 'success',
-                    title: data.message,
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-                fetchCommunityFunnels();
-            } catch (error) {
-                console.error('Erro ao curtir funil:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro ao curtir funil',
-                    text: 'Por favor, tente novamente.',
-                });
-            }
+    try {
+        const response = await fetch(`/funnels/api/community/like/${funnelId}`, { method: 'POST' });
+        if (!response.ok) {
+            throw new Error('Falha ao curtir o funil');
         }
+        const data = await response.json();
+        
+        const likeButton = document.querySelector(`button[onclick="likeFunnel('${funnelId}')"]`);
+        const likeCountElement = likeButton.querySelector('.like-count');
+        const heartIcon = likeButton.querySelector('i');
+        
+        likeCountElement.textContent = data.likes;
+        
+        if (data.liked) {
+            likeButton.classList.add('text-red-500');
+            heartIcon.classList.remove('far');
+            heartIcon.classList.add('fas');
+        } else {
+            likeButton.classList.remove('text-red-500');
+            heartIcon.classList.remove('fas');
+            heartIcon.classList.add('far');
+        }
+
+        showSuccessToast(data.message);
+    } catch (error) {
+        console.error('Erro ao curtir funil:', error);
+        showErrorToast('Erro ao curtir funil');
+    }
+}
 
         async function showComments(funnelId) {
             try {
@@ -316,6 +350,7 @@
                 });
             } catch (error) {
                 console.error('Erro ao carregar comentários:', error);
+                showErrorToast('Erro ao carregar comentários');
             }
         }
 
@@ -330,23 +365,14 @@
                 });
 
                 if (response.ok) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Comentário adicionado com sucesso!',
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
+                    showSuccessToast('Comentário adicionado com sucesso!');
                     showComments(funnelId);
                 } else {
                     throw new Error('Falha ao adicionar comentário');
                 }
             } catch (error) {
                 console.error('Erro ao adicionar comentário:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro ao adicionar comentário',
-                    text: 'Por favor, tente novamente.',
-                });
+                showErrorToast('Erro ao adicionar comentário');
             }
         }
 
@@ -367,19 +393,11 @@
                         if (!response.ok) {
                             throw new Error('Falha ao apagar o funil');
                         }
-                        Swal.fire(
-                            'Apagado!',
-                            'O funil foi apagado com sucesso.',
-                            'success'
-                        );
+                        showSuccessToast('O funil foi apagado com sucesso.');
                         fetchCommunityFunnels();
                     } catch (error) {
                         console.error('Erro ao apagar funil:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Erro ao apagar funil',
-                            text: 'Por favor, tente novamente.',
-                        });
+                        showErrorToast('Erro ao apagar funil');
                     }
                 }
             });
@@ -430,6 +448,7 @@
                 $('#funnelSelect').trigger('change');
             } catch (error) {
                 console.error('Erro ao carregar funis do usuário:', error);
+                showErrorToast('Erro ao carregar funis do usuário');
             }
         }
 
@@ -441,7 +460,7 @@
             const tags = document.getElementById('funnelTags').value.split(',').map(tag => tag.trim());
 
             if (!funnelId || !name || !description || !category) {
-                Swal.fire('Erro', 'Por favor, preencha todos os campos obrigatórios.', 'error');
+                showErrorToast('Por favor, preencha todos os campos obrigatórios.');
                 return;
             }
 
@@ -461,7 +480,7 @@
                 });
 
                 if (response.ok) {
-                    Swal.fire('Compartilhado!', 'Seu funil foi compartilhado com sucesso.', 'success');
+                    showSuccessToast('Seu funil foi compartilhado com sucesso.');
                     closeShareModal();
                     fetchCommunityFunnels();
                 } else {
@@ -469,7 +488,7 @@
                 }
             } catch (error) {
                 console.error('Erro ao compartilhar funil:', error);
-                Swal.fire('Erro', 'Não foi possível compartilhar o funil. Tente novamente.', 'error');
+                showErrorToast('Não foi possível compartilhar o funil. Tente novamente.');
             }
         }
 
@@ -481,11 +500,7 @@
                 displayFunnels(data.funnels);
             } catch (error) {
                 console.error('Erro ao buscar meus posts:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro ao buscar seus posts',
-                    text: 'Por favor, tente novamente.',
-                });
+                showErrorToast('Erro ao buscar seus posts');
             }
         }
 
@@ -497,29 +512,9 @@
                 displayFunnels(data.funnels);
             } catch (error) {
                 console.error('Erro ao buscar posts curtidos:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro ao buscar posts curtidos',
-                    text: 'Por favor, tente novamente.',
-                });
+                showErrorToast('Erro ao buscar posts curtidos');
             }
         }
-
-        // Inicialização do Select2 para o seletor de funis
-        $(document).ready(function() {
-            $('#funnelSelect').select2({
-                placeholder: "Selecione um funil",
-                allowClear: true
-            });
-
-            // Atualizar campos quando um funil é selecionado
-            $('#funnelSelect').on('change', function() {
-                const selectedFunnelId = $(this).val();
-                if (selectedFunnelId) {
-                    fetchFunnelDetails(selectedFunnelId);
-                }
-            });
-        });
 
         async function fetchFunnelDetails(funnelId) {
             try {
@@ -532,8 +527,50 @@
                 document.getElementById('funnelTags').value = funnel.tags ? funnel.tags.join(', ') : '';
             } catch (error) {
                 console.error('Erro ao buscar detalhes do funil:', error);
+                showErrorToast('Erro ao buscar detalhes do funil');
             }
         }
+
+        function showSuccessToast(message) {
+            Swal.fire({
+                icon: 'success',
+                title: message,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+        }
+
+        function showErrorToast(message) {
+            Swal.fire({
+                icon: 'error',
+                title: message,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+        }
+
+        // Inicialização do Select2 para o seletor de funis
+        $(document).ready(function() {
+            $('#funnelSelect').select2({
+                placeholder: "Selecione um funil",
+                allowClear: true,
+                dropdownParent: $('#shareFunnelModal')
+            });
+
+            // Atualizar campos quando um funil é selecionado
+            $('#funnelSelect').on('change', function() {
+                const selectedFunnelId = $(this).val();
+                if (selectedFunnelId) {
+                    fetchFunnelDetails(selectedFunnelId);
+                }
+            });
+        });
     </script>
 </body>
 </html>

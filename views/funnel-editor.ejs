@@ -811,13 +811,19 @@ function getNodeContent(type, data) {
                 return `<p>Vídeo: ${data.content || 'URL do vídeo'}</p><p>Legenda: ${data.caption || ''}</p>`;
             case 'randomMessage':
                 return `<p>Mensagens aleatórias: ${data.messages ? data.messages.length : 0}</p>`;
-    
-                case 'aiAgent':
-                return `<p>Prompt: ${data.aiPrompt ? data.aiPrompt.substring(0, 50) + '...' : 'Não definido'}</p>
-                        <p>Variável de resposta: ${data.aiResponseVariable}</p>`;
-            case 'apiRequest':
-                return `<p>URL: ${data.apiUrl ? data.apiUrl.substring(0, 50) + '...' : 'Não definida'}</p>`;
-          case 'aiCondition':
+
+
+                
+
+                case 'apiRequest':
+    let selectedFieldsHtml = '';
+    if (data.selectedFields && data.selectedFields.length > 0) {
+        selectedFieldsHtml = '<p>Campos selecionados:</p><ul>' +
+            data.selectedFields.map(field => `<li>${field}</li>`).join('') +
+            '</ul>';
+    }
+    return `<p>URL: ${data.apiUrl ? data.apiUrl.substring(0, 50) + '...' : 'Não definida'}</p>${selectedFieldsHtml}`;
+    case 'aiCondition':
                 return `<p>Condição IA: ${data.aiConditionPrompt || 'Não definida'}</p>`;
             case 'generatePayment':
                 return `<p>Gerar pagamento: R$ ${data.amount || '0'}</p>`;
@@ -999,13 +1005,13 @@ function getVariableOptions() {
         .filter(n => n.type === 'input' && n.saveResponse)
         .map(n => `<option value="input:${n.inputKey}">${n.inputKey} (Input)</option>`);
     
-    const apiVariables = nodes
+        const apiVariables = nodes
         .filter(n => n.type === 'apiRequest')
         .flatMap(n => {
             if (n.selectedFields && n.selectedFields.length > 0) {
-                return n.selectedFields.map(field => `<option value="api:${n.id}:${field}">${field} (API: ${n.responseVariable || n.id})</option>`);
+                return n.selectedFields.map(field => `<option value="api:${n.responseVariable}:${field}">${field} (API: ${n.responseVariable})</option>`);
             } else {
-                return [`<option value="api:${n.id}">${n.responseVariable || 'API Response'} (API: ${n.id})</option>`];
+                return [`<option value="api:${n.responseVariable}">${n.responseVariable || 'API Response'}</option>`];
             }
         });
     
@@ -1562,28 +1568,30 @@ function formatHeaders() {
             node.aiConditionVariable = document.getElementById('aiConditionVariable').value;
             break;
             case 'apiRequest':
-            node.apiUrl = document.getElementById('apiUrl').value;
-            node.requestType = document.getElementById('requestType').value;
-            node.requestBody = document.getElementById('requestBody').value;
-            node.responseVariable = document.getElementById('responseVariable').value;
-            
-            // Tratar os headers com mais cuidado
-            try {
-                const headersText = document.getElementById('requestHeaders').value;
-                // Converter o texto para um objeto JavaScript
-                const headersObj = Function(`return ${headersText}`)();
-                // Converter o objeto JavaScript para JSON válido
-                node.headers = JSON.parse(JSON.stringify(headersObj));
-            } catch (error) {
-                console.error('Erro ao analisar os headers:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro nos Headers',
-                    text: 'Os headers não estão em um formato válido. Por favor, corrija e tente novamente.',
-                });
-                return; // Sair da função sem salvar se houver um erro nos headers
-            }
-            break;
+    node.apiUrl = document.getElementById('apiUrl').value;
+    node.requestType = document.getElementById('requestType').value;
+    node.requestBody = document.getElementById('requestBody').value;
+    node.responseVariable = document.getElementById('responseVariable').value;
+    
+    // Salvar os campos selecionados
+    node.selectedFields = Array.from(document.querySelectorAll('#apiDataFields input[type="checkbox"]:checked'))
+        .map(checkbox => checkbox.value);
+    
+    // Tratar os headers
+    try {
+        const headersText = document.getElementById('requestHeaders').value;
+        const headersObj = Function(`return ${headersText}`)();
+        node.headers = JSON.parse(JSON.stringify(headersObj));
+    } catch (error) {
+        console.error('Erro ao analisar os headers:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro nos Headers',
+            text: 'Os headers não estão em um formato válido. Por favor, corrija e tente novamente.',
+        });
+        return;
+    }
+    break;
 
         case 'input':
         const inputKeyElement = document.getElementById('inputKey');
@@ -1810,13 +1818,13 @@ function updateMediaPreview(nodeId, url) {
                     case 'randomMessage':
                     nodeData.messages = node.messages;
                     break;
-                case 'apiRequest':
+                    case 'apiRequest':
                     nodeData.apiUrl = node.apiUrl;
                     nodeData.requestType = node.requestType;
                     nodeData.requestBody = node.requestBody;
-                    nodeData.requestHeaders = node.requestHeaders;
                     nodeData.responseVariable = node.responseVariable;
-                    node.id = node.id; // Garanta que o ID do nó esteja sendo salvo
+                    nodeData.headers = node.headers;
+                    nodeData.selectedFields = node.selectedFields;
                     break;
                 case 'aiAgent':
                     nodeData.aiPrompt = node.aiPrompt;
