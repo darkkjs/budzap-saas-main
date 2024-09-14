@@ -15,8 +15,10 @@ router.get('/', ensureAuthenticated, (req, res) => {
 router.get('/status', async (req, res) => {
     try {
         const { funnelId, instanceKey, chatId } = req.query;
-        const user = await User.findById(req.user.id);
-        const funnel = user.funnels.id(funnelId);
+        const userId = req.user.id;
+
+        // Buscar o funil do Redis
+        const funnel = await funnelController.getFunnelById(funnelId, userId);
 
         if (!funnel) {
             return res.status(404).json({ error: 'Funil não encontrado' });
@@ -27,32 +29,34 @@ router.get('/status', async (req, res) => {
         const state = stateData ? JSON.parse(stateData) : null;
 
         let currentContent = { type: 'text', value: 'Conteúdo não disponível' };
-        if (state && state.currentStep < funnel.steps.length) {
-            const currentStep = funnel.steps[state.currentStep];
-            switch (currentStep.type) {
-                case 'text':
-                    currentContent = { type: 'text', value: currentStep.content };
-                    break;
-                case 'image':
-                    currentContent = { type: 'image', value: currentStep.content };
-                    break;
-                case 'video':
-                    currentContent = { type: 'video', value: currentStep.content };
-                    break;
-                case 'audio':
-                    currentContent = { type: 'audio', value: currentStep.content };
-                    break;
-                case 'input':
-                    currentContent = { type: 'text', value: currentStep.inputPrompt };
-                    break;
-                // Adicione mais casos conforme necessário
+        let currentNode = null;
+        if (state && state.currentNodeId) {
+            currentNode = funnel.nodes.find(node => node.id === state.currentNodeId);
+            if (currentNode) {
+                switch (currentNode.type) {
+                    case 'message':
+                        currentContent = { type: 'text', value: currentNode.data.message };
+                        break;
+                    case 'image':
+                        currentContent = { type: 'image', value: currentNode.data.imageUrl };
+                        break;
+                    case 'video':
+                        currentContent = { type: 'video', value: currentNode.data.videoUrl };
+                        break;
+                    case 'audio':
+                        currentContent = { type: 'audio', value: currentNode.data.audioUrl };
+                        break;
+                    case 'input':
+                        currentContent = { type: 'text', value: currentNode.data.question };
+                        break;
+                }
             }
         }
 
         const response = {
-            totalSteps: funnel.steps.length,
-            currentStep: state ? state.currentStep : 0,
-            hasInput: funnel.steps.some(step => step.type === 'input'),
+            totalNodes: funnel.nodes.length,
+            currentNodeIndex: currentNode ? funnel.nodes.indexOf(currentNode) + 1 : 0,
+            hasInput: funnel.nodes.some(node => node.type === 'input'),
             waitingForInput: state ? state.status === 'waiting_for_input' : false,
             status: state ? state.status : 'not_started',
             currentContent: currentContent

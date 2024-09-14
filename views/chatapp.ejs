@@ -808,14 +808,18 @@
 
         // Função para carregar os funis do usuário
         async function loadUserFunnels() {
-            try {
-                const response = await fetch('/funnels/user-funnels');
-                userFunnels = await response.json();
-                renderFunnels();
-            } catch (error) {
-                console.error('Erro ao carregar funis:', error);
-            }
+    try {
+        const response = await fetch('/funnels/api/list');
+        if (!response.ok) {
+            throw new Error('Failed to fetch user funnels');
         }
+        userFunnels = await response.json();
+        renderFunnels();
+    } catch (error) {
+        console.error('Erro ao carregar funis:', error);
+        showPopup('Erro ao carregar funis', 'error');
+    }
+}
 
 
 
@@ -948,21 +952,21 @@
 
         // Função para atualizar os detalhes do funil
         async function updateFunnelDetails() {
-            if (!currentSelectedFunnel) return;
+    if (!currentSelectedFunnel) return;
 
-            try {
-                const response = await fetch(`/funnels/status?funnelId=${currentSelectedFunnel.funnelId}&instanceKey=${currentSelectedFunnel.instanceKey}&chatId=${currentSelectedFunnel.chatId}`);
-                const data = await response.json();
+    try {
+        const response = await fetch(`/chat/status?funnelId=${currentSelectedFunnel.funnelId}&instanceKey=${currentSelectedFunnel.instanceKey}&chatId=${currentSelectedFunnel.chatId}`);
+        const data = await response.json();
 
-                funnelDetails.innerHTML = `
+        funnelDetails.innerHTML = `
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div class="bg-blue-50 p-3 rounded-lg">
                     <p class="text-sm font-medium text-blue-800">Total de passos</p>
-                    <p class="text-2xl font-bold text-blue-600">${data.totalSteps}</p>
+                    <p class="text-2xl font-bold text-blue-600">${data.totalNodes}</p>
                 </div>
                 <div class="bg-green-50 p-3 rounded-lg">
                     <p class="text-sm font-medium text-green-800">Passo atual</p>
-                    <p class="text-2xl font-bold text-green-600">${data.currentStep}</p>
+                    <p class="text-2xl font-bold text-green-600">${data.currentNodeIndex}</p>
                 </div>
                 <div class="bg-yellow-50 p-3 rounded-lg">
                     <p class="text-sm font-medium text-yellow-800">Contém input</p>
@@ -980,20 +984,19 @@
                 </div>
             </div>
             <div id="funnelAnimation" class="mt-6 h-40 w-full">
-                ${createFunnelAnimation(data.currentStep, data.totalSteps)}
+                ${createFunnelAnimation(data.currentNodeIndex, data.totalNodes)}
             </div>
         `;
 
-                if (data.status === 'completed') {
-                    delete activeFunnels[`${currentSelectedFunnel.instanceKey}:${currentSelectedFunnel.chatId}`];
-                    updateActiveFunnelsList();
-                    showCompletionMessage(currentSelectedFunnel.chatId);
-                }
-            } catch (error) {
-                console.error('Erro ao atualizar detalhes do funil:', error);
-            }
+        if (data.status === 'completed') {
+            delete activeFunnels[`${currentSelectedFunnel.instanceKey}:${currentSelectedFunnel.chatId}`];
+            updateActiveFunnelsList();
+            showCompletionMessage(currentSelectedFunnel.chatId);
         }
-
+    } catch (error) {
+        console.error('Erro ao atualizar detalhes do funil:', error);
+    }
+}
         // Função para formatar o conteúdo atual
         function formatCurrentContent(content) {
             switch (content.type) {
@@ -1100,22 +1103,21 @@
 
         // Atualizar a função renderFunnels para usar a nova função startFunnel
         function renderFunnels() {
-            const funnelHTML = userFunnels.map(funnel => `
-        <button class="funnel-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 mr-2 mb-2" data-funnel-id="${funnel._id}">
+    const funnelHTML = userFunnels.map(funnel => `
+        <button class="funnel-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 mr-2 mb-2" data-funnel-id="${funnel.id}">
             ${funnel.name}
         </button>
     `).join('');
-            funnelsContainer.innerHTML = funnelHTML;
-            mobileFunnelsContainer.innerHTML = funnelHTML;
+    funnelsContainer.innerHTML = funnelHTML;
+    mobileFunnelsContainer.innerHTML = funnelHTML;
 
-            document.querySelectorAll('.funnel-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    const funnelId = button.dataset.funnelId;
-                    startFunnel(funnelId);
-                });
-            });
-        }
-
+    document.querySelectorAll('.funnel-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const funnelId = button.dataset.funnelId;
+            startFunnel(funnelId);
+        });
+    });
+}
         // Função para verificar funis ativos periodicamente
         function checkActiveFunnels() {
             setInterval(async () => {

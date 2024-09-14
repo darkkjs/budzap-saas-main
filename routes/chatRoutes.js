@@ -6,6 +6,7 @@ const User = require('../models/User'); // Assegure-se de que o caminho para o m
 const axios = require("axios")
 const { executeFunnel } = require('../services/funnelExecutor');
 const redisClient = require('../config/redisConfig');
+const funnelController = require('../controllers/funnelController'); // Adicione esta linha no topo do arquivo
 
 const AUTO_RESPONSE_EXPIRY = 60 * 60; // 1 hora em segundos
 
@@ -25,51 +26,49 @@ router.get('/', async (req, res) => {
 
 router.post('/start-funnel', async (req, res) => {
   try {
-      const { funnelId, instanceKey, chatId } = req.body;
-      const user = await User.findById(req.user.id);
-      const funnel = user.funnels.id(funnelId);
+    const { funnelId, instanceKey, chatId } = req.body;
+    const userId = req.user.id;
 
-      if (!funnel) {
-          return res.status(404).json({ error: 'Funil não encontrado' });
+    // Buscar o funil do Redis
+    const funnel = await funnelController.getFunnelById(funnelId, userId);
+
+    if (!funnel) {
+      return res.status(404).json({ error: 'Funil não encontrado' });
+    }
+
+    const autoResponseKey = `auto_response:${instanceKey}:${chatId}`;
+    let state = await redisClient.get(autoResponseKey);
+
+    if (state) {
+      state = JSON.parse(state);
+      if (state.funnelId !== funnelId) {
+        state = null;
       }
+    }
 
-      const autoResponseKey = `auto_response:${instanceKey}:${chatId}`;
-      let state = await redisClient.get(autoResponseKey);
+    if (!state) {
+      state = {
+        funnelId: funnelId,
+        currentNodeId: funnel.nodes[0].id, // Assumindo que o primeiro nó é o inicial
+        status: 'in_progress',
+        userInputs: {},
+        lastMessage: ''
+      };
+    }
 
-      if (state) {
-          state = JSON.parse(state);
-          // Se já existe um estado, verificamos se é do mesmo funil
-          if (state.funnelId !== funnelId) {
-              // Se for um funil diferente, reiniciamos o estado
-              state = null;
-          }
-      }
+    await redisClient.setex(
+      autoResponseKey,
+      AUTO_RESPONSE_EXPIRY,
+      JSON.stringify(state)
+    );
 
-      if (!state) {
-          // Se não há estado ou é um novo funil, iniciamos do zero
-          state = {
-              funnelId: funnelId,
-              currentStep: 0,
-              status: 'in_progress',
-              userInputs: {},
-              lastMessage: ''
-          };
-      }
+    // Iniciar a execução do funil
+    executeFunnel(funnel, chatId, instanceKey, state);
 
-      // Salvamos o estado inicial/atualizado no Redis
-      await redisClient.setex(
-          autoResponseKey,
-          AUTO_RESPONSE_EXPIRY,
-          JSON.stringify(state)
-      );
-
-      // Iniciamos a execução do funil
-      executeFunnel(funnel, chatId, instanceKey, state);
-
-      res.json({ message: 'Funil iniciado com sucesso', currentStep: state.currentStep });
+    res.json({ message: 'Funil iniciado com sucesso', currentNodeId: state.currentNodeId });
   } catch (error) {
-      console.error('Erro ao iniciar funil:', error);
-      res.status(500).json({ error: 'Erro ao iniciar funil' });
+    console.error('Erro ao iniciar funil:', error);
+    res.status(500).json({ error: 'Erro ao iniciar funil' });
   }
 });
 
@@ -304,6 +303,63 @@ router.post('/mark-as-read/:instanceKey/:chatId', async (req, res) => {
 });
 
 // Função para marcar o chat como lido no Redis
+router.get('/status', async (req, res) => {
+  try {
+      const { funnelId, instanceKey, chatId } = req.query;
+      const userId = req.user.id;
 
+      // Buscar o funil do Redis
+      const funnel = await funnelController.getFunnelById(funnelId, userId);
+
+      if (!funnel) {
+          return res.status(404).json({ error: 'Funil não encontrado' });
+      }
+
+      const autoResponseKey = `auto_response:${instanceKey}:${chatId}`;
+      const stateData = await redisClient.get(autoResponseKey);
+      const state = stateData ? JSON.parse(stateData) : null;
+
+      let currentContent = { type: 'text', value: 'Conteúdo não disponível' };
+      let currentNode = null;
+      if (state && state.currentNodeId) {
+          currentNode = funnel.nodes.find(node => node.id === state.currentNodeId);
+          if (currentNode) {
+              switch (currentNode.type) {
+                  case 'message':
+                      currentContent = { type: 'text', value: currentNode.data?.message || 'Mensagem não disponível' };
+                      break;
+                  case 'image':
+                      currentContent = { type: 'image', value: currentNode.data?.imageUrl || 'URL da imagem não disponível' };
+                      break;
+                  case 'video':
+                      currentContent = { type: 'video', value: currentNode.data?.videoUrl || 'URL do vídeo não disponível' };
+                      break;
+                  case 'audio':
+                      currentContent = { type: 'audio', value: currentNode.data?.audioUrl || 'URL do áudio não disponível' };
+                      break;
+                  case 'input':
+                      currentContent = { type: 'text', value: currentNode.data?.question || 'Pergunta não disponível' };
+                      break;
+                  default:
+                      currentContent = { type: 'text', value: 'Tipo de conteúdo não reconhecido' };
+              }
+          }
+      }
+
+      const response = {
+          totalNodes: funnel.nodes.length,
+          currentNodeIndex: currentNode ? funnel.nodes.indexOf(currentNode) + 1 : 0,
+          hasInput: funnel.nodes.some(node => node.type === 'input'),
+          waitingForInput: state ? state.status === 'waiting_for_input' : false,
+          status: state ? state.status : 'not_started',
+          currentContent: currentContent
+      };
+
+      res.json(response);
+  } catch (error) {
+      console.error('Erro ao obter status do funil:', error);
+      res.status(500).json({ error: 'Erro ao obter status do funil' });
+  }
+});
 
 module.exports = router;
