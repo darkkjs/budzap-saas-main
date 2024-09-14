@@ -415,7 +415,7 @@ if (state.status === 'waiting_for_input') {
                             await sendMediaMessage(instanceKey, currentNode.content, chatId, currentNode.type === 'image' ? 'imageFile' : 'video', `${currentNode.type}.${currentNode.type === 'image' ? 'jpg' : 'mp4'}`, currentNode.caption);
                             break;
                     case 'audio':
-                        await sendMediaMessage(instanceKey, currentNode.content, chatId, 'audiofile', 'audio.mp3');
+                        await sendMediaMessage(instanceKey, currentNode.content, chatId, 'audiofile', 'audio.mp3', '');
                         break;
                     
                         case 'blockUser':
@@ -619,7 +619,11 @@ async function sendMediaMessage(instanceKey, mediaUrl, number, filename, final, 
     data.append('file', fs.createReadStream(tempFilePath), final);
     
     data.append('id', `${number}`);
-    data.append('caption', caption);
+
+    if (!final.includes('.mp3')) (
+        data.append('caption', caption)
+    )
+  
     data.append('userType', "user");
     data.append('delay', 0);
 
