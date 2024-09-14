@@ -34,13 +34,15 @@ exports.createGroup = async (req, res) => {
 exports.getAllGroups = async (req, res) => {
     const { instanceKey } = req.query;
     try {
+        console.log('Buscando grupos para a instância:', instanceKey);
         const response = await axios.get(`${API_BASE_URL}/group/getallgroups`, {
             params: { key: instanceKey }
         });
+        console.log('Resposta da API externa:', response.data);
         res.json(response.data);
     } catch (error) {
-        console.error('Erro ao obter grupos:', error);
-        res.status(500).json({ error: 'Erro ao obter grupos' });
+        console.error('Erro ao obter grupos:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: 'Erro ao obter grupos', details: error.message });
     }
 };
 

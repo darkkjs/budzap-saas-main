@@ -46,53 +46,92 @@
         }
         .animate-fade-in { animation: fadeIn 0.5s ease-out; }
         .animate-slide-in { animation: slideIn 0.5s ease-out; }
+        
+        /* Estilos adicionais para o menu */
+        .sidebar-scroll {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        .menu-item {
+            transition: all 0.3s ease;
+        }
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .menu-item i {
+            transition: all 0.3s ease;
+        }
+        .menu-item:hover i {
+            transform: scale(1.2);
+        }
     </style>
     <%- defineContent('head') %>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
     <div class="flex flex-col h-screen lg:flex-row">
         <!-- Sidebar -->
-        <aside id="sidebar" class="bg-gradient text-white w-full lg:w-64 space-y-6 py-7 px-2 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out z-20">
-            <div class="flex flex-col items-center mb-8">
-                <div class="w-20 h-20 overflow-hidden rounded-full border-2 border-white shadow-lg mb-4">
-                    <img src="<%= (user && user.profileImage) || '/img/logo1.jpeg' %>" alt="BudZap Mascot" class="w-full h-full object-cover">
-                </div>
-                <div class="text-center">
-                    <h2 class="text-xl font-semibold"><%= (user && user.name) || 'Visitante' %></h2>
-                    <% if (user && user.plan) { %>
-                        <div class="mt-2 px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm">
-                            <span class="font-medium"><%= user.plan.charAt(0).toUpperCase() + user.plan.slice(1) %></span>
+        <aside id="sidebar" class="bg-gradient text-white w-full lg:w-64 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out z-20 overflow-hidden">
+            <div class="flex flex-col h-full">
+                <div class="p-5">
+                    <div class="flex items-center justify-center mb-6">
+                        <div class="w-20 h-20 overflow-hidden rounded-full border-2 border-white shadow-lg">
+                            <img src="<%= (user && user.profileImage) || '/img/logo1.jpeg' %>" alt="BudZap Mascot" class="w-full h-full object-cover">
                         </div>
-                        <p class="text-xs mt-2 opacity-75">
-                            Válido até: <%= new Date(user.validUntil || Date.now()).toLocaleDateString() %>
-                        </p>
-                    <% } %>
+                    </div>
+                    <div class="text-center mb-6">
+                        <h2 class="text-xl font-semibold"><%= (user && user.name) || 'Visitante' %></h2>
+                        <% if (user && user.plan) { %>
+                            <div class="mt-2 px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm inline-block">
+                                <span class="font-medium"><%= user.plan.charAt(0).toUpperCase() + user.plan.slice(1) %></span>
+                            </div>
+                            <p class="text-xs mt-2 opacity-75">
+                                Válido até: <%= new Date(user.validUntil || Date.now()).toLocaleDateString() %>
+                            </p>
+                        <% } %>
+                    </div>
+                </div>
+                <nav class="flex-1 sidebar-scroll px-4">
+                    <% const navItems = [
+                        { href: '/dashboard', icon: 'fas fa-chart-line', text: 'Dashboard' },
+                        { href: '/change-plan', icon: 'fas fa-level-up-alt', text: 'Planos' },
+                        { href: '/profile', icon: 'fas fa-user-circle', text: 'Perfil' },
+                        { href: '/notifications', icon: 'fas fa-bell', text: 'Notificações' },
+                        { href: '/whatsapp', icon: 'fab fa-whatsapp', text: 'Instâncias' },
+                        { href: '/chat', icon: 'fas fa-comments', text: 'Whatsapp Web' },
+                        { href: '/integrations/dashboard', icon: 'fas fa-plug', text: 'Integrações' },
+                        { href: '/banco/extrato', icon: 'fas fa-money-check-alt', text: 'Conta Bancária' },
+                        { href: '/funnels/community', icon: 'fas fa-users', text: 'Comunidade de Funis' },
+                        { href: '/funnels', icon: 'fas fa-filter', text: 'Funis' },
+                        { href: '/zapvoice/elevenlabs-whatsapp', icon: 'fas fa-microphone-alt', text: 'Gerar Voz' },
+                        { href: '/integrations/hospedar', icon: 'fas fa-cloud-upload-alt', text: 'Hospedar Midia' },
+                        { href: '/auto-response', icon: 'fas fa-robot', text: 'Auto Resposta' },
+                        { href: '/whatsapp/mass-message', icon: 'fas fa-paper-plane', text: 'Spam de mensagens' },
+                        { href: '/group', icon: 'fas fa-user-friends', text: 'Gerenciar grupos' }
+                    ] %>
+                    <% navItems.forEach(item => { %>
+                        <a href="<%= item.href %>" class="menu-item flex items-center space-x-3 px-4 py-3 rounded transition duration-200">
+                            <i class="<%= item.icon %> text-xl"></i>
+                            <span class="animate-slide-in"><%= item.text %></span>
+                        </a>
+                    <% }) %>
+                </nav>
+                <div class="p-4">
+                    <button id="logoutBtn" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Sair
+                    </button>
                 </div>
             </div>
-            <nav>
-                <% const navItems = [
-                    { href: '/dashboard', icon: 'fas fa-tachometer-alt', text: 'Dashboard' },
-                    { href: '/change-plan', icon: 'fas fa-exchange-alt', text: 'Planos' },
-                    { href: '/profile', icon: 'fas fa-id-badge', text: 'Perfil' },
-                    { href: '/notifications', icon: 'fas fa-bell', text: 'Notificações' },
-                    { href: '/whatsapp', icon: 'fab fa-whatsapp', text: 'Instâncias' },
-                    { href: '/chat', icon: 'fas fa-comment-dots', text: 'Whatsapp Web' },
-                    { href: '/integrations/dashboard', icon: 'fas fa-desktop', text: 'Integrações' },
-                    { href: '/banco/extrato', icon: 'fas fa-university', text: 'Conta Bancária' },
-                    { href: '/funnels', icon: 'fas fa-chart-line', text: 'Funis' },
-                    { href: '/zapvoice/elevenlabs-whatsapp', icon: 'fas fa-microphone', text: 'Gerar Voz' },
-                    { href: '/integrations/hospedar', icon: 'fas fa-cloud-upload-alt', text: 'Hospedar Midia' },
-                    { href: '/auto-response', icon: 'fas fa-reply-all', text: 'Auto Resposta' },
-                    { href: '/whatsapp/mass-message', icon: 'fas fa-bullhorn', text: 'Spam de mensagens' },
-                    { href: '/group', icon: 'fas fa-users-cog', text: 'Gerenciar grupos' }
-                ] %>
-                <% navItems.forEach(item => { %>
-                    <a href="<%= item.href %>" class="flex items-center space-x-3 px-4 py-3 rounded transition duration-200 hover:bg-white hover:bg-opacity-20">
-                        <i class="<%= item.icon %> text-2xl"></i>
-                        <span class="animate-slide-in"><%= item.text %></span>
-                    </a>
-                <% }) %>
-            </nav>
         </aside>
 
         <!-- Content area -->
@@ -101,15 +140,13 @@
             <nav class="bg-white dark:bg-gray-800 shadow-md">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between h-16">
-                        <div class="flex">
-                            <div class="flex-shrink-0 flex items-center">
-                                <button id="sidebarToggle" class="text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600 lg:hidden" aria-label="Toggle sidebar">
-                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                                    </svg>
-                                </button>
-                                <span class="ml-2 text-xl font-bold text-gradient"><%= typeof title !== 'undefined' ? title : 'BudZap' %></span>
-                            </div>
+                        <div class="flex items-center">
+                            <button id="sidebarToggle" class="text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600 lg:hidden" aria-label="Toggle sidebar">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
+                            <span class="ml-2 text-xl font-bold text-gradient"><%= typeof title !== 'undefined' ? title : 'BudZap' %></span>
                         </div>
                         <div class="flex items-center">
                             <button id="themeToggle" class="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:shadow-outline">
@@ -173,6 +210,12 @@
         const themeToggle = document.getElementById('themeToggle');
         themeToggle.addEventListener('click', function() {
             document.documentElement.classList.toggle('dark');
+        });
+
+        // Logout button functionality (you need to implement this)
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            // Implement logout logic here
+            console.log('Logout clicked');
         });
     </script>
 </body>

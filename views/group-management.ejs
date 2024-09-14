@@ -100,28 +100,19 @@
     </div>
 
     <script>
-        let selectedInstance = '';
+  let selectedInstance = '';
+  console.log('Script iniciado. selectedInstance:', selectedInstance);
         let groups = {};
 
 
-        function loadUserInstances() {
-    const instanceSelect = document.getElementById('instanceSelect');
-    instanceSelect.innerHTML = '<option value="" disabled selected>Escolha uma instância</option>';
     
-    <% user.whatsappInstances.forEach(instance => { %>
-        const option = document.createElement('option');
-        option.value = '<%= instance.key %>';
-        option.textContent = '<%= instance.name %>';
-        instanceSelect.appendChild(option);
-    <% }); %>
-}
 
-        document.getElementById('instanceSelect').addEventListener('change', function() {
-            selectedInstance = this.value;
-            document.getElementById('groupActions').classList.remove('hidden');
-            getAllGroups();
-        });
-
+document.getElementById('instanceSelect').addEventListener('change', function() {
+    selectedInstance = this.value;
+    console.log('Instância selecionada:', selectedInstance);
+    document.getElementById('groupActions').classList.remove('hidden');
+    getAllGroups();
+});
         function showAlert(title, text, icon) {
             Swal.fire({
                 title: title,
@@ -161,41 +152,61 @@
         }
 
         async function getAllGroups() {
-            try {
-                const response = await fetch(`/group/all?instanceKey=${selectedInstance}`);
-                const responseData = await response.json();
-                if (handleApiResponse(responseData)) {
-                    groups = responseData.data;
-                    displayGroups(groups);
-                }
-            } catch (error) {
-                console.error('Erro ao listar grupos:', error);
-                showAlert('Erro', error.message, 'error');
-            }
+    console.log('Iniciando getAllGroups para a instância:', selectedInstance);
+    if (!selectedInstance) {
+        console.error('Nenhuma instância selecionada');
+        showAlert('Erro', 'Por favor, selecione uma instância primeiro.', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/group/all?instanceKey=${selectedInstance}`);
+        console.log('Resposta recebida:', response);
+        const responseData = await response.json();
+        console.log('Dados da resposta:', responseData);
+        
+        if (responseData.error) {
+            throw new Error(responseData.error);
         }
+        
+        if (responseData.data && typeof responseData.data === 'object') {
+            groups = responseData.data;
+            displayGroups(groups);
+        } else {
+            throw new Error('Formato de resposta inválido');
+        }
+    } catch (error) {
+        console.error('Erro ao listar grupos:', error);
+        showAlert('Erro', 'Falha ao carregar grupos: ' + error.message, 'error');
+    }
+}
 
-        function displayGroups(groups) {
-            const groupList = document.getElementById('groupList');
-            groupList.innerHTML = '';
-            
-            Object.values(groups).forEach(group => {
-                const card = document.createElement('div');
-                card.className = 'card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1';
-                card.innerHTML = `
-                    <div class="card-body">
-                        <h2 class="card-title"><i class="fas fa-users mr-2"></i>${group.subject || 'Grupo sem nome'}</h2>
-                        <p><i class="fas fa-id-card mr-2"></i>ID: ${group.id}</p>
-                        <p><i class="fas fa-user-friends mr-2"></i>Membros: ${group.size}</p>
-                        <div class="card-actions justify-end mt-4">
-                            <button onclick="showGroupActions('${group.id}')" class="btn btn-primary"><i class="fas fa-cogs mr-2"></i>Ações</button>
-                        </div>
+function displayGroups(groups) {
+    const groupList = document.getElementById('groupList');
+    groupList.innerHTML = '';
+    
+    if (Object.keys(groups).length === 0) {
+        groupList.innerHTML = '<p class="text-center">Nenhum grupo encontrado.</p>';
+    } else {
+        Object.values(groups).forEach(group => {
+            const card = document.createElement('div');
+            card.className = 'card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1';
+            card.innerHTML = `
+                <div class="card-body">
+                    <h2 class="card-title"><i class="fas fa-users mr-2"></i>${group.subject || 'Grupo sem nome'}</h2>
+                    <p><i class="fas fa-id-card mr-2"></i>ID: ${group.id}</p>
+                    <p><i class="fas fa-user-friends mr-2"></i>Membros: ${group.size}</p>
+                    <div class="card-actions justify-end mt-4">
+                        <button onclick="showGroupActions('${group.id}')" class="btn btn-primary"><i class="fas fa-cogs mr-2"></i>Ações</button>
                     </div>
-                `;
-                groupList.appendChild(card);
-            });
+                </div>
+            `;
+            groupList.appendChild(card);
+        });
+    }
 
-            document.getElementById('groupListArea').classList.remove('hidden');
-        }
+    document.getElementById('groupListArea').classList.remove('hidden');
+}
 
         function showGroupActions(groupId) {
             const group = groups[groupId];

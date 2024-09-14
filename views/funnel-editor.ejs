@@ -1552,7 +1552,9 @@ function formatHeaders() {
     switch (node.type) {
         // ... (mantenha os casos existentes)
         case 'randomMessage':
-            node.messages = Array.from(document.querySelectorAll('.messageInput')).map(input => input.value);
+            node.messages = Array.from(document.querySelectorAll('.messageInput'))
+                .map(input => input.value)
+                .filter(value => value.trim() !== ''); // Remove mensagens vazias
             break;
             case 'aiAgent':
             node.aiPrompt = document.getElementById('aiPrompt').value;
@@ -1706,6 +1708,14 @@ function updateNodeDisplay(node) {
                 break;
             case 'apiRequest':
                 displayContent = `URL: ${node.apiUrl ? node.apiUrl.substring(0, 50) + '...' : 'Não definida'}`;
+                break;
+                case 'randomMessage':
+                if (node.messages && node.messages.length > 0) {
+                    displayContent = `Mensagens aleatórias (${node.messages.length}):<br>` +
+                        node.messages.map((msg, index) => `${index + 1}. ${msg.substring(0, 30)}...`).join('<br>');
+                } else {
+                    displayContent = 'Nenhuma mensagem definida';
+                }
                 break;
 
         }
