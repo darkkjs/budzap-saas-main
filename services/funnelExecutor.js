@@ -68,8 +68,9 @@ async function generatePayment(instanceKey, chatId, node) {
                     // Usar o uploader para hospedar o QR code no GitHub
                     const qrCodeUrl = await uploadbase64(qrCodeBase64, 'image', github);
                     
-                    await sendTextMessage(instanceKey, `Escaneie o QR code abaixo para pagar:`, chatId);
-                    await sendMediaMessage(instanceKey, qrCodeUrl, chatId, 'imageFile', 'qrcode.jpg');
+                 //   await sendTextMessage(instanceKey, `Escaneie o QR code abaixo para pagar:`, chatId);
+                    await sendMediaMessage(instanceKey, qrCodeUrl, chatId, 'imageFile', 'qrcode.jpg', 'Escaneie o QR code para pagar!');
+                    await sendTextMessage(instanceKey, `Ou pague com o pix copia e cola:`, chatId);
                 } catch (uploadError) {
                     console.error('Erro ao fazer upload do QR code:', uploadError);
                     await sendTextMessage(instanceKey, `Não foi possível gerar o QR code. Por favor, use o código PIX.`, chatId);
