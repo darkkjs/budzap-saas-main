@@ -12,7 +12,7 @@ const axios = require("axios")
 const client = new MercadoPagoConfig({ accessToken: 'APP_USR-656903818257059-081810-20fede545aba678a7e41cf0a6edf3475-1929652882' });
 const ValidationKey = require('../models/ValidationKey');
 const bcrypt = require('bcryptjs');
-
+const admtokenapi = "dark_adm"
 const dashboardController = require('../controllers/dashboardController');
 
 router.get('/', ensureAuthenticated, dashboardController.getDashboard);
@@ -689,23 +689,17 @@ router.post('/register', [
 
    await sendTextMessage(phone, `👋 Oi, ${name}! Bem vindo ao nosso software! 🎉
 
-    Sua conta no Budzap tá prontinha e você já tá no plano gratuito. 💸
+Sua conta no Budzap tá prontinha e você já tá no plano gratuito. 💸
     
-    Quer começar a automatizar sua operação? É só escolher um plano e começar a escalar! 🚀
+Quer começar a automatizar sua operação? É só escolher um plano e começar a escalar! 🚀
     
-    👉 Clique aqui para mudar de plano: https://budzap.online/change-plan
+👉 Clique aqui para mudar de plano: https://budzap.online/change-plan
     
-    Assim que você escolher um plano, sua conta já vai ser ativada automaticamente. Fácil, né? 😎
+Assim que você escolher um plano, sua conta já vai ser ativada automaticamente. Fácil, né? 😎
     
     `)
     
-    await sendTextMessage(phone, `_Esse número é só pra você receber nossos comunicados._
-    
-    Precisa de ajuda? Fala com a gente no suporte! 
-    
-👉 5551995746157
-  
-  🎩 *VEM FAZER PARTE DO NOSSO GRUPO DE BLACKHAT TAMBEM*
+    await sendTextMessage(phone, `🎩 *VEM FAZER PARTE DO NOSSO GRUPO DE BLACKHAT TAMBEM*
 
 Trocar networking é essencial para evoluir sua operação.
 
