@@ -44,7 +44,7 @@ module.exports = {
 
       return next();
     }
-    res.redirect('https://promocaoagora.store/bud');
+    res.redirect('https://promocaoagora.store/software/');
   },
   ensureAdmin: (req, res, next) => {
     if (req.isAuthenticated() && req.user.role === 'admin' && req.session.isAdmin) {

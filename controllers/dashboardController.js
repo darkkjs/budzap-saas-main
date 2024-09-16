@@ -6,7 +6,7 @@ exports.getDashboard = async (req, res) => {
   try {
     if (!req.user) {
       console.log('User is undefined in dashboard route');
-      return res.redirect('https://promocaoagora.store/bud');
+      return res.redirect('https://promocaoagora.store/software/');
     }
     console.log('Rendering dashboard for user:', req.user.username);
 
