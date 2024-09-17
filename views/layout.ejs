@@ -243,6 +243,18 @@
 
     <%- defineContent('scripts') %>
     <script>
+
+document.addEventListener("DOMContentLoaded", function () {
+        const currentUrl = window.location.href;
+      
+        // Se "change-plan" estiver na URL, esconde o modal
+        if (currentUrl.includes('change-plan')) {
+            document.querySelector('.close-vsl').click();
+        }
+
+       
+    });
+
         // Sidebar toggle logic
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebarToggle');
