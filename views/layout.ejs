@@ -225,47 +225,24 @@
         </div>
     </div>
     <% if (user.plan === 'gratuito') { %>
-        <div id="vslModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 p-6 relative transform transition-all duration-500 ease-in-out">
-                <button id="closeVsl" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 focus:outline-none">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-                <h2 class="text-3xl font-extrabold text-gray-900 mb-4 text-center">Desbloqueie Todo o Potencial do BudZap!</h2>
-                <p class="text-lg text-gray-700 mb-6 text-center">Assine agora e tenha acesso a todas as funcionalidades incríveis do BudZap!</p>
-                <div class="text-center">
-                    <a href="/change-plan" class="inline-block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                        Assinar Agora
-                    </a>
-                </div>
+        <div id="vslModal" class="vsl-modal">
+            <div class="vsl-content">
+                <span class="close-vsl">&times;</span>
+                <h2 class="text-2xl font-bold mb-4">Desbloqueie Todo o Potencial do BudZap!</h2>
+             <!--    <div class="video-container mb-4">
+                    Substitua o src pela URL do seu vídeo 
+                    <iframe width="100%" height="315" src="https://www.youtube.com/embed/seu-video-id" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>-->
+                <p class="mb-4">Assine agora e tenha acesso a todas as funcionalidades incríveis do BudZap!</p>
+                <a href="/change-plan" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Assinar Agora
+                </a>
             </div>
         </div>
-    <% } %>
+        <% } %>
 
     <%- defineContent('scripts') %>
     <script>
-
-document.addEventListener("DOMContentLoaded", function () {
-        const currentUrl = window.location.href;
-        const vslModal = document.getElementById('vslModal');
-
-        // Se "change-plan" estiver na URL, esconde o modal
-        if (currentUrl.includes('change-plan')) {
-            if (vslModal) {
-                vslModal.style.display = 'none';
-            }
-        }
-
-        // Lógica para fechar o modal quando o botão de fechar for clicado
-        const closeVsl = document.getElementById('closeVsl');
-        if (closeVsl) {
-            closeVsl.addEventListener('click', function () {
-                vslModal.classList.add('hidden');
-            });
-        }
-    });
-    
         // Sidebar toggle logic
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebarToggle');
