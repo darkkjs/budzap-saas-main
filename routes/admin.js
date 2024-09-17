@@ -5,7 +5,7 @@ const { ensureAdmin } = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
 const ValidationKey = require('../models/ValidationKey');
 const { Parser } = require('json2csv');
-const { PLAN_LIMITS, AUTO_RESPONSE_LIMITS } = require('../config/planLimits');
+const PLAN_LIMITS = require('../config/planLimits');
 const { avisar } = require("../Helpers/avisos");
 
 // Adicione estas rotas ao seu arquivo de rotas admin (provavelmente admin.js)
@@ -126,18 +126,22 @@ router.post('/create-user', ensureAdmin, async (req, res) => {
 router.put('/user/:id', ensureAdmin, async (req, res) => {
   try {
     const { name, email, phone, username, password, role, plan, validUntil } = req.body;
-    
+    console.log('Plano recebido:', plan);
+console.log('PLAN_LIMITS:', PLAN_LIMITS);
+    if (!PLAN_LIMITS[plan]) {
+      return res.status(400).json({ success: false, message: 'Plano inválido' });
+    }
+
     const updateData = {
       name,
       email,
       phone,
       username,
-      password, // Note que agora estamos atualizando a senha diretamente
+      password,
       role,
       plan,
       validUntil: new Date(validUntil),
-      funnelLimit: PLAN_LIMITS[plan],
-      autoResponseLimit: AUTO_RESPONSE_LIMITS[plan]
+      funnelLimit: PLAN_LIMITS[plan].funnels,
     };
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -153,7 +157,7 @@ router.put('/user/:id', ensureAdmin, async (req, res) => {
     res.json({ success: true, user: updatedUser });
   } catch (error) {
     console.error('Erro ao atualizar usuário:', error);
-    res.status(500).json({ success: false, message: 'Erro ao atualizar usuário', error: error.message });
+    res.status(500).json({ success: false, message: 'Erro ao atualizar usuário', error: error });
   }
 });
 
