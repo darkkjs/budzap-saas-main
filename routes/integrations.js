@@ -20,11 +20,23 @@ router.get('/mercadopago-app/status', ensureAuthenticated, integrationController
 router.post('/mercadopago-app/configure', ensureAuthenticated, integrationController.configureMercadoPagoApp);
 router.get('/mercadopago-app/test', ensureAuthenticated, integrationController.testMercadoPagoApp);
 
+
+const PLAN_LIMITS = require('../config/planLimits');
+
+// ... (manter as funções existentes)
+
+// Função auxiliar para verificar se o usuário tem acesso a uma feature
+function checkFeatureAccess(userPlan, feature) {
+    return PLAN_LIMITS[userPlan][feature];
+}
+
+
 // Rota para o dashboard de integrações
 router.get('/dashboard', ensureAuthenticated, (req, res) => {
     res.render('integracoes', { 
         user: req.user,
-        pageTitle: 'Dashboard de Integrações'
+        pageTitle: 'Dashboard de Integrações',
+        checkFeatureAccess
     });
 });
 

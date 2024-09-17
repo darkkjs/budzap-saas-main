@@ -1,6 +1,9 @@
 // controllers/massMessageController.js
 
+const PLAN_LIMITS = require('../config/planLimits');
 const User = require('../models/User');
+const DailyUsage = require('../models/DailyUsage');
+
 const MassMessageReport = require('../models/MassMessageReport');
 const { executeFunnel } = require('../services/funnelExecutor');
 const redisClient = require('../config/redisConfig');
@@ -8,12 +11,6 @@ const { v4: uuidv4 } = require('uuid');
 
 let activeJobs = new Map();
 
-const PLAN_LIMITS = {
-    gratuito: 0,
-    basico: 500,
-    plus: 1000,
-    premium: Infinity
-};
 
 const MASS_MESSAGE_EXPIRY = 60 * 60 * 24; // 24 horas em segundos
 
@@ -50,24 +47,39 @@ exports.renderMassMessagePage = async (req, res) => {
 exports.startMassMessage = async (req, res) => {
     const { numbers, funnelName, instanceIds, alternateInstances } = req.body;
     const userId = req.user.id;
-
+  
     try {
-        let numberList = Array.isArray(numbers) ? numbers : numbers.split('\n');
-        numberList = numberList.map(num => num.toString().trim()).filter(num => num);
+      let numberList = Array.isArray(numbers) ? numbers : numbers.split('\n');
+      numberList = numberList.map(num => num.toString().trim()).filter(num => num);
+  
+      if (numberList.length === 0) {
+        return res.status(400).json({ error: 'Nenhum número válido fornecido' });
+      }
+  
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'Usuário não encontrado' });
+      }
+  
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+  
+      let dailyUsage = await DailyUsage.findOne({ userId: user._id, date: today });
+      if (!dailyUsage) {
+        dailyUsage = new DailyUsage({ userId: user._id, date: today });
+      }
+  
+      const dailyLimit = PLAN_LIMITS[user.plan].dailySpamMessages;
+      const remainingLimit = dailyLimit - dailyUsage.spamMessages;
+  
+      if (numberList.length > remainingLimit) {
+        return res.status(400).json({ error: `Limite diário excedido. Você pode enviar mais ${remainingLimit} mensagens hoje.` });
+      }
 
-        if (numberList.length === 0) {
-            return res.status(400).json({ error: 'Nenhum número válido fornecido' });
-        }
 
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ error: 'Usuário não encontrado' });
-        }
-
-        const remainingLimit = user.funnelLimit - user.funnelUsage;
-        if (numberList.length > remainingLimit) {
-            return res.status(400).json({ error: `Limite excedido. Você pode enviar mais ${remainingLimit} mensagens.` });
-        }
+        // Atualizar o uso diário
+    dailyUsage.spamMessages += numberList.length;
+    await dailyUsage.save();
 
         const funnelsKey = `user:${userId}:funnels`;
         const funnelIds = await redisClient.smembers(funnelsKey);

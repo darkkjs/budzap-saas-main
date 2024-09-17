@@ -2,7 +2,9 @@ const redisClient = require('../config/redisConfig');
 const { executeFunnel, sendTextMessage } = require('../services/funnelExecutor');
 const colors = require('colors');
 const AUTO_RESPONSE_EXPIRY = 60 * 60; // 1 hora em segundos
-const { AUTO_RESPONSE_LIMITS } = require('../config/planLimits');
+const PLAN_LIMITS = require('../config/planLimits');
+const User = require('../models/User');
+const DailyUsage = require('../models/DailyUsage');
 
 // Atualiza campanhas de autoresposta
 exports.updateCampaigns = async (req, res) => {
@@ -52,9 +54,35 @@ exports.handleAutoResponse = async (instanceKey, chatId, message) => {
     try {
         console.log('Processando autoresposta para:'.cyan, { instanceKey, chatId, message });
         
+        const user = await User.findOne({ 'whatsappInstances.key': instanceKey });
+        if (!user) {
+          console.error('Usuário não encontrado para a instância:', instanceKey);
+          return;
+        }
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+    
+        let dailyUsage = await DailyUsage.findOne({ userId: user._id, date: today });
+        if (!dailyUsage) {
+          dailyUsage = new DailyUsage({ userId: user._id, date: today });
+        }
+    
+        const dailyLimit = PLAN_LIMITS[user.plan].dailyAutoResponses;
+    
+        if (dailyUsage.autoResponses >= dailyLimit) {
+          console.log('Limite diário de autorespostas atingido para o usuário:', user._id);
+          return;
+        }
+
         const autoResponseKey = `auto_response:${instanceKey}:${chatId}`;
         const currentState = await redisClient.get(autoResponseKey);
         await saveLastMessage(instanceKey, chatId, message);
+
+        // Atualizar o uso diário
+    dailyUsage.autoResponses += 1;
+    await dailyUsage.save();
+
         if (currentState) {
             let state = JSON.parse(currentState);
             console.log('Estado atual:'.yellow, JSON.stringify(state, null, 2));

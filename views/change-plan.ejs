@@ -81,26 +81,26 @@
                     icon: 'seedling',
                     description: 'Ideal para quem está começando e quer experimentar o poder da automação.',
                     features: [
-                        'Acesso básico à plataforma',
                         '1 conexão WhatsApp',
-                        '2 funis de mensagens',
-                        'Spam de mensagem para ate 1000 leads',
-                        'Autoresposta para até 500 leads',
-                        'Gerenciamento de grupos',
+                        '15 funis de mensagens',
+                        'Spam de mensagem para até 1500 leads por dia',
+                        'Autoresposta para até 750 leads por dia',
+                        'Gerenciamento básico de grupos',
                     ]
                 },
                 plus: {
                     icon: 'rocket',
                     description: 'Perfeito para negócios em crescimento que precisam de mais recursos e flexibilidade.',
                     features: [
-                        'Todos os recursos do plano Gratuito',
-                        '5 conexões WhatsApp',
-                        '25 funis de mensagens',
-                        'Spam de mensagem para ate 10k leads',
-                        'Autoresposta para até 1000 leads',
-                        'Gerenciamento de grupos',
+                        'Todos os recursos do plano Básico',
+                        '3 conexões WhatsApp',
+                        '50 funis de mensagens',
+                        'Spam de mensagem para até 15k leads por dia',
+                        'Autoresposta para até 2000 leads por dia',
+                        'Gerenciamento avançado de grupos',
                         'Gerador de voz (elevenlabs integração)',
-                        'Antiban ativo'
+                        'Antiban ativo',
+                        'API básica'
                     ]
                 },
                 premium: {
@@ -112,8 +112,11 @@
                         'Funis de mensagens ilimitados',
                         'Spam de mensagens ilimitado',
                         'Autoresposta ilimitada',
-                        'Suporte 24/7 com gerente de conta dedicado',
+                        'Suporte prioritário 24/7',
                         'Acesso antecipado a novos recursos',
+                        'API avançada',
+                        'Treinamento personalizado',
+                        'Dashboard analytics avançado'
                     ]
                 }
             } %>
@@ -130,7 +133,10 @@
                         <% if (planKey === atualplan) { %>
                             <div class="badge badge-primary mx-auto">Seu Plano Atual</div>
                         <% } %>
-                        <p class="text-4xl font-bold my-4 text-purple-800 text-center">R$ <%= plan.price %><span class="text-sm font-normal">/mês</span></p>
+                        <p class="text-4xl font-bold my-4 text-purple-800 text-center">
+                            R$ <%= planKey === 'basico' ? '65' : (planKey === 'plus' ? '110' : '180') %>
+                            <span class="text-sm font-normal">/mês</span>
+                        </p>
                         <% if (planKey === 'plus') { %>
                             <p class="text-green-600 font-semibold text-center">Melhor Custo-Benefício!</p>
                         <% } %>
@@ -154,6 +160,7 @@
                 </div>
             <% }); %>
         </div>
+
         <br>
         <br>
         <section id="features" class="mb-20">

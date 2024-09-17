@@ -17,7 +17,7 @@ router.get('/expiring-plans', ensureAdmin, async (req, res) => {
         const users = await User.find({
             $or: [
                 { manualPlanActive: true, validUntil: { $lte: thirtyDaysFromNow, $gte: new Date() } },
-                { stripeSubscriptionId: { $exists: true, $ne: null }, validUntil: { $lte: thirtyDaysFromNow, $gte: new Date() } }
+                { stripeSubscriptionIde: { $exists: true, $ne: null }, validUntil: { $lte: thirtyDaysFromNow, $gte: new Date() } }
             ]
         }).sort({ validUntil: 1 });
 
@@ -125,16 +125,16 @@ router.post('/create-user', ensureAdmin, async (req, res) => {
 
 router.put('/user/:id', ensureAdmin, async (req, res) => {
   try {
-    const { name, email, phone, username, role, plan, validUntil } = req.body;
+    const { name, email, phone, username, password, role, plan, validUntil } = req.body;
     
     const updateData = {
       name,
       email,
       phone,
       username,
+      password, // Note que agora estamos atualizando a senha diretamente
       role,
       plan,
-      manualPlanActive: true,
       validUntil: new Date(validUntil),
       funnelLimit: PLAN_LIMITS[plan],
       autoResponseLimit: AUTO_RESPONSE_LIMITS[plan]
@@ -266,7 +266,7 @@ router.get('/dashboard-data', ensureAdmin, async (req, res) => {
         $match: {
           $or: [
             { manualPlanActive: true, validUntil: { $gt: now } },
-            { stripeSubscriptionId: { $exists: true, $ne: null } }
+            { stripeSubscriptionIde: { $exists: true, $ne: null } }
           ]
         }
       },

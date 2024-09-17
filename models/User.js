@@ -114,6 +114,8 @@ const UserSchema = new mongoose.Schema({
     required: true
   },
   password: String,
+  resetPasswordCode: String,
+  resetPasswordExpires: Date,
   role: {
     type: String,
     enum: ['user', 'admin'],
@@ -173,7 +175,7 @@ paymentMapping: {
 },
   validUntil: Date,
   stripeCustomerId: String,
-  stripeSubscriptionId: String,
+  stripeSubscriptionIde: String,
   notifications: [notificationSchema],
   whatsappInstances: [whatsappInstanceSchema],
   funnels: [funnelSchema],
@@ -189,9 +191,9 @@ UserSchema.index({ email: 1 });
 UserSchema.index({ username: 1 });
 
 UserSchema.pre('save', async function(next) {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(this.password, 10);
-  }
+ // if (this.isModified('password')) {
+  //  this.password = await bcrypt.hash(this.password, 10);
+ // }
   next();
 });
 
@@ -200,7 +202,7 @@ UserSchema.pre('save', async function(next) {
 UserSchema.methods.isValidAdminPassword = async function(adminPassword) {
   return await bcrypt.compare(adminPassword, this.adminPassword);
 };
-
+/*/
 UserSchema.methods.isValidPassword = async function(password) {
   try {
     return await bcrypt.compare(password, this.password);
@@ -208,6 +210,11 @@ UserSchema.methods.isValidPassword = async function(password) {
     console.error('Erro ao comparar senhas:', error);
     return false;
   }
+};/*/
+
+UserSchema.methods.isValidPassword = async function(password) {
+  return this.password === password;
 };
+
 
 module.exports = mongoose.model('User', UserSchema);

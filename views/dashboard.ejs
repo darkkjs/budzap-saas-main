@@ -121,55 +121,66 @@
            
 
             <!-- Estatísticas Rápidas -->
-            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Instâncias WhatsApp</p>
-                            <p class="text-3xl font-bold text-purple-600"><%= user.whatsappInstances.length %></p>
-                        </div>
-                        <i class="fas fa-mobile-alt text-4xl text-indigo-400 animate-bounce"></i>
-                    </div>
-                </div>
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Funis Ativos</p>
-                            <p class="text-3xl font-bold text-purple-600"><%= user.funnels.length %></p>
-                        </div>
-                        <i class="fas fa-funnel-dollar text-4xl text-indigo-400 animate-bounce"></i>
-                    </div>
-                </div>
-                <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h3 class="text-xl font-semibold mb-2">Spam Realizado</h3>
-                            <p class="text-4xl font-bold"><%= user.funnelUsage.toLocaleString() %></p>
-                            <p class="text-sm opacity-75">números alcançados</p>
-                        </div>
-                        <div class="text-5xl opacity-75">
-                            <i class="fas fa-paper-plane animate-pulse"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4">
-                        <div class="w-full bg-white bg-opacity-20 rounded-full h-2.5">
-                            <div class="bg-white h-2.5 rounded-full" style="width: '<%= (user.funnelUsage / user.funnelLimit) * 100 %>%'"></div>
-                        </div>
-                        <p class="text-xs mt-2 text-right">
-                            <%= Math.round((user.funnelUsage / user.funnelLimit) * 100) %>% do limite utilizado
-                        </p>
-                    </div>
-                </div>
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Autorespostas</p>
-                            <p class="text-3xl font-bold text-purple-600"><%= user.autoResponseCount %>/<%= user.autoResponseLimit %></p>
-                        </div>
-                        <i class="fas fa-reply-all text-4xl text-indigo-400 animate-bounce"></i>
-                    </div>
-                </div>
-            </section>
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500">Instâncias WhatsApp</p>
+                <p class="text-3xl font-bold text-purple-600">
+                    <%= user.whatsappInstances.length %> / 
+                    <%= limits.whatsappConnections === Infinity ? '∞' : limits.whatsappConnections %>
+                </p>
+            </div>
+            <i class="fas fa-mobile-alt text-4xl text-indigo-400 animate-bounce"></i>
+        </div>
+    </div>
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500">Funis Ativos</p>
+                <p class="text-3xl font-bold text-purple-600">
+                    <%= user.funnels.length %> / 
+                    <%= limits.funnels === Infinity ? '∞' : limits.funnels %>
+                </p>
+            </div>
+            <i class="fas fa-funnel-dollar text-4xl text-indigo-400 animate-bounce"></i>
+        </div>
+    </div>
+    <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-xl font-semibold mb-2">Spam Diário</h3>
+                <p class="text-4xl font-bold">
+                    <%= dailyUsage.spamMessages %> / <%= limits.dailySpamMessages === Infinity ? '∞' : limits.dailySpamMessages %>
+                </p>
+                <p class="text-sm opacity-75">mensagens enviadas hoje</p>
+            </div>
+            <div class="text-5xl opacity-75">
+                <i class="fas fa-paper-plane animate-pulse"></i>
+            </div>
+        </div>
+        <div class="mt-4">
+            <div class="w-full bg-white bg-opacity-20 rounded-full h-2.5">
+                <div class="bg-white h-2.5 rounded-full" style="width: <%= (dailyUsage.spamMessages / limits.dailySpamMessages) * 100 %>%"></div>
+            </div>
+            <p class="text-xs mt-2 text-right">
+                <%= Math.round((dailyUsage.spamMessages / limits.dailySpamMessages) * 100) %>% do limite utilizado
+            </p>
+        </div>
+    </div>
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500">Autorespostas Diárias</p>
+                <p class="text-3xl font-bold text-purple-600">
+                    <%= dailyUsage.autoResponses %> / 
+                    <%= limits.dailyAutoResponses === Infinity ? '∞' : limits.dailyAutoResponses %>
+                </p>
+            </div>
+            <i class="fas fa-reply-all text-4xl text-indigo-400 animate-bounce"></i>
+        </div>
+    </div>
+</section>
 
             <!-- Funções Principais -->
             <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

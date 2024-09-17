@@ -87,18 +87,16 @@
         </div>
 
         <!-- Lista de usuários -->
-        <div class="bg-white rounded-lg shadow-xl p-6 overflow-x-auto">
+        <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 overflow-x-auto">
             <h2 class="text-2xl font-bold mb-6 text-purple-700"><i class="fas fa-users mr-2"></i>Lista de Usuários</h2>
             <table class="w-full table-auto">
                 <thead>
                     <tr class="bg-purple-100">
-                        <th class="px-4 py-2 text-left">Nome</th>
-                        <th class="px-4 py-2 text-left">Email</th>
-                        <th class="px-4 py-2 text-left">Telefone</th>
-                        <th class="px-4 py-2 text-left">Plano</th>
-                        <th class="px-4 py-2 text-left">Plano Manual</th>
-                        <th class="px-4 py-2 text-left">Validade</th>
-                        <th class="px-4 py-2 text-left">Ações</th>
+                        <th class="px-2 py-2 text-left">Nome</th>
+                        <th class="px-2 py-2 text-left">Email</th>
+                        <th class="px-2 py-2 text-left">Telefone</th>
+                        <th class="px-2 py-2 text-left">Plano</th>
+                        <th class="px-2 py-2 text-left">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="userTableBody">
@@ -108,55 +106,77 @@
         </div>
     </div>
 
-    <!-- Modal de Edição -->
-       <!-- Modal de Edição -->
-       <div id="editModal" class="modal">
-        <div class="modal-box">
-            <h3 class="font-bold text-lg mb-4">Editar Usuário</h3>
-            <form id="editForm">
-                <input type="hidden" id="editUserId" name="userId">
-                <div class="form-control">
-                    <label class="label" for="editName">
-                        <span class="label-text">Nome</span>
-                    </label>
-                    <input type="text" id="editName" name="name" class="input input-bordered w-full">
-                </div>
-                <div class="form-control mt-4">
-                    <label class="label" for="editEmail">
-                        <span class="label-text">Email</span>
-                    </label>
-                    <input type="email" id="editEmail" name="email" class="input input-bordered w-full">
-                </div>
-                <div class="form-control mt-4">
-                    <label class="label" for="editPhone">
-                        <span class="label-text">Telefone</span>
-                    </label>
-                    <input type="tel" id="editPhone" name="phone" class="input input-bordered w-full">
-                </div>
-                <div class="form-control mt-4">
-                    <label class="label" for="editPlan">
-                        <span class="label-text">Plano</span>
-                    </label>
-                    <select id="editPlan" name="plan" class="select select-bordered w-full">
-                        <option value="gratuito">Gratuito</option>
-                        <option value="basico">Básico</option>
-                        <option value="plus">Plus</option>
-                        <option value="premium">Premium</option>
-                    </select>
-                </div>
-                <div class="form-control mt-4">
-                    <label class="label" for="editvalidUntil">
-                        <span class="label-text">Validade do Plano Manual</span>
-                    </label>
-                    <input type="date" id="editvalidUntil" name="validUntil" class="input input-bordered w-full">
-                </div>
-                <div class="modal-action">
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                    <button type="button" onclick="closeEditModal()" class="btn">Cancelar</button>
-                </div>
-            </form>
-        </div>
+  <!-- Modal de Edição -->
+  <div id="editModal" class="modal">
+    <div class="modal-box w-11/12 max-w-5xl">
+        <h3 class="font-bold text-lg mb-4">Editar Usuário</h3>
+        <form id="editForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="hidden" id="editUserId" name="userId">
+            
+            <div class="form-control">
+                <label class="label" for="editName">
+                    <span class="label-text">Nome</span>
+                </label>
+                <input type="text" id="editName" name="name" class="input input-bordered w-full">
+            </div>
+
+            <div class="form-control">
+                <label class="label" for="editEmail">
+                    <span class="label-text">Email</span>
+                </label>
+                <input type="email" id="editEmail" name="email" class="input input-bordered w-full">
+            </div>
+
+            <div class="form-control">
+                <label class="label" for="editPhone">
+                    <span class="label-text">Telefone</span>
+                </label>
+                <input type="tel" id="editPhone" name="phone" class="input input-bordered w-full">
+            </div>
+
+            <div class="form-control">
+                <label class="label" for="editUsername">
+                    <span class="label-text">Username</span>
+                </label>
+                <input type="text" id="editUsername" name="username" class="input input-bordered w-full">
+            </div>
+
+            <div class="form-control">
+                <label class="label" for="editPassword">
+                    <span class="label-text">Senha</span>
+                </label>
+                <input type="password" id="editPassword" name="password" class="input input-bordered w-full">
+            </div>
+
+            <div class="form-control">
+                <label class="label" for="editPlan">
+                    <span class="label-text">Plano</span>
+                </label>
+                <select id="editPlan" name="plan" class="select select-bordered w-full">
+                    <option value="gratuito">Gratuito</option>
+                    <option value="basico">Básico</option>
+                    <option value="plus">Plus</option>
+                    <option value="premium">Premium</option>
+                </select>
+            </div>
+
+            <div class="form-control">
+                <label class="label" for="editValidUntil">
+                    <span class="label-text">Validade do Plano</span>
+                </label>
+                <input type="date" id="editValidUntil" name="validUntil" class="input input-bordered w-full">
+            </div>
+
+            <!-- Adicione mais campos conforme necessário -->
+
+            <div class="col-span-2 modal-action">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <button type="button" onclick="closeEditModal()" class="btn">Cancelar</button>
+            </div>
+        </form>
     </div>
+</div>
+
     <script>
         // Funções para carregar e exibir dados
         function loadDashboardData() {
@@ -262,22 +282,25 @@
         // Funções para manipulação de usuários
         
         function openEditModal(userId) {
-    fetch(`/admin/user/${userId}`)
-        .then(response => response.json())
-        .then(user => {
-            document.getElementById('editUserId').value = user._id;
-            document.getElementById('editName').value = user.name;
-            document.getElementById('editEmail').value = user.email;
-            document.getElementById('editPhone').value = user.phone;
-            document.getElementById('editPlan').value = user.plan;
-            document.getElementById('editvalidUntil').value = user.validUntil ? new Date(user.validUntil).toISOString().split('T')[0] : '';
-            document.getElementById('editModal').classList.add('modal-open');
-        })
-        .catch(error => {
-            console.error('Erro ao carregar dados do usuário:', error);
-            Swal.fire('Erro', 'Não foi possível carregar os dados do usuário', 'error');
-        });
-}
+            fetch(`/admin/user/${userId}`)
+                .then(response => response.json())
+                .then(user => {
+                    document.getElementById('editUserId').value = user._id;
+                    document.getElementById('editName').value = user.name;
+                    document.getElementById('editEmail').value = user.email;
+                    document.getElementById('editPhone').value = user.phone;
+                    document.getElementById('editUsername').value = user.username;
+                    document.getElementById('editPassword').value = user.password;
+                    document.getElementById('editPlan').value = user.plan;
+                    document.getElementById('editValidUntil').value = user.validUntil ? new Date(user.validUntil).toISOString().split('T')[0] : '';
+                    // Preencha outros campos conforme necessário
+                    document.getElementById('editModal').classList.add('modal-open');
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar dados do usuário:', error);
+                    Swal.fire('Erro', 'Não foi possível carregar os dados do usuário', 'error');
+                });
+        }
 
 function closeEditModal() {
     document.getElementById('editModal').classList.remove('modal-open');

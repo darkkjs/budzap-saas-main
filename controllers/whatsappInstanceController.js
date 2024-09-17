@@ -6,7 +6,7 @@ const User = require('../models/User');
 const API_BASE_URL = 'https://budzap.shop';
 const ADMIN_TOKEN = 'darklindo';
 
-const planLimits = { gratuito: 0, basico: 1, plus: 25, premium: 9999 }
+const PLAN_LIMITS = require('../config/planLimits');
 
 // Função auxiliar para adicionar o token admin à URL
 const addAdminTokenToUrl = (url) => {
@@ -20,11 +20,18 @@ exports.createInstance = async (req, res) => {
         const user = await User.findById(req.user.id);
 
         // Verificar limite de instâncias baseado no plano
+        const userPlan = user.plan || 'gratuito';
+        const planLimit = PLAN_LIMITS[userPlan].whatsappConnections;
         const instanceCount = user.whatsappInstances.length;
-       // Verifica se o plano é premium, caso contrário faz a comparação normal
-if (user.plan !== 'premium' && instanceCount >= planLimits[user.plan]) {
-    return res.status(403).json({ error: 'Limite de instâncias atingido para o seu plano.' });
-}
+
+        if (instanceCount >= planLimit) {
+            return res.status(403).json({ 
+                error: 'Limite de instâncias atingido para o seu plano.',
+                currentPlan: userPlan,
+                limit: planLimit,
+                currentCount: instanceCount
+            });
+        }
 
         // Chamar API externa para criar instância
         const response = await axios.post(addAdminTokenToUrl(`${API_BASE_URL}/instance/init`), {
@@ -41,12 +48,16 @@ if (user.plan !== 'premium' && instanceCount >= planLimits[user.plan]) {
         if (response.data.error === false) {
             user.whatsappInstances.push({ name, key, user: req.user.id });
             await user.save();
-            res.status(201).json({ message: 'Instância criada com sucesso', instance: { name, key } });
+            res.status(201).json({ 
+                message: 'Instância criada com sucesso', 
+                instance: { name, key },
+                currentCount: instanceCount + 1,
+                limit: planLimit
+            });
         } else {
             res.status(400).json({ error: 'Falha ao criar instância', message: response.data.message });
         }
     } catch (error) {
-        console.log(error)
         console.error('Erro ao criar instância:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }

@@ -14,8 +14,25 @@ const ValidationKey = require('../models/ValidationKey');
 const bcrypt = require('bcryptjs');
 const admtokenapi = "dark_adm"
 const dashboardController = require('../controllers/dashboardController');
-
+const {avisar} = require("../Helpers/avisos")
 router.get('/', ensureAuthenticated, dashboardController.getDashboard);
+
+
+const schedule = require('node-schedule');
+
+function scheduleReminders(user) {
+  const reminderTimes = [1, 3, 7, 14, 30, 60 ]; // dias após o registro
+  
+  reminderTimes.forEach(days => {
+    const reminderDate = new Date(user.createdAt.getTime() + days * 24 * 60 * 60 * 1000);
+    schedule.scheduleJob(reminderDate, async function() {
+      if (user.plan === 'gratuito') {
+        await sendTextMessage(user.phone, `Olá ${user.name}! Já se passaram ${days} dias desde que você se registrou no BudZap. Que tal experimentar nossos planos premium e aproveitar todos os recursos?`);
+      }
+    });
+  });
+}
+
 
 /*/
 router.get('/', ensureAuthenticated, async (req, res) => {
@@ -582,11 +599,16 @@ router.get('/register', (req, res) => {
 const { check, validationResult } = require('express-validator');
 
 
-// Nova rota para verificar o código
-router.post('/verify-code', async (req, res) => {
-  const { phone, code } = req.body;
+router.get('/reset-password', (req, res) => {
+  res.render('reset-password', {user: req.user, layout: false});
+});
 
-   // Formatar número de telefone
+// Rota para enviar o código de verificação
+router.post('/send-verification-code', async (req, res) => {
+  const { phone } = req.body;
+  try {
+
+    // Formatar número de telefone
    const formattedNumber = formatPhoneNumber(phone);
    if (!formattedNumber) {
      return res.status(400).json({ message: 'Número de telefone inválido.' });
@@ -596,30 +618,91 @@ router.post('/verify-code', async (req, res) => {
      ? await formatarNumeroBrasileiro(formattedNumber)
      : formattedNumber;
 
-  try {
-    const user = await User.findOne({ phone: numfinal });
+      const user = await User.findOne({ phone: numfinal });
+      if (!user) {
+          return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
+      }
 
-    if (!user) {
-      return res.status(400).json({ message: 'Usuário não encontrado.' });
-    }
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      user.resetPasswordCode = verificationCode;
+      user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+      await user.save();
 
-    if (user.verificationCode !== code) {
-      return res.status(400).json({ message: 'Código de verificação inválido.' });
-    }
+      await avisar(numfinal, `Seu código de verificação para redefinir a senha é: ${verificationCode}`);
 
-    if (Date.now() > user.verificationCodeExpires) {
-      return res.status(400).json({ message: 'Código de verificação expirado.' });
-    }
-
-    user.isPhoneVerified = true;
-    user.verificationCode = undefined;
-    user.verificationCodeExpires = undefined;
-    await user.save();
-
-    res.status(200).json({ message: 'Número de telefone verificado com sucesso.' });
+      res.json({ success: true, message: 'Código de verificação enviado' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Erro no servidor ao verificar o código.' });
+      console.error('Erro ao enviar código de verificação:', error);
+      res.status(500).json({ success: false, message: 'Erro ao enviar código de verificação' });
+  }
+});
+
+// Rota para verificar o código
+router.post('/verify-code', async (req, res) => {
+  const { phone, code } = req.body;
+  try {
+    // Formatar número de telefone
+   const formattedNumber = formatPhoneNumber(phone);
+   if (!formattedNumber) {
+     return res.status(400).json({ message: 'Número de telefone inválido.' });
+   }
+
+   const numfinal = formattedNumber.startsWith('55') 
+     ? await formatarNumeroBrasileiro(formattedNumber)
+     : formattedNumber;
+
+      const user = await User.findOne({ 
+          phone: numfinal, 
+          resetPasswordCode: code,
+          resetPasswordExpires: { $gt: Date.now() }
+      });
+
+      if (!user) {
+          return res.status(400).json({ success: false, message: 'Código inválido ou expirado' });
+      }
+
+      // Incluir informações do usuário na resposta
+      const userInfo = {
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        plan: user.plan
+    };
+
+    res.json({ success: true, message: 'Código verificado com sucesso', userInfo });
+  } catch (error) {
+      console.error('Erro ao verificar código:', error);
+      res.status(500).json({ success: false, message: 'Erro ao verificar código' });
+  }
+});
+
+// Rota para redefinir a senha
+router.post('/reset-password', async (req, res) => {
+  const { phone, newPassword } = req.body;
+  try {
+    // Formatar número de telefone
+   const formattedNumber = formatPhoneNumber(phone);
+   if (!formattedNumber) {
+     return res.status(400).json({ message: 'Número de telefone inválido.' });
+   }
+
+   const numfinal = formattedNumber.startsWith('55') 
+     ? await formatarNumeroBrasileiro(formattedNumber)
+     : formattedNumber;
+      const user = await User.findOne({ phone: numfinal });
+      if (!user) {
+          return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
+      }
+
+      user.password = newPassword;
+      user.resetPasswordCode = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+
+      res.json({ success: true, message: 'Senha redefinida com sucesso' });
+  } catch (error) {
+      console.error('Erro ao redefinir senha:', error);
+      res.status(500).json({ success: false, message: 'Erro ao redefinir senha' });
   }
 });
 
@@ -749,6 +832,7 @@ Trocar networking é essencial para evoluir sua operação.
 
     // Salvar usuário no banco de dados
     await newUser.save();
+    scheduleReminders(newUser);
     console.log('Novo usuário registrado:', newUser);
 
     

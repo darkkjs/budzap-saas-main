@@ -42,7 +42,7 @@ router.get('/subscription-success', async (req, res) => {
                 {
                     $set: {
                         stripeCustomerId: session.customer,
-                        stripeSubscriptionId: subscriptionId,
+                        stripeSubscriptionIde: subscriptionId,
                         plan: plano,
                         validUntil: validUntil,
                         funnelLimit: newFunnelLimit,
@@ -139,8 +139,8 @@ router.post('/change-plan', ensureAuthenticated, async (req, res) => {
             premium: 'price_1PlLFaJd0dkXl3iI4dVGf4Uw'
         };
 
-        if (user.stripeSubscriptionId) {
-            await stripe.subscriptions.del(user.stripeSubscriptionId);
+        if (user.stripeSubscriptionIde) {
+            await stripe.subscriptions.del(user.stripeSubscriptionIde);
         }
 
         const subscription = await stripe.subscriptions.create({
@@ -148,7 +148,7 @@ router.post('/change-plan', ensureAuthenticated, async (req, res) => {
             items: [{ price: plans[newPlan] }],
         });
 
-        user.stripeSubscriptionId = subscription.id;
+        user.stripeSubscriptionIde = subscription.id;
         user.plan = newPlan;
         user.validUntil = new Date(subscription.current_period_end * 1000);
 

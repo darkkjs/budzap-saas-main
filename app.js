@@ -143,7 +143,7 @@ console.log(planKey)
 
 // Exemplo de uso da função getPlanFromPriceId:
 app.get('/subscription-details', async (req, res) => {
-    const subscription = await stripeHelpers.retrieveSubscription(req.user.stripeSubscriptionId);
+    const subscription = await stripeHelpers.retrieveSubscription(req.user.stripeSubscriptionIde);
     const planName = stripeHelpers.getPlanFromPriceId(subscription.items.data[0].price.id);
     
     res.json({ plan: planName });

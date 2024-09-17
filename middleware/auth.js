@@ -21,9 +21,9 @@ module.exports = {
         }
       }
       
-      if (user.stripeSubscriptionId) {
+      if (user.stripeSubscriptionIde) {
         try {
-          const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+          const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionIde);
 
           if (subscription.status !== 'active') {
             await avisar(req.user.phone, `EIi ${req.user.name}, seu plano acaba de ser expirado, que tal renovar?\n\nChame o gerente para renovar seu plano: 51995746157\n\n*Ou pague pela plataforma e tenha seu plano ativo automaticamente!*`)

@@ -5,15 +5,15 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 
 const PRICE_TO_PLAN = {
-    'price_1Pv8I9Jd0dkXl3iIsmNRM6cH': 'basico',
-    'price_1Pv8IaJd0dkXl3iIpqfqiNs9': 'plus',
-    'price_1Pv8IfJd0dkXl3iIPFkZLOPJ': 'premium'
+    'price_1Pv8IfJd0dkXl3iIPFkZLOPJ': 'basico',
+    'price_1Pzr6UJd0dkXl3iIcRukFSiX': 'plus',
+    'price_1Pzr78Jd0dkXl3iIlDGW1Wvf': 'premium'
 };
 
 const PLAN_TO_PRICE = {
-    'basico': 'price_1Pv8I9Jd0dkXl3iIsmNRM6cH',
-    'plus': 'price_1Pv8IaJd0dkXl3iIpqfqiNs9',
-    'premium': 'price_1Pv8IfJd0dkXl3iIPFkZLOPJ'
+    'basico': 'price_1Pv8IfJd0dkXl3iIPFkZLOPJ',
+    'plus': 'price_1Pzr6UJd0dkXl3iIcRukFSiX',
+    'premium': 'price_1Pzr78Jd0dkXl3iIlDGW1Wvf'
 };
 
 exports.getPlanFromPriceId = (priceId) => {

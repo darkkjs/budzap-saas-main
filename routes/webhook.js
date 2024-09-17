@@ -190,7 +190,8 @@ router.post('/:instanceKey', async (req, res) => {
     await handleAutoResponse(
       req.params.instanceKey,
       dadoschat.id,
-      dadoschat.mensagem.conteudomsg
+      dadoschat.mensagem.conteudomsg,
+      "autoresposta"
     );
   
 

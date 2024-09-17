@@ -1,6 +1,8 @@
 // controllers/dashboardController.js
 
 const User = require('../models/User'); // Ajuste o caminho conforme necessário
+const PLAN_LIMITS = require('../config/planLimits');
+const DailyUsage = require('../models/DailyUsage');
 
 exports.getDashboard = async (req, res) => {
   try {
@@ -19,12 +21,34 @@ exports.getDashboard = async (req, res) => {
 
     // Aqui você pode adicionar lógica para buscar dados adicionais necessários para o dashboard
     // Por exemplo, estatísticas de uso, informações da assinatura, etc.
-
-    res.render('dashboard', { 
-      user: req.user,
-      statusMessage: statusMessage,
-      // Adicione aqui quaisquer outros dados que você queira passar para a view do dashboard
+  
+    const user = req.user;
+    const userLimits = PLAN_LIMITS[user.plan];
+  
+    // Buscar o uso diário para o usuário atual
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let dailyUsage = await DailyUsage.findOne({ 
+      userId: user._id, 
+      date: today 
     });
+  
+    if (!dailyUsage) {
+      dailyUsage = {
+        spamMessages: 0,
+        autoResponses: 0
+      };
+    }
+  
+    res.render('dashboard', { 
+      user: user, 
+      limits: userLimits, // Certifique-se de que está passando 'limits' e não 'userLimits'
+      statusMessage: statusMessage,
+      dailyUsage: dailyUsage
+    });
+
+
   } catch (error) {
     console.error('Error in dashboard route:', error);
     res.status(500).render('error', { message: 'Um erro ocorreu ao carregar o dashboard' });

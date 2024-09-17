@@ -14,6 +14,42 @@
         .dark {
             --primary-gradient: linear-gradient(135deg, #434343 0%, #000000 100%);
         }
+
+        .vsl-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.8);
+}
+
+.vsl-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 600px;
+}
+
+.close-vsl {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-vsl:hover,
+.close-vsl:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
         body {
             font-family: 'Poppins', sans-serif;
         }
@@ -120,9 +156,13 @@
                         { href: '/group', icon: 'fas fa-user-friends', text: 'Gerenciar grupos' }
                     ] %>
                     <% navItems.forEach(item => { %>
-                        <a href="<%= item.href %>" class="menu-item flex items-center space-x-3 px-4 py-3 rounded transition duration-200">
+                        <a href="<%= user.plan === 'gratuito' && item.href !== '/change-plan' ? '#' : item.href %>" 
+                           class="menu-item flex items-center space-x-3 px-4 py-3 rounded transition duration-200 <%= user.plan === 'gratuito' && item.href !== '/change-plan' ? 'opacity-50 cursor-not-allowed' : '' %>">
                             <i class="<%= item.icon %> text-xl"></i>
                             <span class="animate-slide-in"><%= item.text %></span>
+                            <% if (user.plan === 'gratuito' && item.href !== '/change-plan') { %>
+                                <i class="fas fa-lock ml-auto text-sm"></i>
+                            <% } %>
                         </a>
                     <% }) %>
                 </nav>
@@ -184,6 +224,22 @@
             </main>
         </div>
     </div>
+    <% if (user.plan === 'gratuito') { %>
+        <div id="vslModal" class="vsl-modal">
+            <div class="vsl-content">
+                <span class="close-vsl">&times;</span>
+                <h2 class="text-2xl font-bold mb-4">Desbloqueie Todo o Potencial do BudZap!</h2>
+             <!--    <div class="video-container mb-4">
+                    Substitua o src pela URL do seu vídeo 
+                    <iframe width="100%" height="315" src="https://www.youtube.com/embed/seu-video-id" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>-->
+                <p class="mb-4">Assine agora e tenha acesso a todas as funcionalidades incríveis do BudZap!</p>
+                <a href="/change-plan" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Assinar Agora
+                </a>
+            </div>
+        </div>
+        <% } %>
 
     <%- defineContent('scripts') %>
     <script>
@@ -217,6 +273,42 @@
             // Implement logout logic here
             console.log('Logout clicked');
         });
+
+        // VSL Modal logic for free plan users
+<% if (user.plan === 'gratuito') { %>
+    const vslModal = document.getElementById('vslModal');
+    const closeVsl = document.querySelector('.close-vsl');
+
+    // Show modal when page loads
+    window.onload = function() {
+        vslModal.style.display = "block";
+    }
+
+    // Close modal when clicking on X
+    closeVsl.onclick = function() {
+        vslModal.style.display = "none";
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+        if (event.target == vslModal) {
+            vslModal.style.display = "none";
+        }
+    }
+<% } %>
+
+// Disable links for free plan users
+<% if (user.plan === 'gratuito') { %>
+    document.querySelectorAll('.menu-item').forEach(item => {
+        if (!item.href.includes('/change-plan')) {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('Esta funcionalidade está disponível apenas para usuários pagos. Por favor, assine um plano para acessá-la.');
+            });
+        }
+    });
+<% } %>
+
     </script>
 </body>
 </html>

@@ -36,21 +36,61 @@
             <p class="text-gray-600">Baseado na proporção de autorespostas em relação ao total de mensagens</p>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-2xl font-semibold mb-4">Mensagens por Dia</h2>
-            <canvas id="messagesChart"></canvas>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-2xl font-semibold mb-4">Mensagens por Dia</h2>
+                <canvas id="messagesChart"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-2xl font-semibold mb-4">Autorespostas por Dia</h2>
+                <canvas id="autoResponsesChart"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Uso de Recursos</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Instâncias WhatsApp</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: <%= usagePercentages.whatsappConnections %>%"></div>
+                    </div>
+                    <p class="mt-1"><%= user.whatsappInstances.length %> / <%= limits.whatsappConnections %></p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Funis</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                        <div class="bg-green-600 h-2.5 rounded-full" style="width: <%= usagePercentages.funnels %>%"></div>
+                    </div>
+                    <p class="mt-1"><%= totalFunnels %> / <%= limits.funnels %></p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Spam Diário</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                        <div class="bg-yellow-600 h-2.5 rounded-full" style="width: <%= usagePercentages.dailySpamMessages %>%"></div>
+                    </div>
+                    <p class="mt-1"><%= spamData[spamData.length - 1] %> / <%= limits.dailySpamMessages %></p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Autorespostas Diárias</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                        <div class="bg-red-600 h-2.5 rounded-full" style="width: <%= usagePercentages.dailyAutoResponses %>%"></div>
+                    </div>
+                    <p class="mt-1"><%= autoResponseData[autoResponseData.length - 1] %> / <%= limits.dailyAutoResponses %></p>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        const ctx = document.getElementById('messagesChart').getContext('2d');
-        new Chart(ctx, {
+        const ctx1 = document.getElementById('messagesChart').getContext('2d');
+        new Chart(ctx1, {
             type: 'line',
             data: {
-                labels: ['Anteontem', 'Ontem', 'Hoje'],
+                labels: <%= JSON.stringify(dates) %>,
                 datasets: [{
                     label: 'Mensagens Enviadas',
-                    data: ['<%= messagesTwoDaysAgo %>', '<%= messagesYesterday %>', '<%= messagesToday %>'],
+                    data: <%= JSON.stringify(spamData) %>,
                     borderColor: 'rgb(102, 126, 234)',
                     tension: 0.1
                 }]
@@ -64,6 +104,32 @@
                     title: {
                         display: true,
                         text: 'Tendência de Mensagens'
+                    }
+                }
+            }
+        });
+
+        const ctx2 = document.getElementById('autoResponsesChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: <%= JSON.stringify(dates) %>,
+                datasets: [{
+                    label: 'Autorespostas',
+                    data: <%= JSON.stringify(autoResponseData) %>,
+                    borderColor: 'rgb(234, 179, 8)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Tendência de Autorespostas'
                     }
                 }
             }

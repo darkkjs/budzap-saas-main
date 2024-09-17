@@ -67,6 +67,7 @@
                <!-- ElevenLabs Card -->
 <div class="integration-card bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-2xl transition-shadow duration-300">
     <div class="px-6 py-6">
+        
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center">
                 <div class="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full p-3 shadow-md">
@@ -75,6 +76,9 @@
                 <div class="ml-4">
                     <h3 class="text-xl font-semibold text-gray-900">ElevenLabs</h3>
                     <p class="text-sm text-purple-600 font-medium">Geração de Voz AI Avançada</p>
+                    <% if (!checkFeatureAccess(user.plan, 'voiceGenerator')) { %>
+                        <p class="text-red-500 text-sm mt-2">Seu plano atual não inclui acesso ao gerador de voz.</p>
+                    <% } %>
                 </div>
             </div>
             <span class="px-3 py-1 text-sm font-semibold text-green-800 bg-green-100 rounded-full flex items-center">
@@ -124,6 +128,9 @@
                 <div class="ml-4">
                     <h3 class="text-xl font-semibold text-gray-900">Mercado Pago</h3>
                     <p class="text-sm text-blue-600 font-medium">Gestão Financeira Integrada</p>
+                    <% if (!checkFeatureAccess(user.plan, 'api')) { %>
+                        <p class="text-red-500 text-sm mt-2">Seu plano atual não inclui acesso à API do Mercado Pago.</p>
+                    <% } %>
                 </div>
             </div>
             <span class="px-3 py-1 text-sm font-semibold text-green-800 bg-green-100 rounded-full flex items-center">
@@ -175,6 +182,9 @@
                 <div class="ml-4">
                     <h3 class="text-xl font-semibold text-gray-900">Mercado Pago App</h3>
                     <p class="text-sm text-yellow-600 font-medium">Geração e Verificação de Pagamentos</p>
+                    <% if (!checkFeatureAccess(user.plan, 'api')) { %>
+                        <p class="text-red-500 text-sm mt-2">Seu plano atual não inclui acesso à API do Mercado Pago.</p>
+                    <% } %>
                 </div>
             </div>
             <span id="mpAppStatus" class="px-3 py-1 text-sm font-semibold text-gray-800 bg-gray-200 rounded-full flex items-center">

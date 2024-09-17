@@ -2,7 +2,14 @@ const User = require('../models/User');
 const axios = require('axios');
 const fs = require('fs').promises;
 const path = require('path');
+const PLAN_LIMITS = require('../config/planLimits');
 
+// ... (manter as funções existentes)
+
+// Função auxiliar para verificar se o usuário tem acesso a uma feature
+function checkFeatureAccess(userPlan, feature) {
+    return PLAN_LIMITS[userPlan][feature];
+}
 
 const mercadopago = require('mercadopago');
 
@@ -10,12 +17,17 @@ exports.getMercadoPagoAppStatus = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
         const accessToken = user.mercadopago.appAccessToken;
+        const hasAccess = checkFeatureAccess(user.plan, 'api') !== false;
 
-        if (accessToken) {
+        if (accessToken && hasAccess) {
             const maskedToken = maskAccessToken(accessToken);
-            res.json({ configured: true, maskedToken });
+            res.json({ configured: true, maskedToken, hasAccess });
         } else {
-            res.json({ configured: false });
+            res.json({ 
+                configured: false, 
+                hasAccess,
+                message: hasAccess ? null : 'Seu plano atual não inclui acesso à API do Mercado Pago.'
+            });
         }
     } catch (error) {
         console.error('Erro ao obter status do Mercado Pago App:', error);
@@ -33,6 +45,10 @@ exports.configureMercadoPagoApp = async (req, res) => {
         const { accessToken } = req.body;
         const userId = req.user.id;
 
+        if (!checkFeatureAccess(user.plan, 'api')) {
+            return res.status(403).json({ success: false, error: 'Seu plano não inclui acesso à API do Mercado Pago.' });
+        }
+        
         // Configurar o cliente Mercado Pago
         const client = new mercadopago.MercadoPagoConfig({ accessToken: accessToken });
 
@@ -97,17 +113,20 @@ async function readTonsConfig() {
 
 exports.checkElevenLabsConfig = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('elevenlabsApiKey elevenlabsVoiceId');
+        const user = await User.findById(req.user.id).select('elevenlabsApiKey elevenlabsVoiceId plan');
         
         if (!user) {
             return res.status(404).json({ error: 'Usuário não encontrado' });
         }
 
+        const hasAccess = checkFeatureAccess(user.plan, 'voiceGenerator');
         const isConfigured = !!(user.elevenlabsApiKey && user.elevenlabsVoiceId);
 
         res.json({
             configured: isConfigured,
-            message: isConfigured ? 'ElevenLabs está configurado' : 'ElevenLabs não está configurado'
+            hasAccess: hasAccess,
+            message: isConfigured ? 'ElevenLabs está configurado' : 'ElevenLabs não está configurado',
+            planMessage: hasAccess ? null : 'Seu plano atual não inclui acesso ao gerador de voz.'
         });
     } catch (error) {
         console.error('Erro ao verificar configuração do ElevenLabs:', error);
@@ -209,12 +228,15 @@ exports.testMercadoPagoIntegration = async (req, res) => {
 exports.saveElevenLabsConfig = async (req, res) => {
     try {
         const { apiKey, voiceId } = req.body;
-        const userId = req.user.id;
+        const user = await User.findById(req.user.id);
 
-        await User.findByIdAndUpdate(userId, {
-            elevenlabsApiKey: apiKey,
-            elevenlabsVoiceId: voiceId
-        });
+        if (!checkFeatureAccess(user.plan, 'voiceGenerator')) {
+            return res.status(403).json({ error: 'Seu plano não inclui acesso ao gerador de voz.' });
+        }
+
+        user.elevenlabsApiKey = apiKey;
+        user.elevenlabsVoiceId = voiceId;
+        await user.save();
 
         res.status(200).json({ message: 'Configuração do ElevenLabs salva com sucesso' });
     } catch (error) {
@@ -248,6 +270,11 @@ exports.testElevenLabsIntegration = async (req, res) => {
         const { text, tom } = req.body;
         const user = await User.findById(req.user.id);
 
+        if (!checkFeatureAccess(user.plan, 'voiceGenerator')) {
+            return res.status(403).json({ error: 'Seu plano não inclui acesso ao gerador de voz.' });
+        }
+
+        
         if (!user.elevenlabsApiKey || !user.elevenlabsVoiceId) {
             return res.status(400).json({ error: 'Configuração do ElevenLabs não encontrada' });
         }
