@@ -244,16 +244,16 @@
     <%- defineContent('scripts') %>
     <script>
 
-document.addEventListener("DOMContentLoaded", function () {
-        const currentUrl = window.location.href;
-      
-        // Se "change-plan" estiver na URL, esconde o modal
-        if (currentUrl.includes('change-plan')) {
-            document.querySelector('.close-vsl').click();
+document.addEventListener("DOMContentLoaded", () => {
+    // Verifica se a URL atual contém 'change-plan'
+    if (window.location.href.includes('change-plan')) {
+        // Seleciona o botão de fechar e clica nele para ocultar o modal
+        const closeButton = document.querySelector('.close-vsl');
+        if (closeButton) {
+            closeButton.click();
         }
-
-       
-    });
+    }
+});
 
         // Sidebar toggle logic
         const sidebar = document.getElementById('sidebar');
