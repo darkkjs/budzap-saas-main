@@ -84,8 +84,9 @@
   let funnels = [];
 const currentPlan = '<%= user.plan %>';
 const PLAN_LIMITS = {
-    gratuito: 1,
-    plus: 5,
+    gratuito: 0,
+    basico: 15,
+    plus: 30,
     premium: Infinity
 };
 const funnelLimit = PLAN_LIMITS[currentPlan];

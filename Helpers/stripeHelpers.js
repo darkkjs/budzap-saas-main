@@ -1,7 +1,7 @@
 // helpers/stripeHelpers.js
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-
+const User = require('../models/User');
 
 
 const PRICE_TO_PLAN = {
@@ -50,5 +50,33 @@ exports.createCheckoutSession = async (userId, plan, successUrl, cancelUrl) => {
 exports.retrieveSubscription = async (subscriptionId) => {
     return await stripe.subscriptions.retrieve(subscriptionId);
 };
+
+exports.handleSuccessfulPayment = async (session) => {
+    const userId = session.client_reference_id;
+    const user = await User.findById(userId);
+  
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+  
+    const subscription = await stripe.subscriptions.retrieve(session.subscription);
+    const planName = this.getPlanFromPriceId(subscription.items.data[0].price.id);
+  
+    await User.findByIdAndUpdate(userId, {
+      plan: planName,
+      stripeCustomerId: session.customer,
+      stripeSubscriptionId: session.subscription,
+      validUntil: new Date(subscription.current_period_end * 1000),
+      $push: {
+        notifications: {
+          title: `Plano ${planName} ativado`,
+          content: 'Sua assinatura foi ativada com sucesso!',
+          timestamp: new Date()
+        }
+      }
+    });
+  
+    await avisar(user.phone, `Parabéns, ${user.name}! Seu plano ${planName} foi ativado com sucesso. Aproveite todos os recursos!`);
+  };
 
 // Adicione outras funções relacionadas ao Stripe conforme necessário

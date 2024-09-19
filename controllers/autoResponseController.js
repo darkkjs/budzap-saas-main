@@ -285,19 +285,31 @@ exports.getAutoResponseReport = async (req, res) => {
 };
 
 // Uso de autoresposta por usuário
+
+
+
 exports.getAutoResponseUsage = async (req, res) => {
     const { instanceKey } = req.params;
-    const userKey = `user:${req.user.id}`;
+    const userId = req.user.id;
 
     try {
-        const [userPlan, autoResponseCount] = await Promise.all([
-            redisClient.hget(userKey, 'plan'),
-            redisClient.hget(userKey, 'autoResponseCount'),
-        ]);
+        const user = await User.findById(userId).select('plan');
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
+        }
 
-        const isPremium = userPlan === 'premium';
-        const limit = AUTO_RESPONSE_LIMITS[userPlan];
-        const usage = parseInt(autoResponseCount) || 0;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        let dailyUsage = await DailyUsage.findOne({ userId: userId, date: today });
+        if (!dailyUsage) {
+            dailyUsage = new DailyUsage({ userId: userId, date: today, autoResponses: 0 });
+            await dailyUsage.save();
+        }
+
+        const isPremium = user.plan === 'premium';
+        const limit = PLAN_LIMITS[user.plan].dailyAutoResponses;
+        const usage = dailyUsage.autoResponses || 0;
 
         res.json({
             success: true,

@@ -4,7 +4,7 @@ const router = express.Router();
 const { stripe } = require('../stripe');
 const User = require('../models/User');
 const { PLANS } = require('../stripe');
-const { PLAN_LIMITS, AUTO_RESPONSE_LIMITS } = require('../config/planLimits');
+const  PLAN_LIMITS  = require('../config/planLimits');
 const { ensureAuthenticated } = require('../middleware/auth');
 const { MercadoPagoConfig, Preference } = require('mercadopago');
 const axios = require("axios")
@@ -203,7 +203,7 @@ router.get('/payment-pending', (req, res) => {
 
 const { Payment } = require('mercadopago');
 
-
+const DailyUsage = require('../models/DailyUsage');
 router.get('/update-user-plan', async (req, res) => {
   const { 
     userId, 
@@ -234,9 +234,8 @@ router.get('/update-user-plan', async (req, res) => {
     }
 
     // Se o pagamento foi aprovado, atualize o plano do usuário
-    const newFunnelLimit = PLAN_LIMITS[plan];
-    const newAutoResponseLimit = AUTO_RESPONSE_LIMITS[plan];
     const validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 dias a partir de agora
+    const newFunnelLimit = PLAN_LIMITS[plan].funnels;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
@@ -244,9 +243,7 @@ router.get('/update-user-plan', async (req, res) => {
         $set: {
           plan: plan,
           validUntil: validUntil,
-          funnelLimit: newFunnelLimit,
-          autoResponseLimit: newAutoResponseLimit,
-          autoResponseCount: 0 // Resetamos o contador ao mudar de plano
+          funnelLimit: newFunnelLimit, // Mantemos a atualização do funnelLimit
         },
         $push: {
           notifications: {
@@ -263,12 +260,28 @@ router.get('/update-user-plan', async (req, res) => {
       throw new Error('Falha ao atualizar o usuário');
     }
 
+    // Resetar o uso diário para o novo plano
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    await DailyUsage.findOneAndUpdate(
+      { userId: userId, date: today },
+      { 
+        $set: {
+          spamMessages: 0,
+          autoResponses: 0
+        }
+      },
+      { upsert: true, new: true }
+    );
+
+    // Enviar mensagem de confirmação
+    await avisar(user.phone, `Parabéns, ${user.name}! Seu plano ${plan} foi ativado com sucesso. Aproveite todos os recursos!`);
+
     res.render('plano-sucess', { 
       layout: false, 
       plan: plan,
       validUntil: validUntil.toLocaleDateString(),
-      funnelLimit: newFunnelLimit,
-      autoResponseLimit: newAutoResponseLimit
+      funnelLimit: newFunnelLimit
     });
 
   } catch (error) {
@@ -607,16 +620,14 @@ router.get('/reset-password', (req, res) => {
 router.post('/send-verification-code', async (req, res) => {
   const { phone } = req.body;
   try {
+      const formattedNumber = formatPhoneNumber(phone);
+      if (!formattedNumber) {
+          return res.status(400).json({ success: false, message: 'Número de telefone inválido.' });
+      }
 
-    // Formatar número de telefone
-   const formattedNumber = formatPhoneNumber(phone);
-   if (!formattedNumber) {
-     return res.status(400).json({ message: 'Número de telefone inválido.' });
-   }
-
-   const numfinal = formattedNumber.startsWith('55') 
-     ? await formatarNumeroBrasileiro(formattedNumber)
-     : formattedNumber;
+      const numfinal = formattedNumber.startsWith('55') 
+          ? await formatarNumeroBrasileiro(formattedNumber)
+          : formattedNumber;
 
       const user = await User.findOne({ phone: numfinal });
       if (!user) {
@@ -637,19 +648,19 @@ router.post('/send-verification-code', async (req, res) => {
   }
 });
 
+
 // Rota para verificar o código
 router.post('/verify-code', async (req, res) => {
   const { phone, code } = req.body;
   try {
-    // Formatar número de telefone
-   const formattedNumber = formatPhoneNumber(phone);
-   if (!formattedNumber) {
-     return res.status(400).json({ message: 'Número de telefone inválido.' });
-   }
+      const formattedNumber = formatPhoneNumber(phone);
+      if (!formattedNumber) {
+          return res.status(400).json({ success: false, message: 'Número de telefone inválido.' });
+      }
 
-   const numfinal = formattedNumber.startsWith('55') 
-     ? await formatarNumeroBrasileiro(formattedNumber)
-     : formattedNumber;
+      const numfinal = formattedNumber.startsWith('55') 
+          ? await formatarNumeroBrasileiro(formattedNumber)
+          : formattedNumber;
 
       const user = await User.findOne({ 
           phone: numfinal, 
@@ -661,15 +672,14 @@ router.post('/verify-code', async (req, res) => {
           return res.status(400).json({ success: false, message: 'Código inválido ou expirado' });
       }
 
-      // Incluir informações do usuário na resposta
       const userInfo = {
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        plan: user.plan
-    };
+          name: user.name,
+          email: user.email,
+          username: user.username,
+          plan: user.plan
+      };
 
-    res.json({ success: true, message: 'Código verificado com sucesso', userInfo });
+      res.json({ success: true, message: 'Código verificado com sucesso', userInfo });
   } catch (error) {
       console.error('Erro ao verificar código:', error);
       res.status(500).json({ success: false, message: 'Erro ao verificar código' });
@@ -680,18 +690,22 @@ router.post('/verify-code', async (req, res) => {
 router.post('/reset-password', async (req, res) => {
   const { phone, newPassword } = req.body;
   try {
-    // Formatar número de telefone
-   const formattedNumber = formatPhoneNumber(phone);
-   if (!formattedNumber) {
-     return res.status(400).json({ message: 'Número de telefone inválido.' });
-   }
+      const formattedNumber = formatPhoneNumber(phone);
+      if (!formattedNumber) {
+          return res.status(400).json({ success: false, message: 'Número de telefone inválido.' });
+      }
 
-   const numfinal = formattedNumber.startsWith('55') 
-     ? await formatarNumeroBrasileiro(formattedNumber)
-     : formattedNumber;
-      const user = await User.findOne({ phone: numfinal });
+      const numfinal = formattedNumber.startsWith('55') 
+          ? await formatarNumeroBrasileiro(formattedNumber)
+          : formattedNumber;
+
+      const user = await User.findOne({ 
+          phone: numfinal,
+          resetPasswordExpires: { $gt: Date.now() }
+      });
+
       if (!user) {
-          return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
+          return res.status(404).json({ success: false, message: 'Usuário não encontrado ou sessão de redefinição expirada' });
       }
 
       user.password = newPassword;
@@ -705,7 +719,6 @@ router.post('/reset-password', async (req, res) => {
       res.status(500).json({ success: false, message: 'Erro ao redefinir senha' });
   }
 });
-
 
 router.post('/register', [
   check('name').notEmpty().withMessage('Nome é obrigatório'),

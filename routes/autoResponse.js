@@ -4,7 +4,6 @@ const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated } = require('../middleware/auth');
 const redisClient = require('../config/redisConfig'); // Certifique-se de ter este arquivo configurado
-const { AUTO_RESPONSE_LIMITS } = require('../config/planLimits');
 const {updateCampaigns, getCampaigns, getAutoResponseReport, getAutoResponseUsage} = require('../controllers/autoResponseController');
 const { getActiveFunnels } = require('../utils/funnelHelper');
 
@@ -35,8 +34,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         res.render('auto-response', { 
             user: req.user, 
             title: 'Configurar Autoresposta - BudZap',
-            funnels: activeFunnels,
-            AUTO_RESPONSE_LIMITS
+            funnels: activeFunnels
         });
     } catch (error) {
         console.error('Erro ao carregar funnels:', error);
@@ -47,15 +45,19 @@ router.get('/', ensureAuthenticated, async (req, res) => {
 router.get('/usage', ensureAuthenticated, async (req, res) => {
     try {
         const userId = req.user.id;
-        const userKey = `user:${userId}`;
+        const user = await User.findById(userId).select('plan');
         
-        const [userPlan, autoResponseCount] = await Promise.all([
-            redisClient.hget(userKey, 'plan'),
-            redisClient.hget(userKey, 'autoResponseCount')
-        ]);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-        const limit = AUTO_RESPONSE_LIMITS[userPlan];
-        const usage = parseInt(autoResponseCount) || 0;
+        let dailyUsage = await DailyUsage.findOne({ userId: userId, date: today });
+        if (!dailyUsage) {
+            dailyUsage = new DailyUsage({ userId: userId, date: today, autoResponses: 0 });
+            await dailyUsage.save();
+        }
+
+        const limit = PLAN_LIMITS[user.plan].dailyAutoResponses;
+        const usage = dailyUsage.autoResponses || 0;
 
         res.json({
             success: true,

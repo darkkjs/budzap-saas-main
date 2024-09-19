@@ -15,9 +15,9 @@ const PLAN_LIMITS = {
     },
     basico: {
       whatsappConnections: 1,
-      funnels: 15,
-      dailySpamMessages: 1500,
-      dailyAutoResponses: 750,
+        funnels: 15,
+        dailySpamMessages: 1500,
+        dailyAutoResponses: 750,
       groupManagement: 'basic',
       voiceGenerator: true,  // Alterado para true
       antiban: false,

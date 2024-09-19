@@ -3,9 +3,15 @@ const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const User = require('../models/User');
 const { ensureAuthenticated } = require('../middleware/auth');
-const { PLAN_LIMITS, AUTO_RESPONSE_LIMITS } = require('../config/planLimits');
+
 const stripeHelpers = require('../Helpers/stripeHelpers');
-const {avisar} = require('../Helpers/avisos')
+
+
+
+
+const DailyUsage = require('../models/DailyUsage');
+const  PLAN_LIMITS = require('../config/planLimits');
+const { avisar } = require("../Helpers/avisos");
 
 router.get('/subscription-success', async (req, res) => {
     const { id, userId } = req.query;
@@ -18,7 +24,6 @@ router.get('/subscription-success', async (req, res) => {
 
         // Verifica se a sessão foi bem-sucedida
         if (session.payment_status === 'paid') {
-          
             const subscriptionId = session.subscription;
 
             // Recupera os detalhes da assinatura
@@ -30,11 +35,16 @@ router.get('/subscription-success', async (req, res) => {
             }
 
             const plano = await stripeHelpers.getPlanFromPriceId(subscription.items.data[0].price.id);
-            console.log(subscription.items.data[0].price);
+            console.log("Plano detectado:", plano);
+
+            // Verifica se o plano existe no PLAN_LIMITS
+            if (!PLAN_LIMITS[plano]) {
+                console.error(`Plano não reconhecido: ${plano}`);
+                return res.status(400).json({ success: false, message: 'Plano não reconhecido' });
+            }
 
             // Se o pagamento foi aprovado, atualize o plano do usuário
-            const newFunnelLimit = PLAN_LIMITS[plano];
-            const newAutoResponseLimit = AUTO_RESPONSE_LIMITS[plano];
+            const newFunnelLimit = PLAN_LIMITS[plano].funnels;
             const validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 dias a partir de agora
 
             const updatedUser = await User.findByIdAndUpdate(
@@ -42,12 +52,10 @@ router.get('/subscription-success', async (req, res) => {
                 {
                     $set: {
                         stripeCustomerId: session.customer,
-                        stripeSubscriptionIde: subscriptionId,
+                        stripeSubscriptionId: subscriptionId,
                         plan: plano,
                         validUntil: validUntil,
-                        funnelLimit: newFunnelLimit,
-                        autoResponseLimit: newAutoResponseLimit,
-                        autoResponseCount: 0 // Resetamos o contador ao mudar de plano
+                        funnelLimit: newFunnelLimit
                     },
                     $push: {
                         notifications: {
@@ -59,37 +67,46 @@ router.get('/subscription-success', async (req, res) => {
                 },
                 { new: true, runValidators: true }
             );
+            
+            // Resetar o uso diário para o novo plano
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            await DailyUsage.findOneAndUpdate(
+                { userId: userId, date: today },
+                { 
+                    $set: {
+                        spamMessages: 0,
+                        autoResponses: 0
+                    }
+                },
+                { upsert: true, new: true }
+            );
 
-            await avisar(req.user.phone, `🎉 Parabéns! Seu plano foi ativado com sucesso! 🚀
+            await avisar(user.phone, `🎉 Parabéns! Seu plano foi ativado com sucesso! 🚀
 
 Agora você tem acesso a todos os recursos do plano ${plano}. Aproveite!
 
-Se precisar de ajuda chame no número: 51995746157`)
+Se precisar de ajuda chame no número: 51995746157`);
 
-// Função para formatar valores em reais
-function formatarValorEmReais(valorEmCentavos) {
-    // Converte de centavos para reais
-    const valorEmReais = valorEmCentavos / 100;
-  
-    // Formata para o padrão de moeda brasileira
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(valorEmReais);
-  }
+            function formatarValorEmReais(valorEmCentavos) {
+                const valorEmReais = valorEmCentavos / 100;
+                return new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                }).format(valorEmReais);
+            }
 
-  const valorFormatado = formatarValorEmReais(subscription.items.data[0].price.unit_amount);
+            const valorFormatado = formatarValorEmReais(subscription.items.data[0].price.unit_amount);
 
-
-await avisar(process.env.numerodono, `🎉 *Nova venda realizada!*
+            await avisar(process.env.numerodono, `🎉 *Nova venda realizada!*
 
 💰 *Valor recebido:* ${valorFormatado}
 📜 *Plano:* ${plano}
 
-👤 *Usuário:* ${req.user.username}
-📞 *Número:* ${req.user.phone}
+👤 *Usuário:* ${user.username}
+📞 *Número:* ${user.phone}
 
-🎊 Parabéns pela venda!`)
+🎊 Parabéns pela venda!`);
 
             if (!updatedUser) {
                 throw new Error('Falha ao atualizar o usuário');
@@ -100,8 +117,7 @@ await avisar(process.env.numerodono, `🎉 *Nova venda realizada!*
                 layout: false, 
                 plan: plano,
                 validUntil: validUntil.toLocaleDateString(),
-                funnelLimit: newFunnelLimit,
-                autoResponseLimit: newAutoResponseLimit
+                funnelLimit: newFunnelLimit
             });
         } else {
             // Se o pagamento não foi bem-sucedido, redireciona para o dashboard com status de erro

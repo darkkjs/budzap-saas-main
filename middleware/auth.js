@@ -1,5 +1,5 @@
 const User = require("../models/User");
-const { PLAN_LIMITS, AUTO_RESPONSE_LIMITS } = require('../config/planLimits');
+const DailyUsage = require('../models/DailyUsage');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { avisar } = require("../Helpers/avisos")
 
@@ -8,31 +8,35 @@ module.exports = {
     if (req.isAuthenticated()) {
       const user = req.user;
       const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      let dailyUsage = await DailyUsage.findOne({ userId: user._id, date: today });
+      if (!dailyUsage) {
+        dailyUsage = new DailyUsage({ userId: user._id, date: today });
+        await dailyUsage.save();
+      }
 
       if (user.manualPlanActive && user.validUntil) {
         if (user.validUntil > now) {
-          // Plano manual ativo e válido
           return next();
         } else {
-          // Plano manual expirado
           await updateToFreePlan(user);
-          await avisar(req.user.phone, `EIi ${req.user.name}, seu plano acaba de ser expirado, que tal renovar?\n\nChame o gerente para renovar seu plano: 51995746157\n\n*Ou pague pela plataforma e tenha seu plano ativo automaticamente!*`)
+          await avisar(req.user.phone, `Ei ${req.user.name}, seu plano manual expirou. Que tal renovar?`);
           return next();
         }
       }
       
-      if (user.stripeSubscriptionIde) {
+      if (user.stripeSubscriptionId) {
         try {
-          const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionIde);
+          const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
 
-          if (subscription.status !== 'active') {
-            await avisar(req.user.phone, `EIi ${req.user.name}, seu plano acaba de ser expirado, que tal renovar?\n\nChame o gerente para renovar seu plano: 51995746157\n\n*Ou pague pela plataforma e tenha seu plano ativo automaticamente!*`)
+          if (subscription.status === 'active') {
+            if (subscription.current_period_end * 1000 < now.getTime()) {
+              await updateSubscriptionStatus(user, subscription);
+            }
+          } else {
             await updateToFreePlan(user);
-          } else if (subscription.current_period_end * 1000 < now.getTime()) {
-            // Subscription has expired, update to free plan
-            await avisar(req.user.phone, `EIi ${req.user.name}, seu plano acaba de ser expirado, que tal renovar?\n\nChame o gerente para renovar seu plano: 51995746157\n\n*Ou pague pela plataforma e tenha seu plano ativo automaticamente!*`)
-            await updateToFreePlan(user);
-
+            await avisar(req.user.phone, `Ei ${req.user.name}, sua assinatura do Stripe expirou. Que tal renovar?`);
           }
         } catch (error) {
           console.error('Error checking subscription status:', error);
@@ -55,8 +59,8 @@ module.exports = {
 };
 
 async function updateToFreePlan(user) {
-  const newFunnelLimit = PLAN_LIMITS['gratuito'];
-  const newAutoResponseLimit = AUTO_RESPONSE_LIMITS['gratuito'];
+  const newFunnelLimit = 0;
+  const newAutoResponseLimit = 0;
   const newFunnelUsage = Math.min(user.funnelUsage, newFunnelLimit);
   const newAutoResponseCount = Math.min(user.autoResponseCount || 0, newAutoResponseLimit);
 
@@ -89,3 +93,23 @@ async function updateToFreePlan(user) {
     timestamp: new Date()
   });
 }
+
+
+async function updateSubscriptionStatus(user, subscription) {
+  const planName = getPlanNameFromStripePrice(subscription.items.data[0].price.id);
+  await User.findByIdAndUpdate(user._id, {
+    plan: planName,
+    validUntil: new Date(subscription.current_period_end * 1000),
+  });
+}
+
+function getPlanNameFromStripePrice(priceId) {
+  // Mapeie os IDs de preço do Stripe para os nomes dos planos
+  const priceToPlans = {
+    'price_1Pv8IfJd0dkXl3iIPFkZLOPJ': 'basico',
+    'price_1Pzr6UJd0dkXl3iIcRukFSiX': 'plus',
+    'price_1Pzr78Jd0dkXl3iIlDGW1Wvf': 'premium'
+  };
+  return priceToPlans[priceId] || 'gratuito';
+}
+
