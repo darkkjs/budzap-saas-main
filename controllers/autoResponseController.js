@@ -50,7 +50,7 @@ async function saveLastMessage(instanceKey, chatId, message) {
 }
 
 // Processa autoresposta com base na campanha
-exports.handleAutoResponse = async (instanceKey, chatId, message) => {
+exports.handleAutoResponse = async (instanceKey, chatId, message, source) => {
     try {
         console.log('Processando autoresposta para:'.cyan, { instanceKey, chatId, message });
         
@@ -79,9 +79,7 @@ exports.handleAutoResponse = async (instanceKey, chatId, message) => {
         const currentState = await redisClient.get(autoResponseKey);
         await saveLastMessage(instanceKey, chatId, message);
 
-        // Atualizar o uso diário
-    dailyUsage.autoResponses += 1;
-    await dailyUsage.save();
+        
 
         if (currentState) {
             let state = JSON.parse(currentState);
@@ -114,15 +112,33 @@ exports.handleAutoResponse = async (instanceKey, chatId, message) => {
         const campaignsData = await redisClient.get(campaignsKey);
         const campaigns = campaignsData ? JSON.parse(campaignsData) : [];
 
+        let campaignExecuted = false;
         for (const campaign of campaigns) {
             if (campaign.isActive && shouldExecuteCampaign(campaign, message)) {
                 console.log(`Executando campanha:`.green, campaign.name);
                 await executeCampaign(instanceKey, chatId, message, campaign);
-                return;
+                campaignExecuted = true;
+                break;
             }
         }
 
         console.log('Nenhuma campanha correspondente encontrada'.yellow);
+
+        if (campaignExecuted) {
+            if (source !== "webhook") {
+                console.log('Chamada de autoresposta ignorada, não é proveniente de webhook'.yellow);
+                return;
+            }
+            
+            // Incrementar apenas se uma campanha foi executada
+            dailyUsage.autoResponses += 1;
+            await dailyUsage.save();
+            console.log(`Uso de autoresposta incrementado para o usuário ${user._id}`.green);
+        } else {
+            console.log('Nenhuma campanha correspondente encontrada'.yellow);
+        }
+
+
     } catch (error) {
         console.error('Erro ao processar autoresposta:'.red, error);
     }

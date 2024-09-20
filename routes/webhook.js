@@ -191,7 +191,7 @@ router.post('/:instanceKey', async (req, res) => {
       req.params.instanceKey,
       dadoschat.id,
       dadoschat.mensagem.conteudomsg,
-      "autoresposta"
+      "webhook"
     );
   
 

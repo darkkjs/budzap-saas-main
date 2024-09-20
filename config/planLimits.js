@@ -42,7 +42,7 @@ const PLAN_LIMITS = {
       mercadoPagoIntegration: true,  // Nova integração
     },
     premium: {
-      whatsappConnections: Infinity,
+      whatsappConnections: 10,
       funnels: Infinity,
       dailySpamMessages: Infinity,
       dailyAutoResponses: Infinity,
