@@ -8,12 +8,26 @@
     <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a","950":"#172554"}
+                    }
+                },
+                fontFamily: {
+                    'sans': ['Inter', 'sans-serif'],
+                }
+            }
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f0f2f5;
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
         }
 
         #activeFunnelsList {
@@ -134,13 +148,13 @@
         }
 
         .chat-bubble {
-            max-width: 70%;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-            padding: 8px 12px;
-            border-radius: 12px;
-            line-height: 1.4;
-        }
+        max-width: 90%;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+        padding: 8px 12px;
+        border-radius: 12px;
+        line-height: 1.4;
+    }
 
         .chat-bubble.with-media {
             padding: 4px;
@@ -181,6 +195,16 @@
             font-weight: bold;
         }
 
+        .chat-end .chat-bubble {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .chat-start .chat-bubble {
+            background-color: white;
+            color: #1f2937;
+        }
+        
         .full-size-media {
             max-width: 90%;
             max-height: 80vh;
@@ -189,6 +213,14 @@
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
+        .whitespace-pre-wrap {
+        white-space: pre-wrap;
+    }
+
+    .break-words {
+        word-break: break-word;
+    }
 
         .full-size-media-container {
             position: relative;
@@ -484,6 +516,10 @@
                     </div>
                 </div>
                 <div id="messageList" class="message-list flex-grow p-6 bg-chat-pattern overflow-y-auto"></div>
+                <div class="p-2 bg-white border-b">
+                    <input type="text" id="messageSearch" placeholder="Pesquisar mensagens..." class="w-full px-3 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
                 <div class="p-4 bg-white">
                     <div id="funnelsContainer" class="funnels-container"></div>
                     <div class="flex items-center">
@@ -658,7 +694,58 @@
         </svg>
         Ver Relatórios de Funis
     </button>
-
+    <div id="emojiPicker" class="hidden absolute bottom-16 right-16 bg-white rounded-lg shadow-xl p-4">
+        <div id="emojiList" class="grid grid-cols-8 gap-2"></div>
+    </div>
+    <script>
+        const messageSearch = document.getElementById('messageSearch');
+    
+        messageSearch.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const messageElements = document.querySelectorAll('.chat-bubble');
+    
+            messageElements.forEach(element => {
+                const messageText = element.textContent.toLowerCase();
+                if (messageText.includes(searchTerm)) {
+                    element.style.backgroundColor = 'yellow';
+                } else {
+                    element.style.backgroundColor = '';
+                }
+            });
+        });
+    </script>
+    <script>
+        const emojiButton = document.getElementById('emojiButton');
+        const emojiPicker = document.getElementById('emojiPicker');
+        const emojiList = document.getElementById('emojiList');
+    
+        const emojis = ['😀', '😂', '😍', '🥳', '😎', '🤔', '😊', '👍', '❤️', '🎉', '🔥', '💯'];
+    
+        emojis.forEach(emoji => {
+            const emojiSpan = document.createElement('span');
+            emojiSpan.textContent = emoji;
+            emojiSpan.className = 'text-2xl cursor-pointer hover:bg-gray-200 rounded p-1';
+            emojiSpan.onclick = () => addEmojiToInput(emoji);
+            emojiList.appendChild(emojiSpan);
+        });
+    
+        emojiButton.addEventListener('click', () => {
+            emojiPicker.classList.toggle('hidden');
+        });
+    
+        function addEmojiToInput(emoji) {
+            const input = document.getElementById('messageInput');
+            input.value += emoji;
+            input.focus();
+        }
+    
+        // Fechar o emoji picker quando clicar fora dele
+        document.addEventListener('click', (event) => {
+            if (!emojiPicker.contains(event.target) && event.target !== emojiButton) {
+                emojiPicker.classList.add('hidden');
+            }
+        });
+    </script>
     <script>
         const instanceModal = document.getElementById('instanceModal');
         const instanceSelect = document.getElementById('instanceSelect');
@@ -1104,14 +1191,14 @@
         // Atualizar a função renderFunnels para usar a nova função startFunnel
         function renderFunnels() {
     const funnelHTML = userFunnels.map(funnel => `
-        <button class="funnel-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 mr-2 mb-2" data-funnel-id="${funnel.id}">
+        <button class="px-4 py-2 bg-primary-100 text-primary-800 rounded-full text-sm font-medium hover:bg-primary-200 transition-colors duration-200" data-funnel-id="${funnel.id}">
             ${funnel.name}
         </button>
     `).join('');
     funnelsContainer.innerHTML = funnelHTML;
     mobileFunnelsContainer.innerHTML = funnelHTML;
 
-    document.querySelectorAll('.funnel-button').forEach(button => {
+    document.querySelectorAll('[data-funnel-id]').forEach(button => {
         button.addEventListener('click', () => {
             const funnelId = button.dataset.funnelId;
             startFunnel(funnelId);
@@ -1163,64 +1250,59 @@
 
         // Carregar chats
         async function loadChats(instanceKey) {
+
+
+    // Seleciona o elemento <nav> pela classe ou qualquer seletor apropriado
+    var navElement = document.querySelector("nav.bg-white.dark\\:bg-gray-800.shadow-md");
+    
+    // Verifica se o elemento foi encontrado
+    if (navElement) {
+        // Remove o elemento da página
+        navElement.remove();
+    }
+
+
+    var breadcrumbNav = document.querySelector('nav.text-gray-500.dark\\:text-gray-400.text-sm.mb-4');
+
+// Verifica se o elemento foi encontrado
+if (breadcrumbNav) {
+    // Remove o elemento da página
+    breadcrumbNav.remove();
+}
             const response = await fetch(`/chat/chats/${instanceKey}`);
             chats = await response.json();
             renderChats(chats);
         }
 
         function renderChats(chatsToRender) {
+    const chatHTML = chatsToRender.map(chat => {
+        const lastMessageContent = getMediaDescription(chat.lastMessageType, chat.lastMessage);
+        const chatTypeIcon = chat.chatType === 'grupo' ? '👥' : '👤';
+        const unreadCount = chat.unreadCount || 0;
+        const unreadClass = unreadCount > 0 ? 'bg-primary-100' : '';
+        const unreadIndicator = unreadCount > 0 ? `<span class="bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full">${unreadCount}</span>` : '';
+        const avatarUrl = getAvatarUrl(chat, chat.id);
 
-            // Seleciona o elemento pelo seletor de classe
-            const navbarElement = document.querySelector('.navbar.glassmorphism.sticky.top-0.z-30');
-
-            // Verifica se o elemento existe no DOM antes de tentar removê-lo
-            if (navbarElement) {
-                navbarElement.remove();
-            }
-
-            // Seleciona o elemento pelo seletor de classe
-            const footerElement = document.querySelector('footer.bg-white.dark\\:bg-gray-800.text-center.p-4.mt-8.rounded-lg.shadow');
-
-            // Verifica se o elemento existe no DOM antes de tentar removê-lo
-            if (footerElement) {
-                footerElement.remove();
-            }
-
-            // Seleciona o elemento pelo seletor de classe
-            const navElement = document.querySelector('nav.text-gray-500.dark\\:text-gray-400.text-sm.mb-4[aria-label="Breadcrumb"]');
-
-            // Verifica se o elemento existe no DOM antes de tentar removê-lo
-            if (navElement) {
-                navElement.remove();
-            }
-
-
-            const chatHTML = chatsToRender.map(chat => {
-                const lastMessageContent = getMediaDescription(chat.lastMessageType, chat.lastMessage);
-                const chatTypeIcon = chat.chatType === 'grupo' ? '👥' : '👤';
-                const unreadCount = chat.unreadCount || 0;
-                const unreadClass = unreadCount > 0 ? 'unread' : '';
-                const unreadIndicator = unreadCount > 0 ? `<span class="unread-indicator">${unreadCount}</span>` : '';
-                const avatarUrl = getAvatarUrl(chat, chat.id);
-
-                return `
-                    <div class="chat-item p-4 hover:bg-gray-100 cursor-pointer rounded-lg transition duration-300 ease-in-out ${unreadClass}" data-chat-id="${chat.id}" data-chat-type="${chat.chatType}">
-                        <div class="flex items-center relative">
-                            <img src="${avatarUrl}" alt="${chat.name}" class="w-12 h-12 rounded-full mr-3">
-                            <div class="flex-grow">
-                                <div class="font-semibold text-gray-800">${chatTypeIcon} ${chat.name}</div>
-                                <div class="text-sm text-gray-600 truncate-message">${lastMessageContent}</div>
-                            </div>
-                            <div class="text-xs text-gray-500">${new Date(chat.lastMessageTimestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                            ${unreadIndicator}
+        return `
+            <div class="chat-item p-3 hover:bg-gray-100 cursor-pointer rounded-lg transition duration-200 ease-in-out ${unreadClass}" data-chat-id="${chat.id}" data-chat-type="${chat.chatType}">
+                <div class="flex items-center space-x-3">
+                    <img src="${avatarUrl}" alt="${chat.name}" class="w-12 h-12 rounded-full object-cover">
+                    <div class="flex-grow min-w-0">
+                        <div class="flex justify-between items-baseline">
+                            <h3 class="font-semibold text-gray-900 truncate">${chatTypeIcon} ${chat.name}</h3>
+                            <span class="text-xs text-gray-500">${new Date(chat.lastMessageTimestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
+                        <p class="text-sm text-gray-600 truncate">${lastMessageContent}</p>
                     </div>
-                `;
-            }).join('');
-            chatList.innerHTML = chatHTML;
-            mobileChatList.innerHTML = chatHTML;
-            addChatListeners();
-        }
+                    ${unreadIndicator}
+                </div>
+            </div>
+        `;
+    }).join('');
+    chatList.innerHTML = chatHTML;
+    mobileChatList.innerHTML = chatHTML;
+    addChatListeners();
+}
 
         // Função para carregar mensagens atualizada
         async function loadMessages(instanceKey, chatId) {
@@ -1280,81 +1362,86 @@
         }
 
         function renderMessages(messages, chatId) {
-            const messageHTML = messages.map(message => {
-                const messageClass = message.fromMe ? 'chat-end' : 'chat-start';
-                const bubbleClass = message.fromMe ? 'bg-blue-500 text-white' : 'bg-white text-gray-800';
-                let contentHtml = '';
+    const messageHTML = messages.map(message => {
+        const messageClass = message.fromMe ? 'chat-end' : 'chat-start';
+        const bubbleClass = message.fromMe ? 'bg-blue-500 text-white' : 'bg-white text-gray-800';
+        let contentHtml = '';
 
-                switch (message.type) {
-                    case 'image':
-                    case 'video':
-                        mediaClass = 'with-media';
-                        break;
-                    // ... outros casos ...
-                }
-
-                switch (message.type) {
-                    case 'texto':
-                    case 'text':
-                        contentHtml = `<div class="chat-bubble ${bubbleClass}">${message.content}</div>`;
-                        break;
-                    case 'image':
-                        contentHtml = `
+        switch (message.type) {
+            case 'texto':
+            case 'text':
+                contentHtml = `<div class="chat-bubble ${bubbleClass}">${formatTextWithLinks(message.content)}</div>`;
+                break;
+            case 'image':
+                contentHtml = `
                     <div class="chat-bubble ${bubbleClass} p-1">
-                        <img src="${message.content}" alt="Image" class="media-content" onclick="openMediaPopup('${message.content}', 'image')">
+                        <img src="${message.content}" alt="Image" class="media-content rounded-lg cursor-pointer" onclick="openMediaPopup('${message.content}', 'image')">
                     </div>`;
-                        break;
-                    case 'video':
-                        contentHtml = `
+                break;
+            case 'video':
+                contentHtml = `
                     <div class="chat-bubble ${bubbleClass} p-1">
-                        <div class="video-thumbnail" onclick="openMediaPopup('${message.content}', 'video')">
-                            <video src="${message.content}" class="media-content"></video>
-                        </div>
+                        <video src="${message.content}" class="media-content rounded-lg cursor-pointer" onclick="openMediaPopup('${message.content}', 'video')"></video>
                     </div>`;
-                        break;
-                    case 'audio':
-                        contentHtml = `
-                <div class="chat-bubble ${bubbleClass} p-1">
-                    <audio src="${message.content}" class="audio-player" controls></audio>
-                </div>`;
-                        break;
-                    case 'document':
-                        contentHtml = `
-                <div class="chat-bubble ${bubbleClass}">
-                    <a href="${message.content}" target="_blank" class="document-link">
-                        <i class="fas fa-file-pdf"></i>
-                        Download Document
-                    </a>
-                </div>`;
-                        break;
-                    default:
-                        contentHtml = `<div class="chat-bubble ${bubbleClass}">${message.content}</div>`;
-                }
-                const senderNameHtml = getSenderName(message, chatId, currentChatInfo);
+                break;
+            case 'audio':
+                contentHtml = `
+                    <div class="chat-bubble ${bubbleClass} p-1">
+                        <audio src="${message.content}" class="w-full" controls></audio>
+                    </div>`;
+                break;
+            case 'document':
+                contentHtml = `
+                    <div class="chat-bubble ${bubbleClass}">
+                        <a href="${message.content}" target="_blank" class="flex items-center space-x-2 text-blue-600 hover:underline">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Ver documento</span>
+                        </a>
+                    </div>`;
+                break;
+            default:
+                contentHtml = `<div class="chat-bubble ${bubbleClass}">${formatTextWithLinks(message.content)}</div>`;
+        }
 
-                return `
-            <div class="chat ${messageClass}">
+        const senderNameHtml = getSenderName(message, chatId, currentChatInfo);
+
+        return `
+            <div class="chat ${messageClass} mb-4">
                 <div class="chat-image avatar">
                     <div class="w-10 rounded-full">
                         <img src="${message.senderImage || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png'}" alt="${message.sender}">
                     </div>
                 </div>
-                <div class="chat-message">
-                    <div class="chat-message-header">
-                        ${senderNameHtml ? `<span class="chat-sender">${senderNameHtml}</span>` : ''}
-                        <span class="chat-time">${new Date(message.timestamp * 1000).toLocaleString()}</span>
-                    </div>
+                <div class="chat-header text-xs opacity-50 mb-1">
+                    ${senderNameHtml}
+                    ${new Date(message.timestamp * 1000).toLocaleString()}
+                </div>
+                <div class="chat-bubble-wrapper">
                     ${contentHtml}
                 </div>
             </div>
         `;
-            }).join('');
+    }).join('');
 
-            messageList.innerHTML = messageHTML;
-            mobileMessageList.innerHTML = messageHTML;
-            scrollToBottom();
+    messageList.innerHTML = messageHTML;
+    mobileMessageList.innerHTML = messageHTML;
+    scrollToBottom();
+}
+
+function formatTextWithLinks(text) {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, (url) => {
+        if (url.match(/\.(jpeg|jpg|gif|png)$/)) {
+            return `<img src="${url}" alt="Image" class="inline-media rounded-lg cursor-pointer" onclick="openMediaPopup('${url}', 'image')">`;
+        } else if (url.match(/\.(mp4|webm|ogg)$/)) {
+            return `<video src="${url}" class="inline-media rounded-lg cursor-pointer" onclick="openMediaPopup('${url}', 'video')"></video>`;
+        } else if (url.match(/\.(mp3|wav)$/)) {
+            return `<audio src="${url}" class="w-full" controls></audio>`;
+        } else {
+            return `<a href="${url}" target="_blank" class="text-blue-600 hover:underline">${url}</a>`;
         }
-
+    });
+}
         function scrollToBottom() {
             messageList.scrollTop = messageList.scrollHeight;
             mobileMessageList.scrollTop = mobileMessageList.scrollHeight;
@@ -1444,36 +1531,38 @@
         }
 
         function showNotification(chat) {
-            if (chat.fromMe == true) return;
-            console.log(chat);
-            if (receiveSoundToggle.checked) {
-                notificationSound.play();
-            }
-            const lastMessageContent = getMediaDescription(chat.lastMessageType, chat.lastMessage);
-            const notification = document.createElement('div');
-            notification.className = 'notification';
-            notification.innerHTML = `
-                <div class="flex items-center">
-                    <img src="${chat.image || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png'}" alt="${chat.name}" class="w-10 h-10 rounded-full mr-3">
-                    <div>
-                        <div class="font-semibold">${chat.name}</div>
-                        <div class="text-sm">${lastMessageContent}</div>
-                    </div>
-                </div>
-                <span class="close-btn">&times;</span>
-            `;
-            document.body.appendChild(notification);
+    if (chat.fromMe == true) return;
+    if (receiveSoundToggle.checked) {
+        notificationSound.play();
+    }
+    const lastMessageContent = getMediaDescription(chat.lastMessageType, chat.lastMessage);
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-sm w-full transition-all duration-300 ease-in-out transform translate-y-0';
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <img src="${chat.image || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png'}" alt="${chat.name}" class="w-10 h-10 rounded-full mr-3 object-cover">
+            <div class="flex-grow min-w-0">
+                <h4 class="font-semibold text-gray-900 truncate">${chat.name}</h4>
+                <p class="text-sm text-gray-600 truncate">${lastMessageContent}</p>
+            </div>
+            <button class="text-gray-400 hover:text-gray-600 transition-colors duration-200 ml-2">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    document.body.appendChild(notification);
 
-            // Adicionar evento para fechar a notificação
-            notification.querySelector('.close-btn').addEventListener('click', () => {
-                notification.remove();
-            });
+    notification.querySelector('button').addEventListener('click', () => {
+        notification.remove();
+    });
 
-            setTimeout(() => {
-                notification.remove();
-            }, 5000);
-        }
-
+    setTimeout(() => {
+        notification.style.transform = 'translate-y-[-100%]';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 5000);
+}
         async function sendMessage(content) {
             if (!currentInstanceKey || !currentChatId || !content.trim()) {
                 console.error('Missing required information to send message');

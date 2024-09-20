@@ -7,6 +7,23 @@ const User = require('../models/User');
 const AUTO_RESPONSE_EXPIRY = 60 * 60; // 1 hora em segundos
 const { uploadbase64 } = require('../Helpers/uploader'); // Ajuste o caminho conforme necessário
 const github = require('../config/git');
+const { getChats, getMessages, markChatAsRead, saveMessage } = require('../Helpers/redisHelpers');
+
+async function saveAutoResponseMessage(instanceKey, chatId, content, type = 'text') {
+    const messageKey = `${chatId}:${Date.now()}`;
+    const messageData = {
+        key: messageKey,
+        sender: 'Auto-resposta',
+        content: content,
+        timestamp: Math.floor(Date.now() / 1000),
+        fromMe: true,
+        type: type,
+            senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
+    };
+
+    await saveMessage(instanceKey, chatId, messageData);
+}
+
 const {
     GoogleGenerativeAI,
     HarmCategory,
@@ -301,6 +318,7 @@ if (state.status === 'waiting_for_input') {
                 case 'randomMessage':
     const randomIndex = Math.floor(Math.random() * currentNode.messages.length);
     await sendTextMessage(instanceKey, currentNode.messages[randomIndex], chatId);
+    await saveAutoResponseMessage(instanceKey, chatId, randomMessage, 'text');
     break;
     case 'apiRequest':
         try {
@@ -341,6 +359,7 @@ if (state.status === 'waiting_for_input') {
                     let messageContent = currentNode.content;
                     messageContent = replaceVariables(messageContent, state);
                     await sendTextMessage(instanceKey, messageContent, chatId);
+                    await saveAutoResponseMessage(instanceKey, chatId, messageContent, 'text');
                     break;
                     case 'generatePayment':
                         const paymentId = await generatePayment(instanceKey, chatId, currentNode);
@@ -386,6 +405,7 @@ if (state.status === 'waiting_for_input') {
                         case 'input':
                             if (state.status !== 'waiting_for_input') {
                                 await sendTextMessage(instanceKey, currentNode.content, chatId);
+                                await saveAutoResponseMessage(instanceKey, chatId, currentNode.content, 'text');
                                 state.status = 'waiting_for_input';
                                 state.expectedInput = currentNode.inputKey;
                                 await redisClient.setex(autoResponseKey, AUTO_RESPONSE_EXPIRY, JSON.stringify(state));
@@ -414,9 +434,11 @@ if (state.status === 'waiting_for_input') {
                     case 'image':
                         case 'video':
                             await sendMediaMessage(instanceKey, currentNode.content, chatId, currentNode.type === 'image' ? 'imageFile' : 'video', `${currentNode.type}.${currentNode.type === 'image' ? 'jpg' : 'mp4'}`, currentNode.caption);
+                            await saveAutoResponseMessage(instanceKey, chatId, currentNode.content, currentNode.type);
                             break;
                     case 'audio':
                         await sendMediaMessage(instanceKey, currentNode.content, chatId, 'audiofile', 'audio.mp3', '');
+                        await saveAutoResponseMessage(instanceKey, chatId, currentNode.content, 'audio');
                         break;
                     
                         case 'blockUser':

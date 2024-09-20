@@ -49,6 +49,20 @@ async function saveLastMessage(instanceKey, chatId, message) {
     await redisClient.expire(key, AUTO_RESPONSE_EXPIRY);
 }
 
+async function saveAutoResponseMessage(instanceKey, chatId, content, type = 'text') {
+    const messageKey = `${chatId}:${Date.now()}`;
+    const messageData = {
+        key: messageKey,
+        sender: 'Auto-resposta',
+        content: content,
+        timestamp: Math.floor(Date.now() / 1000),
+        fromMe: true,
+        type: type
+    };
+
+    await saveMessage(instanceKey, chatId, messageData);
+}
+
 // Processa autoresposta com base na campanha
 exports.handleAutoResponse = async (instanceKey, chatId, message, source) => {
     try {
@@ -129,7 +143,7 @@ exports.handleAutoResponse = async (instanceKey, chatId, message, source) => {
                 console.log('Chamada de autoresposta ignorada, não é proveniente de webhook'.yellow);
                 return;
             }
-            
+
             // Incrementar apenas se uma campanha foi executada
             dailyUsage.autoResponses += 1;
             await dailyUsage.save();
