@@ -19,219 +19,174 @@
         }
         .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gradient-to-br from-purple-100 to-indigo-200 min-h-screen">
     <div class="min-h-screen flex flex-col">
         <!-- Navbar -->
         <nav class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 shadow-lg">
             <div class="container mx-auto flex justify-between items-center">
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm">Bem-vindo, <%= user.name %></span>
-                    <a href="/logout" class="btn btn-sm btn-outline btn-white">Sair</a>
+                    <span class="text-sm font-medium">Bem-vindo, <%= user.name %></span>
+                    <a href="/logout" class="px-4 py-2 rounded-full bg-white text-indigo-600 text-sm font-bold hover:bg-indigo-100 transition duration-300">Sair</a>
                 </div>
             </div>
         </nav>
 
         <!-- Main Content -->
-        <main class="flex-grow container mx-auto p-6 space-y-6">
+        <main class="flex-grow container mx-auto p-6 space-y-8">
 
-               <!-- Nova seção: Alerta de Plano Gratuito -->
-               <% if (user.plan === 'gratuito') { %>
-                <section class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg shadow-md">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl mr-4"></i>
-                        </div>
-                        <div>
-                            <p class="font-bold">Sua conta não está ativada!</p>
-                            <p>Para liberar todas as funções e aproveitar ao máximo o BudZap, ative algum de nossos planos.</p>
-                            <a href="/change-plan" class="mt-2 inline-block bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
-                                Conheça nossos planos
-                            </a>
-                        </div>
+            <!-- Nova seção: Alerta de Plano Gratuito -->
+            <% if (user.plan === 'gratuito') { %>
+            <section class="glass-effect rounded-xl p-6 shadow-lg">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-yellow-500 text-3xl mr-6"></i>
                     </div>
-                </section>
-                <% } %>
+                    <div>
+                        <p class="font-bold text-lg text-indigo-800">Sua conta não está ativada!</p>
+                        <p class="text-indigo-600">Para liberar todas as funções e aproveitar ao máximo o BudZap, ative algum de nossos planos.</p>
+                        <a href="/change-plan" class="mt-4 inline-block bg-gradient-to-r from-yellow-400 to-yellow-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 ease-in-out hover:from-yellow-500 hover:to-yellow-700 transform hover:-translate-y-1">
+                            Conheça nossos planos
+                        </a>
+                    </div>
+                </div>
+            </section>
+            <% } %>
 
-                
             <!-- Notificação mais recente -->
-<% if (user.notifications && user.notifications.length > 0) { %>
-    <div class="bg-indigo-100 border-l-4 border-indigo-500 text-indigo-700 p-4 mb-4">
-        <div class="flex items-center">
-            <div class="flex-shrink-0">
-                <i class="fas fa-bell text-indigo-500"></i>
+            <% if (user.notifications && user.notifications.length > 0) { %>
+            <div class="glass-effect rounded-xl p-6 shadow-lg">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-bell text-indigo-500 text-2xl mr-4"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-indigo-800">
+                            <%= user.notifications[user.notifications.length - 1].title %>: <%= user.notifications[user.notifications.length - 1].content %>
+                        </p>
+                        <p class="text-xs text-indigo-500 mt-2">
+                            <%= new Date(user.notifications[user.notifications.length - 1].timestamp).toLocaleString() %>
+                        </p>
+                    </div>
+                </div>
             </div>
-            <div class="ml-3">
-                <p class="text-sm font-medium">
-                    <%= user.notifications[user.notifications.length - 1].title %>: <%= user.notifications[user.notifications.length - 1].content %>
-                </p>
-                <p class="text-xs text-indigo-500 mt-1">
-                    <%= new Date(user.notifications[user.notifications.length - 1].timestamp).toLocaleString() %>
-                </p>
-            </div>
-        </div>
-    </div>
-<% } %>
+            <% } %>
 
-            
             <!-- Resumo do Plano -->
-            <section class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-2xl font-semibold mb-4 text-purple-700">Seu Plano BudZap</h2>
+            <section class="glass-effect rounded-xl p-6 shadow-lg">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-800">Seu Plano BudZap</h2>
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-lg">Plano Atual: <span class="font-bold text-indigo-600"><%= user.plan.charAt(0).toUpperCase() + user.plan.slice(1) %></span></p>
-                        <p>Válido até: <%= new Date(user.validUntil).toLocaleDateString() %></p>
+                        <p class="text-lg text-indigo-600">Plano Atual: <span class="font-bold"><%= user.plan.charAt(0).toUpperCase() + user.plan.slice(1) %></span></p>
+                        <p class="text-indigo-500">Válido até: <%= new Date(user.validUntil).toLocaleDateString() %></p>
                     </div>
-                    <a href="/change-plan" class="btn btn-primary animate-pulse">Upgrade de Plano</a>
+                    <a href="/change-plan" class="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold rounded-full shadow-lg hover:from-purple-600 hover:to-indigo-700 transition duration-300 transform hover:-translate-y-1">Upgrade de Plano</a>
                 </div>
             </section>
 
             <!-- Informações Financeiras (apenas se o Mercado Pago estiver integrado) -->
             <% if (user.mercadopago && user.mercadopago.integrationActive) { %>
             <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
-                        <i class="fas fa-wallet mr-2"></i>Saldo do Dia
+                <div class="glass-effect rounded-xl p-6 shadow-lg">
+                    <h3 class="text-xl font-semibold mb-2 text-indigo-800">
+                        <i class="fas fa-wallet mr-2 text-indigo-500"></i>Saldo do Dia
                     </h3>
                     <p class="text-3xl font-bold text-green-600" id="dailyBalance">Carregando...</p>
                 </div>
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
-                        <i class="fas fa-chart-line mr-2"></i>Lucro Mensal
+                <div class="glass-effect rounded-xl p-6 shadow-lg">
+                    <h3 class="text-xl font-semibold mb-2 text-indigo-800">
+                        <i class="fas fa-chart-line mr-2 text-indigo-500"></i>Lucro Mensal
                     </h3>
                     <p class="text-3xl font-bold text-blue-600" id="monthlyProfit">Carregando...</p>
                 </div>
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
-                        <i class="fas fa-shopping-cart mr-2"></i>Gasto Mensal
+                <div class="glass-effect rounded-xl p-6 shadow-lg">
+                    <h3 class="text-xl font-semibold mb-2 text-indigo-800">
+                        <i class="fas fa-shopping-cart mr-2 text-indigo-500"></i>Gasto Mensal
                     </h3>
                     <p class="text-3xl font-bold text-red-600" id="monthlyExpense">Carregando...</p>
                 </div>
             </section>
             <% } else { %>
-            <section class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-xl font-semibold mb-2 text-purple-700">
-                    <i class="fas fa-link-slash mr-2"></i>Integração Mercado Pago
+            <section class="glass-effect rounded-xl p-6 shadow-lg">
+                <h3 class="text-xl font-semibold mb-2 text-indigo-800">
+                    <i class="fas fa-link-slash mr-2 text-indigo-500"></i>Integração Mercado Pago
                 </h3>
-                <p class="text-gray-600 mb-4">Conecte sua conta do Mercado Pago para ver informações financeiras detalhadas.</p>
-                <a href="/integrations/mercadopago" class="btn btn-primary btn-sm">Configurar Integração</a>
+                <p class="text-indigo-600 mb-4">Conecte sua conta do Mercado Pago para ver informações financeiras detalhadas.</p>
+                <a href="/integrations/mercadopago" class="px-6 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold rounded-full shadow-lg hover:from-purple-600 hover:to-indigo-700 transition duration-300">Configurar Integração</a>
             </section>
             <% } %>
 
-           
-
             <!-- Estatísticas Rápidas -->
-<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-500">Instâncias WhatsApp</p>
-                <p class="text-3xl font-bold text-purple-600">
-                    <%= user.whatsappInstances.length %> / 
-                    <%= limits.whatsappConnections === Infinity ? '∞' : limits.whatsappConnections %>
-                </p>
-            </div>
-            <i class="fas fa-mobile-alt text-4xl text-indigo-400 animate-bounce"></i>
-        </div>
-    </div>
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-500">Funis Ativos</p>
-                <p class="text-3xl font-bold text-purple-600">
-                    <%= user.funnels.length %> / 
-                    <%= limits.funnels === Infinity ? '∞' : limits.funnels %>
-                </p>
-            </div>
-            <i class="fas fa-funnel-dollar text-4xl text-indigo-400 animate-bounce"></i>
-        </div>
-    </div>
-    <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
-        <div class="flex items-center justify-between">
-            <div>
-                <h3 class="text-xl font-semibold mb-2">Spam Diário</h3>
-                <p class="text-4xl font-bold">
-                    <%= dailyUsage.spamMessages %> / <%= limits.dailySpamMessages === Infinity ? '∞' : limits.dailySpamMessages %>
-                </p>
-                <p class="text-sm opacity-75">mensagens enviadas hoje</p>
-            </div>
-            <div class="text-5xl opacity-75">
-                <i class="fas fa-paper-plane animate-pulse"></i>
-            </div>
-        </div>
-        <div class="mt-4">
-            <div class="w-full bg-white bg-opacity-20 rounded-full h-2.5">
-                <div class="bg-white h-2.5 rounded-full" style="width: <%= (dailyUsage.spamMessages / limits.dailySpamMessages) * 100 %>%"></div>
-            </div>
-            <p class="text-xs mt-2 text-right">
-                <%= Math.round((dailyUsage.spamMessages / limits.dailySpamMessages) * 100) %>% do limite utilizado
-            </p>
-        </div>
-    </div>
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-500">Autorespostas Diárias</p>
-                <p class="text-3xl font-bold text-purple-600">
-                    <%= dailyUsage.autoResponses %> / 
-                    <%= limits.dailyAutoResponses === Infinity ? '∞' : limits.dailyAutoResponses %>
-                </p>
-            </div>
-            <i class="fas fa-reply-all text-4xl text-indigo-400 animate-bounce"></i>
-        </div>
-    </div>
-</section>
-
-            <!-- Funções Principais 
-            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
-                        <i class="fas fa-comment-dots mr-2"></i>Mensagens em Massa
-                    </h3>
-                    <p class="text-gray-600 mb-4">Envie mensagens personalizadas para múltiplos contatos de uma só vez.</p>
-                    <a href="/mass-message" class="btn btn-primary btn-sm">Iniciar Campanha</a>
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-effect rounded-xl p-6 shadow-lg transform hover:scale-105 transition-all duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-indigo-500">Instâncias WhatsApp</p>
+                            <p class="text-3xl font-bold text-indigo-800">
+                                <%= user.whatsappInstances.length %> / 
+                                <%= limits.whatsappConnections === Infinity ? '∞' : limits.whatsappConnections %>
+                            </p>
+                        </div>
+                        <i class="fas fa-mobile-alt text-4xl text-indigo-400 animate-bounce"></i>
+                    </div>
                 </div>
-                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
-                        <i class="fas fa-robot mr-2"></i>Autoresposta
-                    </h3>
-                    <p class="text-gray-600 mb-4">Configure respostas automáticas para interagir com seus clientes 24/7.</p>
-                    <a href="/auto-response" class="btn btn-primary btn-sm">Configurar</a>
+                <div class="glass-effect rounded-xl p-6 shadow-lg transform hover:scale-105 transition-all duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-indigo-500">Funis Ativos</p>
+                            <p class="text-3xl font-bold text-indigo-800">
+                                <%= user.funnels.length %> / 
+                                <%= limits.funnels === Infinity ? '∞' : limits.funnels %>
+                            </p>
+                        </div>
+                        <i class="fas fa-funnel-dollar text-4xl text-indigo-400 animate-bounce"></i>
+                    </div>
                 </div>
-                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
-                        <i class="fas fa-funnel-dollar mr-2"></i>Funis de Venda
-                    </h3>
-                    <p class="text-gray-600 mb-4">Crie funis de venda personalizados para aumentar suas conversões.</p>
-                    <a href="/funnels" class="btn btn-primary btn-sm">Gerenciar Funis</a>
+                <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2">Spam Diário</h3>
+                            <p class="text-4xl font-bold">
+                                <%= dailyUsage.spamMessages %> / <%= limits.dailySpamMessages === Infinity ? '∞' : limits.dailySpamMessages %>
+                            </p>
+                            <p class="text-sm opacity-75">mensagens enviadas hoje</p>
+                        </div>
+                        <div class="text-5xl opacity-75">
+                            <i class="fas fa-paper-plane animate-pulse"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="w-full bg-white bg-opacity-20 rounded-full h-2.5">
+                            <div class="bg-white h-2.5 rounded-full" style="width: <%= (dailyUsage.spamMessages / limits.dailySpamMessages) * 100 %>%"></div>
+                        </div>
+                        <p class="text-xs mt-2 text-right">
+                            <%= Math.round((dailyUsage.spamMessages / limits.dailySpamMessages) * 100) %>% do limite utilizado
+                        </p>
+                    </div>
                 </div>
-                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
-                        <i class="fas fa-users mr-2"></i>Gerenciar Grupos
-                    </h3>
-                    <p class="text-gray-600 mb-4">Crie e gerencie grupos do WhatsApp para melhor organização.</p>
-                    <a href="/group" class="btn btn-primary btn-sm">Gerenciar Grupos</a>
+                <div class="glass-effect rounded-xl p-6 shadow-lg transform hover:scale-105 transition-all duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-indigo-500">Autorespostas Diárias</p>
+                            <p class="text-3xl font-bold text-indigo-800">
+                                <%= dailyUsage.autoResponses %> / 
+                                <%= limits.dailyAutoResponses === Infinity ? '∞' : limits.dailyAutoResponses %>
+                            </p>
+                        </div>
+                        <i class="fas fa-reply-all text-4xl text-indigo-400 animate-bounce"></i>
+                    </div>
                 </div>
-                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
-                        <i class="fas fa-chart-line mr-2"></i>Análise de Desempenho
-                    </h3>
-                    <p class="text-gray-600 mb-4">Visualize métricas e insights sobre suas campanhas e interações.</p>
-                    <a href="/analytics" class="btn btn-primary btn-sm">Ver Análises</a>
-                </div>
-                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-                    <h3 class="text-xl font-semibold mb-2 text-purple-700">
-                        <i class="fas fa-cog mr-2"></i>Configurações
-                    </h3>
-                    <p class="text-gray-600 mb-4">Personalize sua experiência BudZap e gerencie suas preferências.</p>
-                    <a href="/settings" class="btn btn-primary btn-sm">Ajustar Configurações</a>
-                </div>
-            </section>-->
+            </section>
 
             <!-- Gráfico de Uso -->
-            <section class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-2xl font-semibold mb-4 text-purple-700">Uso de Recursos</h2>
+            <section class="glass-effect rounded-xl p-6 shadow-lg">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-800">Uso de Recursos</h2>
                 <canvas id="resourceUsageChart" height="200"></canvas>
             </section>
         </main>

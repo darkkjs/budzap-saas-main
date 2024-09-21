@@ -10,46 +10,50 @@
     <link rel="icon" type="image/x-icon" href="/img/icons8-b-16.png">
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-gradient: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
         }
         .dark {
-            --primary-gradient: linear-gradient(135deg, #434343 0%, #000000 100%);
+            --primary-gradient: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
         }
 
         .vsl-modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.8);
-}
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
 
-.vsl-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 600px;
-}
+        .vsl-content {
+            background-color: #ffffff;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 600px;
+            transition: all 0.3s ease;
+        }
 
-.close-vsl {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
+        .close-vsl {
+            color: #718096;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
 
-.close-vsl:hover,
-.close-vsl:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
+        .close-vsl:hover,
+        .close-vsl:focus {
+            color: #2D3748;
+            text-decoration: none;
+            cursor: pointer;
+        }
 
         body {
             font-family: 'Poppins', sans-serif;
@@ -63,19 +67,21 @@
             -webkit-text-fill-color: transparent;
         }
         .glassmorphism {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(4px);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
         }
         .card-zoom {
-            transition: transform 0.3s ease-in-out;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
         }
         .card-zoom:hover {
-            transform: scale(1.05);
+            transform: scale(1.03);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06);
         }
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         @keyframes slideIn {
             from { transform: translateX(-20px); opacity: 0; }
@@ -88,19 +94,23 @@
         .sidebar-scroll {
             max-height: calc(100vh - 200px);
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
         }
         .sidebar-scroll::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
         .sidebar-scroll::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 2px;
         }
         .sidebar-scroll::-webkit-scrollbar-track {
-            background-color: rgba(0, 0, 0, 0.1);
+            background-color: transparent;
         }
         .menu-item {
             transition: all 0.3s ease;
+            border-radius: 8px;
+            margin-bottom: 5px;
         }
         .menu-item:hover {
             background-color: rgba(255, 255, 255, 0.1);
@@ -115,10 +125,10 @@
     </style>
     <%- defineContent('head') %>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
     <div class="flex flex-col h-screen lg:flex-row">
         <!-- Sidebar -->
-        <aside id="sidebar" class="bg-gradient text-white w-full lg:w-64 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-200 ease-in-out z-20 overflow-hidden">
+        <aside id="sidebar" class="bg-gradient text-white w-full lg:w-64 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition duration-300 ease-in-out z-20 overflow-hidden">
             <div class="flex flex-col h-full">
                 <div class="p-5">
                     <div class="flex items-center justify-center mb-6">
@@ -195,7 +205,7 @@
                             <span class="ml-2 text-xl font-bold text-gradient"><%= typeof title !== 'undefined' ? title : 'BudZap' %></span>
                         </div>
                         <div class="flex items-center">
-                            <button id="themeToggle" class="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:shadow-outline">
+                            <button id="themeToggle" class="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:shadow-outline transition-colors duration-200">
                                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                                 </svg>
@@ -211,7 +221,7 @@
                 <nav class="text-gray-500 dark:text-gray-400 text-sm mb-4" aria-label="Breadcrumb">
                     <ol class="list-none p-0 inline-flex">
                         <li class="flex items-center">
-                            <a href="/" class="hover:text-gray-700 dark:hover:text-gray-200">Home</a>
+                            <a href="/" class="hover:text-gray-700 dark:hover:text-gray-200 transition-colors duration-200">Home</a>
                             <svg class="fill-current w-3 h-3 mx-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg>
                         </li>
                         <li class="flex items-center">
@@ -238,7 +248,7 @@
                     <iframe width="100%" height="315" src="https://www.youtube.com/embed/seu-video-id" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>-->
                 <p class="mb-4">Assine agora e tenha acesso a todas as funcionalidades incríveis do BudZap!</p>
-                <a href="/change-plan" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                <a href="/change-plan" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg">
                     Assinar Agora
                 </a>
             </div>

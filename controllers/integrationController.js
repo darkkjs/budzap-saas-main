@@ -45,7 +45,7 @@ exports.configureMercadoPagoApp = async (req, res) => {
         const { accessToken } = req.body;
         const userId = req.user.id;
 
-        if (!checkFeatureAccess(user.plan, 'api')) {
+        if (!checkFeatureAccess(req.user.plan, 'api')) {
             return res.status(403).json({ success: false, error: 'Seu plano não inclui acesso à API do Mercado Pago.' });
         }
         

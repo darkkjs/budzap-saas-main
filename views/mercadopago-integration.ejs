@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Integração Personalizada Mercado Pago</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.05); }
@@ -15,53 +17,57 @@
         .pulse {
             animation: pulse 2s infinite;
         }
+        .glass-effect {
+            background: rgba(30, 30, 30, 0.35);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
-<body class="bg-gradient-to-r from-blue-500 to-purple-600 min-h-screen p-8">
-    <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-xl">
-        <div class="flex items-center mb-6">
-            <i class="fas fa-link text-3xl text-blue-500 mr-3"></i>
-            <h1 class="text-2xl font-bold">Integração Mercado Pago</h1>
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 min-h-screen p-8 text-gray-200">
+    <div class="max-w-3xl mx-auto glass-effect p-8 rounded-2xl shadow-2xl">
+        <div class="flex items-center mb-8">
+            <i class="fas fa-link text-4xl text-white-400 mr-4"></i>
+            <h1 class="text-3xl font-bold text-white-400">Integração Mercado Pago</h1>
         </div>
         
-        <form id="mercadoPagoForm" class="space-y-4">
-            <div>
-                <label for="xCsrfToken" class="block text-sm font-medium text-gray-700">
-                    <i class="fas fa-key text-blue-500 mr-2"></i>X-CSRF-Token
+        <form id="mercadoPagoForm" class="space-y-6">
+            <div class="bg-gray-800 bg-opacity-50 p-6 rounded-xl">
+                <label for="xCsrfToken" class="block text-sm font-medium text-white-400 mb-2">
+                    <i class="fas fa-key text-white-400 mr-2"></i>X-CSRF-Token
                 </label>
-                <input type="text" id="xCsrfToken" name="xCsrfToken" value="<%= mercadoPagoConfig.xCsrfToken || '' %>" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                <input type="text" id="xCsrfToken" name="xCsrfToken" value="<%= mercadoPagoConfig.xCsrfToken || '' %>" required class="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50">
             </div>
-            <div>
-                <label for="cookie" class="block text-sm font-medium text-gray-700">
-                    <i class="fas fa-cookie-bite text-blue-500 mr-2"></i>Cookie
+            <div class="bg-gray-800 bg-opacity-50 p-6 rounded-xl">
+                <label for="cookie" class="block text-sm font-medium text-white-400 mb-2">
+                    <i class="fas fa-cookie-bite text-white-400 mr-2"></i>Cookie
                 </label>
-                <textarea id="cookie" name="cookie" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"><%= mercadoPagoConfig.cookie || '' %></textarea>
+                <textarea id="cookie" name="cookie" rows="3" required class="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50"><%= mercadoPagoConfig.cookie || '' %></textarea>
             </div>
-            <div>
-                <label for="xNewRelicId" class="block text-sm font-medium text-gray-700">
-                    <i class="fas fa-fingerprint text-blue-500 mr-2"></i>X-NewRelic-ID
+            <div class="bg-gray-800 bg-opacity-50 p-6 rounded-xl">
+                <label for="xNewRelicId" class="block text-sm font-medium text-white-400 mb-2">
+                    <i class="fas fa-fingerprint text-white-400 mr-2"></i>X-NewRelic-ID
                 </label>
-                <input type="text" id="xNewRelicId" name="xNewRelicId" value="<%= mercadoPagoConfig.xNewRelicId || '' %>" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                <input type="text" id="xNewRelicId" name="xNewRelicId" value="<%= mercadoPagoConfig.xNewRelicId || '' %>" required class="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-gray-200 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50">
             </div>
-            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105">
+            <button type="submit" class="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105">
                 <i class="fas fa-save mr-2"></i>Salvar Configuração
             </button>
         </form>
 
-        <div class="mt-8">
-            <h2 class="text-xl font-semibold mb-4 flex items-center">
-                <i class="fas fa-vial text-green-500 mr-2"></i>Testar Integração
+        <div class="mt-10">
+            <h2 class="text-2xl font-semibold mb-6 flex items-center text-white-400">
+                <i class="fas fa-vial text-white-400 mr-3"></i>Testar Integração
             </h2>
-            <button id="testIntegration" class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105">
+            <button id="testIntegration" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105">
                 <i class="fas fa-plug mr-2"></i>Testar Conexão
             </button>
         </div>
 
-        <div id="testResult" class="mt-4 p-4 rounded-md hidden"></div>
+        <div id="testResult" class="mt-6 p-4 rounded-xl hidden"></div>
     </div>
 
     <script>
-       
         document.getElementById('mercadoPagoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const xCsrfToken = document.getElementById('xCsrfToken').value;
@@ -79,24 +85,27 @@
         document.getElementById('testIntegration').addEventListener('click', async () => {
             const resultDiv = document.getElementById('testResult');
             resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Testando conexão...';
-            resultDiv.className = 'mt-4 p-4 rounded-md bg-yellow-100 flex items-center justify-center';
+            resultDiv.className = 'mt-6 p-4 rounded-xl bg-yellow-900 flex items-center justify-center text-white-200';
 
             try {
                 const response = await axios.get('/integrations/mercadopago/test');
-                resultDiv.innerHTML = '<i class="fas fa-check-circle text-green-500 mr-2"></i>Conexão bem-sucedida!';
-                resultDiv.className = 'mt-4 p-4 rounded-md bg-green-100 flex items-center justify-center pulse';
+                resultDiv.innerHTML = '<i class="fas fa-check-circle text-green-400 mr-2"></i>Conexão bem-sucedida!';
+                resultDiv.className = 'mt-6 p-4 rounded-xl bg-green-900 flex items-center justify-center text-green-200 pulse';
             } catch (error) {
-                resultDiv.innerHTML = '<i class="fas fa-exclamation-circle text-red-500 mr-2"></i>Erro na conexão: ' + (error.response ? error.response.data.error : error.message);
-                resultDiv.className = 'mt-4 p-4 rounded-md bg-red-100 flex items-center justify-center';
+                resultDiv.innerHTML = '<i class="fas fa-exclamation-circle text-red-400 mr-2"></i>Erro na conexão: ' + (error.response ? error.response.data.error : error.message);
+                resultDiv.className = 'mt-6 p-4 rounded-xl bg-red-900 flex items-center justify-center text-red-200';
             }
         });
 
         function showNotification(message, type) {
             const notification = document.createElement('div');
-            notification.className = `fixed bottom-4 right-4 p-4 rounded-md ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`;
+            notification.className = `fixed bottom-4 right-4 p-4 rounded-xl ${type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white shadow-lg transform transition-all duration-300 ease-in-out`;
             notification.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>${message}`;
             document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 3000);
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
     </script>
 </body>
