@@ -50,7 +50,8 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       user: user, 
       limits: userLimits, // Certifique-se de que está passando 'limits' e não 'userLimits'
       statusMessage: statusMessage,
-      dailyUsage: dailyUsage
+      dailyUsage: dailyUsage,
+      currentUrl: req.originalUrl  // Adicione esta linha
     });
 
 

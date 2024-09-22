@@ -96,65 +96,65 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
-            const registerBtn = document.getElementById('registerBtn');
-            const registrationForm = document.getElementById('registrationForm');
+    const registerBtn = document.getElementById('registerBtn');
+    const registrationForm = document.getElementById('registrationForm');
 
-            registrationForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                // Show loading popup
-                Swal.fire({
-                    title: 'Processando...',
-                    text: 'Por favor, aguarde enquanto criamos sua conta.',
-                    allowOutsideClick: false,
-                    showConfirmButton: false,
-                    willOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+    registrationForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      // Show loading popup
+      Swal.fire({
+        title: 'Processando...',
+        text: 'Por favor, aguarde enquanto criamos sua conta.',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        willOpen: () => {
+          Swal.showLoading();
+        }
+      });
 
-                const formData = new FormData(registrationForm);
-                const formDataObj = Object.fromEntries(formData.entries());
+      const formData = new FormData(registrationForm);
+      const formDataObj = Object.fromEntries(formData.entries());
 
-                try {
-                    const response = await fetch('/register', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(formDataObj),
-                    });
-
-                    const data = await response.json();
-
-                    // Close loading popup
-                    Swal.close();
-
-                    if (response.ok) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Registro concluído!',
-                            text: 'Sua conta foi criada com sucesso. Você será redirecionado para a página de login.',
-                        }).then(() => {
-                            window.location.href = '/login';
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Erro no registro',
-                            text: data.message || 'Ocorreu um erro durante o registro.',
-                        });
-                    }
-                } catch (error) {
-                    console.error('Erro:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Erro',
-                        text: 'Ocorreu um erro ao processar sua solicitação.',
-                    });
-                }
-            });
+      try {
+        const response = await fetch('/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formDataObj),
         });
+
+        const data = await response.json();
+
+        // Close loading popup
+        Swal.close();
+
+        if (response.ok) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Registro concluído!',
+            text: 'Sua conta foi criada com sucesso. Você será redirecionado para o dashboard.',
+          }).then(() => {
+            window.location.href = data.redirect || '/dashboard';
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Erro no registro',
+            text: data.message || 'Ocorreu um erro durante o registro.',
+          });
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Ocorreu um erro ao processar sua solicitação.',
+        });
+      }
+    });
+  });
     </script>
 </body>
 </html>

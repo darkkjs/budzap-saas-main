@@ -24,88 +24,317 @@
     <meta property="twitter:description" content="Aumente suas vendas e engaje seus clientes com a plataforma de automação WhatsApp mais poderosa do mercado.">
     <meta property="twitter:image" content="https://cdn.pixabay.com/photo/2021/01/11/07/22/whatsapp-5907292_1280.jpg">
 
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
     <style>
+        :root {
+            --primary-color: #00A884;
+            --secondary-color: #128C7E;
+            --accent-color: #34B7F1;
+            --background-color: #111B21;
+            --text-color: #E9EDF0;
+            --card-bg: rgba(255, 255, 255, 0.1);
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 168, 132, 0.2) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(52, 183, 241, 0.2) 0%, transparent 20%);
+            background-attachment: fixed;
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
         }
-        .animate-float {
-            animation: float 6s ease-in-out infinite;
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
         }
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-            100% { transform: translateY(0px); }
+
+        @media (min-width: 1024px) {
+            .container {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+        }
+
+        .feedback-section, .login-section {
+            flex: 1;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .feedback-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .feedback-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .login-box {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .link {
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .link:hover {
+            color: var(--primary-color);
+        }
+
+        .feedback-carousel {
+            overflow: hidden;
+            position: relative;
+            height: 200px;
+        }
+
+        .feedback-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .error-message {
+        background-color: rgba(220, 38, 38, 0.1);
+        border-left: 4px solid #DC2626;
+        color: #FECACA;
+        padding: 12px;
+        margin-bottom: 20px;
+        border-radius: 0 5px 5px 0;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        animation: fadeInShake 0.5s ease-out;
+    }
+
+    .error-message i {
+        margin-right: 10px;
+        font-size: 18px;
+    }
+
+    @keyframes fadeInShake {
+        0% {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+        60% {
+            transform: translateX(5px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+        .feedback-slide.active {
+            opacity: 1;
+        }
+
+        @media (max-width: 1023px) {
+            .container {
+                flex-direction: column-reverse;
+            }
+
+            .feedback-section, .login-section {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-purple-400 to-indigo-600 min-h-screen flex items-center justify-center">
-    <div class="container mx-auto px-4">
-        <div class="max-w-md mx-auto bg-white rounded-xl shadow-2xl overflow-hidden md:max-w-2xl transform hover:scale-105 transition duration-500">
-            <div class="md:flex">
-                <div class="md:shrink-0 bg-purple-600 md:w-48 flex items-center justify-center p-6">
-                    <i class="fas fa-user-circle text-8xl text-white animate-float"></i>
-                </div>
-                <div class="p-8">
-                    <div class="uppercase tracking-wide text-sm text-purple-500 font-semibold mb-1">Bem-vindo de volta</div>
-                    <% if (messages && messages.error) { %>
-                        <div class="alert alert-error shadow-lg mb-4">
-                          <div>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            <span><%= messages.error %></span>
-                          </div>
-                        </div>
-                      <% } %>
-                    <h2 class="text-3xl font-extrabold text-gray-900 mb-6">Faça seu login</h2>
-                  
-                    <form action="/login" method="POST" class="space-y-4">
-                        <div class="form-control">
-                            <label class="label">
-                                <span class="label-text"><i class="fas fa-user mr-2"></i>Nome de usuário</span>
-                            </label>
-                            <input type="text" id="username" name="username" required class="input input-bordered input-primary w-full">
-                        </div>
-                        <div class="form-control">
-                            <label class="label">
-                                <span class="label-text"><i class="fas fa-lock mr-2"></i>Senha</span>
-                            </label>
-                            <input type="password" id="password" name="password" required class="input input-bordered input-primary w-full">
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <label class="label cursor-pointer">
-                                <input type="checkbox" class="checkbox checkbox-primary" />
-                                <span class="label-text ml-2">Lembrar-me</span>
-                            </label>
-                            <a href="/reset-password" class="text-sm text-purple-600 hover:text-purple-500">Esqueceu a senha?</a>
-                        </div>
-                        <div class="mt-6">
-                            <button type="submit" class="btn btn-primary w-full">
-                                <i class="fas fa-sign-in-alt mr-2"></i>Entrar
-                            </button>
-                        </div>
-                    </form>
-                   
-                    <div class="mt-6 text-center">
-                        <a href="/register" class="btn btn-secondary">
-                            <i class="fas fa-user-plus mr-2"></i>Criar uma conta
-                        </a>
+<body>
+    <div class="container">
+        <!-- Seção de Feedbacks -->
+        <div class="feedback-section">
+            <h2 class="text-3xl font-bold mb-6 text-center">O que nossos clientes dizem</h2>
+            <div class="feedback-carousel">
+                <div class="feedback-slide active">
+                    <div class="feedback-card">
+                        <p class="text-lg mb-4">"Estou usando e já consigo ver os resultados, superou minhas expectativas!"</p>
+                        <p class="font-semibold">- Maria Silva</p>
                     </div>
+                </div>
+                <div class="feedback-slide">
+                    <div class="feedback-card">
+                        <p class="text-lg mb-4">"To testando os funis e é incrivel oque se pode fazer!"</p>
+                        <p class="font-semibold">- João Santos</p>
+                    </div>
+                </div>
+                <div class="feedback-slide">
+                    <div class="feedback-card">
+                        <p class="text-lg mb-4">"Interface intuitiva e recursos incríveis."</p>
+                        <p class="font-semibold">- Ana Oliveira</p>
+                    </div>
+                </div>
+                <div class="feedback-slide active">
+                    <div class="feedback-card">
+                        <p class="text-lg mb-4">"Cara, tô usando o BudZap há um mês e já vi meu faturamento subir 20%. Tá valendo cada centavo!"</p>
+                        <p class="font-semibold">- Carlos Oliveira, Loja de Roupas</p>
+                    </div>
+                </div>
+                <div class="feedback-slide">
+                    <div class="feedback-card">
+                        <p class="text-lg mb-4">"Mano, que ferramenta massa! Consigo agendar todas as mensagens da semana em minutos. Tô economizando um tempão!"</p>
+                        <p class="font-semibold">- Fernanda Lima, Influenciadora Digital</p>
+                    </div>
+                </div>
+                <div class="feedback-slide">
+                    <div class="feedback-card">
+                        <p class="text-lg mb-4">"Os funis de venda são demais! Tô convertendo muito mais leads em clientes."</p>
+                        <p class="font-semibold">- Ricardo Santos, Corretor de Imóveis</p>
+                    </div>
+                </div>
+                <div class="feedback-slide">
+                    <div class="feedback-card">
+                        <p class="text-lg mb-4">"Achei que ia ser complicado, mas a interface é super fácil de usar. Em dois dias já tava mandando ver nas campanhas!"</p>
+                        <p class="font-semibold">- Juliana Mendes, Pequena Empreendedora</p>
+                    </div>
+                </div>
+                <div class="feedback-slide">
+                    <div class="feedback-card">
+                        <p class="text-lg mb-4">"O suporte é show de bola! Sempre que tenho dúvida, eles resolvem na hora. Tô impressionado com a atenção ao cliente."</p>
+                        <p class="font-semibold">- André Martins, Agência de Marketing</p>
+                    </div>
+                </div>
+                <div class="feedback-slide">
+                    <div class="feedback-card">
+                        <p class="text-lg mb-4">"Meu engajamento com os clientes deu aumentou demais!"</p>
+                        <p class="font-semibold">- Patrícia Rocha, Consultora de Beleza</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+               
+          
+
+        <!-- Seção de Login -->
+        <div class="login-section">
+            <div class="login-box">
+                <div class="text-center mb-8">
+                    <i class="fas fa-robot text-6xl mb-4" style="color: var(--primary-color);"></i>
+                    <h1 class="text-4xl font-bold mb-2">BudZap</h1>
+                    <p class="text-lg">Sua plataforma de automação WhatsApp</p>
+                </div>
+                
+               <% if (typeof error !== 'undefined' && error) { %>
+    <div class="error-message" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        <p><%= error %></p>
+    </div>
+<% } %>
+                
+                <form action="/login" method="POST">
+                    <input type="text" id="login" name="login" required class="input-field" placeholder="Username / Email / Telefone">
+                    <input type="password" id="password" name="password" required class="input-field" placeholder="Senha">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                           
+                        </div>
+                        <a href="/reset-password" class="link text-sm">Esqueceu a senha?</a>
+                    </div>
+                    <button type="submit" class="btn-primary w-full">
+                        Entrar
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-sm">
+                        Não tem uma conta?
+                        <a href="/register" class="link">Registre-se</a>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
     <script>
-        gsap.from("form > div", {
+        // Animação de entrada
+        gsap.from(".feedback-section", {
             opacity: 0,
-            y: 50,
-            stagger: 0.2,
+            x: -50,
             duration: 1,
             ease: "power3.out"
         });
+
+        gsap.from(".login-section", {
+            opacity: 0,
+            x: 50,
+            duration: 1,
+            ease: "power3.out"
+        });
+
+        // Carrossel de feedbacks
+        const slides = document.querySelectorAll('.feedback-slide');
+        let currentSlide = 0;
+
+        function showSlide(index) {
+            slides[currentSlide].classList.remove('active');
+            slides[index].classList.add('active');
+            currentSlide = index;
+        }
+
+        function nextSlide() {
+            let next = (currentSlide + 1) % slides.length;
+            showSlide(next);
+        }
+
+        setInterval(nextSlide, 5000);
     </script>
 </body>
 </html>

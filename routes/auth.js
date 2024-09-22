@@ -21,15 +21,32 @@ router.get('/', ensureAuthenticated, dashboardController.getDashboard);
 const schedule = require('node-schedule');
 
 function scheduleReminders(user) {
-  const reminderTimes = [1, 3, 7, 14, 30, 60 ]; // dias após o registro
+  if (!user || !user.createdAt || !user.name || !user.phone) {
+    console.error('Dados de usuário inválidos para agendar lembretes');
+    return;
+  }
+
+  const reminderTimes = [1, 3, 7, 14, 30, 60]; // dias após o registro
+  const now = new Date();
   
   reminderTimes.forEach(days => {
     const reminderDate = new Date(user.createdAt.getTime() + days * 24 * 60 * 60 * 1000);
-    schedule.scheduleJob(reminderDate, async function() {
-      if (user.plan === 'gratuito') {
-        await sendTextMessage(user.phone, `Olá ${user.name}! Já se passaram ${days} dias desde que você se registrou no BudZap. Que tal experimentar nossos planos premium e aproveitar todos os recursos?`);
-      }
-    });
+    
+    // Só agenda lembretes para datas futuras
+    if (reminderDate > now) {
+      schedule.scheduleJob(reminderDate, async function() {
+        try {
+          const updatedUser = await User.findById(user._id);
+          if (updatedUser && updatedUser.plan === 'gratuito') {
+            const message = `Olá ${updatedUser.name}! Já se passaram ${days} dias desde que você se registrou no BudZap. Que tal experimentar nossos planos premium e aproveitar todos os recursos?`;
+            await sendTextMessage(updatedUser.phone, message);
+            console.log(`Lembrete enviado para ${updatedUser.name} após ${days} dias`);
+          }
+        } catch (error) {
+          console.error(`Erro ao enviar lembrete para o usuário ${user._id} após ${days} dias:`, error);
+        }
+      });
+    }
   });
 }
 
@@ -802,6 +819,9 @@ Trocar networking é essencial para evoluir sua operação.
 🔱 Grupo: https://chat.whatsapp.com/Ba6vC7DcHXxIu4ZZRk0CfP
   `)
 
+  const loginMessage = `Bem-vindo ao BudZap, ${newUser.name}! 🎉\n\nSuas informações de login:\n\nUsername: ${newUser.username}\nEmail: ${newUser.email}\nTelefone: ${newUser.phone}\n\nGuarde essas informações em um local seguro. Você pode usar qualquer uma delas para fazer login.`;
+  await sendTextMessage(phone, loginMessage);
+
      } catch(e) {
      
         if (e.response && e.response.data) {
@@ -848,8 +868,19 @@ Trocar networking é essencial para evoluir sua operação.
     scheduleReminders(newUser);
     console.log('Novo usuário registrado:', newUser);
 
+
     
-    res.status(200).json({ message: 'Registro concluído com sucesso.' });
+// Fazer login automático do usuário
+    req.login(newUser, (err) => {
+      if (err) {
+        console.error('Erro ao fazer login automático:', err);
+        return res.status(500).json({ message: 'Erro ao fazer login automático após o registro.' });
+      }
+      
+      // Redirecionar para o dashboard
+      return res.status(200).json({ message: 'Registro concluído com sucesso. Redirecionando para o dashboard.', redirect: '/dashboard' });
+    });
+
   } catch (error) {
     console.error('Erro no registro:', error);
     res.status(500).json({ message: 'Erro no servidor ao registrar usuário.' });
@@ -914,19 +945,16 @@ router.post('/login', (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
     if (err) { 
       console.error('Erro na autenticação:', err);
-      req.flash('error', 'Ocorreu um erro durante o login.');
-      return res.redirect('/login');
+      return res.render('login', { error: 'Ocorreu um erro durante o login.', layout: false, user: req.user });
     }
     if (!user) { 
       console.log('Login falhou:', info.message);
-      req.flash('error', info.message || 'Nome de usuário ou senha incorretos.');
-      return res.redirect('/login');
+      return res.render('login', { error: info.message, layout: false, user: req.user });
     }
     req.logIn(user, (err) => {
       if (err) { 
         console.error('Erro ao fazer login:', err);
-        req.flash('error', 'Ocorreu um erro ao fazer login.');
-        return res.redirect('/login');
+        return res.render('login', { error: 'Ocorreu um erro ao fazer login.',  layout: false, user: req.user });
       }
       console.log('Login bem-sucedido para:', user.username);
       return res.redirect('/dashboard');

@@ -239,35 +239,84 @@
         </div>
     </div>
     <% if (user.plan === 'gratuito') { %>
-        <div id="vslModal" class="vsl-modal">
-            <div class="vsl-content">
-                <span class="close-vsl">&times;</span>
-                <h2 class="text-2xl font-bold mb-4">Desbloqueie Todo o Potencial do BudZap!</h2>
-             <!--    <div class="video-container mb-4">
-                    Substitua o src pela URL do seu vídeo 
-                    <iframe width="100%" height="315" src="https://www.youtube.com/embed/seu-video-id" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                </div>-->
-                <p class="mb-4">Assine agora e tenha acesso a todas as funcionalidades incríveis do BudZap!</p>
-                <a href="/change-plan" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg">
-                    Assinar Agora
-                </a>
-            </div>
-        </div>
-        <% } %>
+  <div id="upgradeCard" class="fixed bottom-4 right-4 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-hidden transition-all duration-300 ease-in-out transform hover:scale-105">
+    <div class="bg-gradient-to-r from-purple-500 to-indigo-600 p-4">
+      <h3 class="text-xl font-bold text-white mb-2">Desbloqueie o Poder Total do BudZap! 🚀</h3>
+      <p class="text-white text-sm">Você está perdendo recursos incríveis!</p>
+    </div>
+    <div class="p-4">
+      <ul class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+        <li class="flex items-center mb-2">
+          <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          Automação ilimitada de mensagens
+        </li>
+        <li class="flex items-center mb-2">
+          <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          Integrações avançadas
+        </li>
+        <li class="flex items-center">
+          <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          Acesso de qualquer lugar
+        </li>
+      </ul>
+      <a href="/change-plan" class="block w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-center py-2 rounded-lg font-semibold hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg">
+        Upgrade Agora!
+      </a>
+    </div>
+  </div>
+<% } %>
 
     <%- defineContent('scripts') %>
     <script>
+let currentUrl;
 
-document.addEventListener("DOMContentLoaded", () => {
     // Verifica se a URL atual contém 'change-plan'
-    if (window.location.href.includes('change-plan')) {
-        // Seleciona o botão de fechar e clica nele para ocultar o modal
-        const closeButton = document.querySelector('.close-vsl');
-        if (closeButton) {
-            closeButton.click();
-        }
+    currentUrl = window.location.href;
+   
+
+
+// Lógica para o card de upgrade
+  const upgradeCard = document.getElementById('upgradeCard');
+  if (upgradeCard) {
+    let isDragging = false;
+    let startX, startY, startLeft, startTop;
+
+    upgradeCard.addEventListener('mousedown', startDrag);
+    upgradeCard.addEventListener('touchstart', startDrag);
+
+    function startDrag(e) {
+      isDragging = true;
+      startX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
+      startY = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
+      startLeft = upgradeCard.offsetLeft;
+      startTop = upgradeCard.offsetTop;
+
+      document.addEventListener('mousemove', drag);
+      document.addEventListener('touchmove', drag);
+      document.addEventListener('mouseup', stopDrag);
+      document.addEventListener('touchend', stopDrag);
     }
-});
+
+    function drag(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+
+      const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
+      const clientY = e.type === 'mousemove' ? e.clientY : e.touches[0].clientY;
+
+      const deltaX = clientX - startX;
+      const deltaY = clientY - startY;
+
+      upgradeCard.style.left = `${startLeft + deltaX}px`;
+      upgradeCard.style.top = `${startTop + deltaY}px`;
+    }
+
+    function stopDrag() {
+      isDragging = false;
+      document.removeEventListener('mousemove', drag);
+      document.removeEventListener('touchmove', drag);
+    }
+  }
 
         // Sidebar toggle logic
         const sidebar = document.getElementById('sidebar');
