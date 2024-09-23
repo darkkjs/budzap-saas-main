@@ -114,7 +114,7 @@ async function generatePayment(instanceKey, chatId, node) {
     }
 }
 
-async function checkPayment(instanceKey, frontendPaymentId) {
+async function checkPayment(instanceKey, frontendPaymentId, chatId) {
     try {
         const user = await User.findOne({ 'whatsappInstances.key': instanceKey });
         console.log('Usuário encontrado:', user);
@@ -142,7 +142,7 @@ async function checkPayment(instanceKey, frontendPaymentId) {
 
         // Salvar o evento de pagamento (pago ou não pago)
         const eventType = isPaid ? 'PAYMENT_PAID' : 'PAYMENT_NOT_PAID';
-        await saveEvent(user._id, payment.payer.email.split('@')[0], eventType, {
+        await saveEvent(user._id, chatId, eventType, {
             amount: payment.transaction_amount,
             paymentId: realPaymentId,
             status: payment.status
@@ -421,7 +421,7 @@ if (state.status === 'waiting_for_input') {
                                 if (!currentNode.paymentToCheck) {
                                     throw new Error('Nenhum pagamento selecionado para verificação');
                                 }
-                                const isPaid = await checkPayment(instanceKey, currentNode.paymentToCheck);
+                                const isPaid = await checkPayment(instanceKey, currentNode.paymentToCheck, chatId);
                                 const nextConnection2 = funnel.connections.find(conn => 
                                     conn.sourceId === currentNode.id && 
                                     (isPaid ? conn.anchors[0] === 'Right' : conn.anchors[0] === 'Bottom')
