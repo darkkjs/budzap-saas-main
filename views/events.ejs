@@ -100,34 +100,51 @@
         let currentPage = 1;
         const itemsPerPage = 10;
 
-        function formatWhatsAppNumber(number) {
-            let cleaned = number.replace("@s.whatsapp.net", "").replace(/\D/g, '');
-            let hasPlus = number.startsWith('+');
-            let countryCode = '';
-            if (cleaned.length > 10) {
-                countryCode = cleaned.match(/^\d{1,3}/)[0];
-                cleaned = cleaned.slice(countryCode.length);
-            }
-            if (countryCode === '55' && cleaned.length === 11) {
-                const areaCode = cleaned.slice(0, 2);
-                const firstPart = cleaned.slice(2, 7);
-                const secondPart = cleaned.slice(7);
-                return `${hasPlus ? '+' : ''}${countryCode} ${areaCode} ${firstPart}-${secondPart}`;
-            } else {
-                const formatted = cleaned.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2-$3');
-                return `${hasPlus ? '+' : ''}${countryCode} ${formatted}`;
-            }
-        }
+
+        // Função para formatar o número de telefone
+const formatPhoneNumber = (num) => {
+  const cleaned = num.replace(/\D/g, '');
+  const ddd = parseInt(cleaned.slice(0, 2));
+  return ddd <= 27 ? cleaned.padStart(13, '55') : cleaned.padStart(12, '55');
+};
+
+const formatarNumeroBrasileiro = (numero) => {
+  numero = numero.replace(/\D/g, '');
+  if (!numero.startsWith('55')) return false;
+  
+  numero = numero.slice(2);
+  const ddd = parseInt(numero.slice(0, 2));
+  if (ddd < 11 || ddd > 99) return false;
+
+  if (ddd <= 27) {
+    numero = numero.length < 11 ? numero.slice(0, 2) + '9' + numero.slice(2) : numero.slice(0, 11);
+  } else {
+    numero = numero.length > 10 ? numero.slice(0, 2) + numero.slice(3).slice(0, 8) : numero;
+    if (numero.length < 10) return false;
+  }
+
+  return '55' + numero;
+};
+
+      
 
         function applyFilters() {
             currentPage = 1;
             fetchEvents();
         }
 
-        function fetchEvents() {
+        async function fetchEvents() {
             const eventType = document.getElementById('eventType').value;
             const dateFrom = document.getElementById('dateFrom').value;
             const dateTo = document.getElementById('dateTo').value;
+
+
+            const formattedNumber = formatPhoneNumber(event.targetId.replace("@s.whatsapp.net", ""));
+    
+
+    const numfinal = formattedNumber.startsWith('55') 
+      ? await formatarNumeroBrasileiro(formattedNumber)
+      : formattedNumber;
 
             fetch(`/api-events/events?page=${currentPage}&limit=${itemsPerPage}&eventType=${eventType}&dateFrom=${dateFrom}&dateTo=${dateTo}`)
                 .then(response => response.json())
@@ -138,7 +155,7 @@
                         const row = document.createElement('tr');
                         row.className = index % 2 === 0 ? 'bg-gray-50 hover:bg-gray-100 transition duration-300' : 'bg-white hover:bg-gray-100 transition duration-300';
                         row.innerHTML = `
-                            <td class="py-3 px-6 text-left whitespace-nowrap">${formatWhatsAppNumber(event.targetId)}</td>
+                            <td class="py-3 px-6 text-left whitespace-nowrap">${numfinal}</td>
                             <td class="py-3 px-6 text-left">${getEventTypeIcon(event.eventType)} ${getEventTypeLabel(event.eventType)}</td>
                             <td class="py-3 px-6 text-left">${event.data.amount ? `R$ ${event.data.amount.toFixed(2)}` : '-'}</td>
                             <td class="py-3 px-6 text-left">${formatDate(event.timestamp)}</td>
