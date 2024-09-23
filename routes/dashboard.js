@@ -13,7 +13,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
   try {
     if (!req.user) {
       console.log('User is undefined in dashboard route');
-      return res.redirect('https://promocaoagora.store/software/');
+      return res.redirect('https://app.hocketzap.com');
     }
     console.log('Rendering dashboard for user:', req.user.username);
 

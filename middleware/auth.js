@@ -21,7 +21,12 @@ module.exports = {
           return next();
         } else {
           await updateToFreePlan(user);
-          await avisar(req.user.phone, `Ei ${req.user.name}, seu plano manual expirou. Que tal renovar?`);
+          try {
+            await avisar(req.user.phone, `Ei ${req.user.name}, seu plano manual expirou. Que tal renovar?`);
+          } catch(e) {
+            console.log("Erro ao avisar numero")
+          }
+          
           return next();
         }
       }
@@ -48,7 +53,7 @@ module.exports = {
 
       return next();
     }
-    res.redirect('https://promocaoagora.store/software/');
+    res.redirect('https://app.hocketzap.com');
   },
   ensureAdmin: (req, res, next) => {
     if (req.isAuthenticated() && req.user.role === 'admin' && req.session.isAdmin) {

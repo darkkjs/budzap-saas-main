@@ -56,7 +56,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
   try {
     if (!req.user) {
       console.log('User is undefined in dashboard route');
-      return res.redirect('https://promocaoagora.store/software/');
+      return res.redirect('https://app.hocketzap.com');
     }
     console.log('Rendering dashboard for user:', req.user.username);
     res.render('dashboard', { user: req.user });
@@ -776,7 +776,7 @@ router.post('/register', [
     if (!validationKey) {
 
       try {
-        await sendTextMessage(phone, `Eii ${name}, para criar sua conta na budzap você precisa ter um código de ativação!\n\nℹ️ *Esse código de ativação é necessário para ativar sua conta.*\n\n❌  Parece que você não digitou o código, ou o código que você digitou é invalido"\n\nNão tem um código de ativação? 👇\n\nAssine um plano da budzap por aqui: https://promocaoagora.store/software/zapp \n\n✅ _Ao assinar um plano pelo site acima, você recebera o seu codigo de ativação para ativar sua conta de acordo com o plano que você adquiriu_`)
+        await sendTextMessage(phone, `Eii ${name}, para criar sua conta na budzap você precisa ter um código de ativação!\n\nℹ️ *Esse código de ativação é necessário para ativar sua conta.*\n\n❌  Parece que você não digitou o código, ou o código que você digitou é invalido"\n\nNão tem um código de ativação? 👇\n\nAssine um plano da budzap por aqui: https://app.hocketzap.comzapp \n\n✅ _Ao assinar um plano pelo site acima, você recebera o seu codigo de ativação para ativar sua conta de acordo com o plano que você adquiriu_`)
       } catch(e) {
      
         if (e.response && e.response.data) {
