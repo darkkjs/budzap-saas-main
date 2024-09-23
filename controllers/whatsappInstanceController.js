@@ -39,7 +39,7 @@ exports.createInstance = async (req, res) => {
             browser: "Ubuntu",
             webhook: true,
             base64: true,
-            webhookUrl: `https://budzap.online/webhook/${key}`,
+            webhookUrl: `https://hocketzap.com/webhook/${key}`,
             webhookEvents: ["messages.upsert"],
             ignoreGroups: false,
             messagesRead: false
