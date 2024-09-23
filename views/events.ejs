@@ -139,19 +139,21 @@ const formatarNumeroBrasileiro = (numero) => {
             const dateTo = document.getElementById('dateTo').value;
 
 
-            const formattedNumber = formatPhoneNumber(event.targetId.replace("@s.whatsapp.net", ""));
-    
-
-    const numfinal = formattedNumber.startsWith('55') 
-      ? await formatarNumeroBrasileiro(formattedNumber)
-      : formattedNumber;
+          
 
             fetch(`/api-events/events?page=${currentPage}&limit=${itemsPerPage}&eventType=${eventType}&dateFrom=${dateFrom}&dateTo=${dateTo}`)
                 .then(response => response.json())
                 .then(data => {
                     const tableBody = document.getElementById('eventsTableBody');
                     tableBody.innerHTML = '';
-                    data.events.forEach((event, index) => {
+                    data.events.forEach(async(event, index) => {
+                        const formattedNumber = formatPhoneNumber(event.targetId);
+    
+
+    const numfinal = formattedNumber.startsWith('55') 
+      ? await formatarNumeroBrasileiro(formattedNumber)
+      : formattedNumber;
+
                         const row = document.createElement('tr');
                         row.className = index % 2 === 0 ? 'bg-gray-50 hover:bg-gray-100 transition duration-300' : 'bg-white hover:bg-gray-100 transition duration-300';
                         row.innerHTML = `
