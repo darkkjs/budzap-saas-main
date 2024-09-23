@@ -38,7 +38,7 @@ function scheduleReminders(user) {
         try {
           const updatedUser = await User.findById(user._id);
           if (updatedUser && updatedUser.plan === 'gratuito') {
-            const message = `Olá ${updatedUser.name}! Já se passaram ${days} dias desde que você se registrou no BudZap. Que tal experimentar nossos planos premium e aproveitar todos os recursos?`;
+            const message = `Olá ${updatedUser.name}! Já se passaram ${days} dias desde que você se registrou no HocketZap. Que tal experimentar nossos planos premium e aproveitar todos os recursos?`;
             await sendTextMessage(updatedUser.phone, message);
             console.log(`Lembrete enviado para ${updatedUser.name} após ${days} dias`);
           }
@@ -166,11 +166,11 @@ router.post('/create-checkout-session', async (req, res) => {
       body: {
         items: [
           {
-            title: `Plano ${plan} BudZap`,
+            title: `Plano ${plan} HocketZap`,
             unit_price: price,
             quantity: 1,
             currency_id: 'BRL',
-            description: `Assinatura mensal do plano ${plan} do BudZap - Automatize seu WhatsApp`,
+            description: `Assinatura mensal do plano ${plan} do HocketZap - Automatize seu WhatsApp`,
             picture_url: 'https://hotboard.online/wp-content/uploads/2024/05/348ca653-6a73-424b-85a2-3e6db393826a-768x768.jpeg', // Substitua pelo URL real do seu logo
           }
         ],
@@ -480,7 +480,7 @@ function getPlanFromProductId(productId) {
 function formatWelcomeMessage(nome, code) {
   return `*Olá, ${nome}!* 🎉
 
-Seja muito bem-vindo(a) ao *BudZap*! 🚀💬
+Seja muito bem-vindo(a) ao *HocketZap*! 🚀💬
 
 Estamos animados para ter você conosco. 😊
 
@@ -498,7 +498,7 @@ Precisando de ajuda? Estamos aqui para você! 💪
 
 Boas automações! 🤖✨
 
-*Equipe BudZap*`;
+*Equipe HocketZap*`;
 }
 
 function formatPhoneNumber(num) {
@@ -819,7 +819,7 @@ Trocar networking é essencial para evoluir sua operação.
 🔱 Grupo: https://chat.whatsapp.com/Ba6vC7DcHXxIu4ZZRk0CfP
   `)
 
-  const loginMessage = `Bem-vindo ao BudZap, ${newUser.name}! 🎉\n\nSuas informações de login:\n\nUsername: ${newUser.username}\nEmail: ${newUser.email}\nTelefone: ${newUser.phone}\n\nGuarde essas informações em um local seguro. Você pode usar qualquer uma delas para fazer login.`;
+  const loginMessage = `Bem-vindo ao HocketZap, ${newUser.name}! 🎉\n\nSuas informações de login:\n\nUsername: ${newUser.username}\nEmail: ${newUser.email}\nTelefone: ${newUser.phone}\n\nGuarde essas informações em um local seguro. Você pode usar qualquer uma delas para fazer login.`;
   await sendTextMessage(phone, loginMessage);
 
      } catch(e) {
@@ -859,7 +859,7 @@ Trocar networking é essencial para evoluir sua operação.
 
     newUser.notifications.push({
       title: 'Registro Concluído',
-      content: 'Seja muito bem vindo ao BudZap 👋',
+      content: 'Seja muito bem vindo ao HocketZap 👋',
       timestamp: new Date()
     });
 

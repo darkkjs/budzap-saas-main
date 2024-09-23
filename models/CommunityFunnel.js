@@ -18,7 +18,9 @@ const communityFunnelSchema = new mongoose.Schema({
     downloads: { type: Number, default: 0 },
     comments: [commentSchema],
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
+    price: { type: Number, default: 0 },  // Adicionado campo de preço
+    requiredPlan: { type: String, enum: ['', 'basic', 'pro', 'enterprise'], default: '' }  // Adicionado campo de plano requerido
 });
 
 communityFunnelSchema.index({ name: 'text', description: 'text', tags: 'text' });

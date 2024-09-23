@@ -6,11 +6,17 @@ const funnelController = require('../controllers/funnelController');
 const { ensureAuthenticated } = require('../middleware/auth');
 const User = require('../models/User'); // Assegure-se de que o caminho para o modelo User está correto
 const redisClient = require('../config/redisConfig');
+const { getActiveFunnels } = require('../utils/funnelHelper');
+const communityFunnelController = require('../controllers/communityFunnelController');
 
 // Rota para a página de listagem de funis
 router.get('/', ensureAuthenticated, (req, res) => {
     res.render('funnels', { title: 'Funil', user: req.user });
 });
+
+
+router.post('/api/community/purchase/:funnelId', ensureAuthenticated, communityFunnelController.initiatePurchase);
+
 
 router.get('/status', async (req, res) => {
     try {
@@ -103,24 +109,42 @@ router.post('/api/create', ensureAuthenticated, funnelController.createFunnel);
 router.put('/api/update/:id', ensureAuthenticated, funnelController.updateFunnel);
 router.delete('/api/delete/:id', ensureAuthenticated, funnelController.deleteFunnel);
 
-const communityFunnelController = require('../controllers/communityFunnelController');
 
 
 // Exportação e importação
 router.get('/api/export/:id', ensureAuthenticated, funnelController.exportFunnel);
 router.post('/api/import', ensureAuthenticated, funnelController.importFunnel);
 
-router.get('/community', ensureAuthenticated, (req, res) => {
-    const escapeJSON = (json) => {
-        return JSON.stringify(json).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
-    };
-    
-    // Quando você estiver renderizando a página:
-    res.render('community-funnels', {
-        user: escapeJSON(req.user),
-        // ... outras variáveis
-    });
+router.get('/community', ensureAuthenticated, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const userKey = `user:${userId}`;
+        const funnelsKey = `user:${userId}:funnels`;
+
+        const [userPlan, funnelIds] = await Promise.all([
+            redisClient.hget(userKey, 'plan'),
+            redisClient.smembers(funnelsKey)
+        ]);
+
+        const funnelsPromises = funnelIds.map(funnelId => 
+            redisClient.get(`funnel:${funnelId}`).then(JSON.parse)
+        );
+        const funnels = await Promise.all(funnelsPromises);
+
+        const activeFunnels = getActiveFunnels(funnels, userPlan);
+
+        res.render('community-funnels', {
+            user: req.user,
+            funnels: activeFunnels,
+            title: 'Comunidade de Funis'
+        });
+    } catch (error) {
+        console.error('Erro ao carregar funis do usuário:', error);
+        res.status(500).render('error', { message: 'Erro ao carregar funis do usuário' });
+    }
 });
+
+
 router.get('/api/community/list', ensureAuthenticated, communityFunnelController.listCommunityFunnels);
 router.post('/api/community/share', ensureAuthenticated, communityFunnelController.shareFunnel);
 router.get('/api/community/download/:id', ensureAuthenticated, communityFunnelController.downloadCommunityFunnel);

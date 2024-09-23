@@ -48,7 +48,7 @@ router.post('/send-reminder', ensureAdmin, async (req, res) => {
 
         const message = `Olá ${user.name}! 👋
 
-Esperamos que esteja aproveitando ao máximo seu plano ${user.plan} do BudZap. 🚀
+Esperamos que esteja aproveitando ao máximo seu plano ${user.plan} do HocketZap. 🚀
 
 Gostaríamos de lembrá-lo que seu plano atual expirará em ${user.daysRemaining} dias. Para continuar aproveitando todos os benefícios e recursos exclusivos, não se esqueça de renovar sua assinatura.
 
@@ -61,10 +61,10 @@ Para renovar, é fácil! Basta acessar sua conta em https://budzap.online e clic
 
 Tem alguma dúvida ou precisa de ajuda? Estamos aqui para você! Responda esta mensagem ou entre em contato pelo nosso suporte.
 
-Obrigado por fazer parte da família BudZap! 🎉
+Obrigado por fazer parte da família HocketZap! 🎉
 
 Atenciosamente,
-Equipe BudZap`;
+Equipe HocketZap`;
 console.log(user.phone, message)
         await avisar(user.phone, message);
         res.json({ success: true, message: 'Lembrete enviado com sucesso' });

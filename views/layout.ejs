@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= typeof title !== 'undefined' ? title : 'BudZap' %></title>
+    <title><%= typeof title !== 'undefined' ? title : 'HocketZap' %></title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -133,7 +133,7 @@
                 <div class="p-5">
                     <div class="flex items-center justify-center mb-6">
                         <div class="w-20 h-20 overflow-hidden rounded-full border-2 border-white shadow-lg">
-                            <img src="<%= (user && user.profileImage) || '/img/logo1.jpeg' %>" alt="BudZap Mascot" class="w-full h-full object-cover">
+                            <img src="<%= (user && user.profileImage) || '/img/logo1.jpeg' %>" alt="HocketZap Mascot" class="w-full h-full object-cover">
                         </div>
                     </div>
                     <div class="text-center mb-6">
@@ -202,7 +202,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                                 </svg>
                             </button>
-                            <span class="ml-2 text-xl font-bold text-gradient"><%= typeof title !== 'undefined' ? title : 'BudZap' %></span>
+                            <span class="ml-2 text-xl font-bold text-gradient"><%= typeof title !== 'undefined' ? title : 'HocketZap' %></span>
                         </div>
                         <div class="flex items-center">
                             <button id="themeToggle" class="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:shadow-outline transition-colors duration-200">
@@ -241,7 +241,7 @@
     <% if (user.plan === 'gratuito') { %>
   <div id="upgradeCard" class="fixed bottom-4 right-4 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-hidden transition-all duration-300 ease-in-out transform hover:scale-105">
     <div class="bg-gradient-to-r from-purple-500 to-indigo-600 p-4">
-      <h3 class="text-xl font-bold text-white mb-2">Desbloqueie o Poder Total do BudZap! 🚀</h3>
+      <h3 class="text-xl font-bold text-white mb-2">Desbloqueie o Poder Total do HocketZap! 🚀</h3>
       <p class="text-white text-sm">Você está perdendo recursos incríveis!</p>
     </div>
     <div class="p-4">

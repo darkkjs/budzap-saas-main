@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Integrações - BudZap</title>
+    <title>Dashboard de Integrações - HocketZap</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
     <style>
@@ -65,26 +65,25 @@
         <div class="px-4 py-6 sm:px-0">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                <!-- ElevenLabs Card -->
-<div class="integration-card bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-2xl transition-shadow duration-300">
-    <div class="px-6 py-6">
-        
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center">
-                <div class="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full p-3 shadow-md">
-                    <i class="fas fa-microphone-alt text-white text-2xl"></i>
-                </div>
-                <div class="ml-4">
-                    <h3 class="text-xl font-semibold text-gray-900">ElevenLabs</h3>
-                    <p class="text-sm text-purple-600 font-medium">Geração de Voz AI Avançada</p>
-                    <% if (!checkFeatureAccess(user.plan, 'voiceGenerator')) { %>
-                        <p class="text-red-500 text-sm mt-2">Seu plano atual não inclui acesso ao gerador de voz.</p>
-                    <% } %>
-                </div>
-            </div>
-            <span class="px-3 py-1 text-sm font-semibold text-green-800 bg-green-100 rounded-full flex items-center">
-                <i class="fas fa-check-circle mr-1"></i> Ativo
-            </span>
-        </div>
+               <div class="integration-card bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-2xl transition-shadow duration-300">
+                <div class="px-6 py-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full p-3 shadow-md">
+                                <i class="fas fa-microphone-alt text-white text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-semibold text-gray-900">ElevenLabs</h3>
+                                <p class="text-sm text-purple-600 font-medium">Geração de Voz AI Avançada</p>
+                                <% if (!checkFeatureAccess(user.plan, 'voiceGenerator')) { %>
+                                    <p class="text-red-500 text-sm mt-2">Seu plano atual não inclui acesso ao gerador de voz.</p>
+                                <% } %>
+                            </div>
+                        </div>
+                        <span id="elevenlabsStatus" class="px-3 py-1 text-sm font-semibold text-gray-800 bg-gray-200 rounded-full flex items-center">
+                            <i class="fas fa-question-circle mr-1"></i> Não configurado
+                        </span>
+                    </div>
         <div class="mt-4 space-y-2">
             <p class="text-sm text-gray-600 leading-relaxed">
                 Revolucione sua comunicação com vozes AI realistas e personalizáveis:
@@ -254,7 +253,7 @@
                     </h3>
                     <div class="mt-2">
                         <p class="text-sm text-gray-500">
-                            Estamos trabalhando duro para trazer novas integrações emocionantes para a plataforma BudZap. Fique atento para atualizações em breve!
+                            Estamos trabalhando duro para trazer novas integrações emocionantes para a plataforma HocketZap. Fique atento para atualizações em breve!
                         </p>
                     </div>
                 </div>
@@ -298,6 +297,31 @@
 
     // Chamar a função ao carregar a página
     document.addEventListener('DOMContentLoaded', updateMercadoPagoAppStatus);
+
+
+    function updateElevenLabsStatus() {
+        axios.get('/integrations/elevenlabs/check-config')
+            .then(response => {
+                const statusElement = document.getElementById('elevenlabsStatus');
+                if (response.data.active) {
+                    statusElement.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Ativo';
+                    statusElement.className = 'px-3 py-1 text-sm font-semibold text-green-800 bg-green-100 rounded-full flex items-center';
+                } else if (response.data.configured) {
+                    statusElement.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i> Configurado, não testado';
+                    statusElement.className = 'px-3 py-1 text-sm font-semibold text-yellow-800 bg-yellow-100 rounded-full flex items-center';
+                } else {
+                    statusElement.innerHTML = '<i class="fas fa-question-circle mr-1"></i> Não configurado';
+                    statusElement.className = 'px-3 py-1 text-sm font-semibold text-gray-800 bg-gray-200 rounded-full flex items-center';
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao verificar status do ElevenLabs:', error);
+            });
+    }
+
+    // Chamar a função ao carregar a página
+
+    document.addEventListener('DOMContentLoaded', updateElevenLabsStatus);
 
     // Atualizar a função de configuração para chamar updateMercadoPagoAppStatus após a configuração
     document.getElementById('configureMPApp').addEventListener('click', async () => {

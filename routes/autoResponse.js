@@ -33,7 +33,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
 
         res.render('auto-response', { 
             user: req.user, 
-            title: 'Configurar Autoresposta - BudZap',
+            title: 'Configurar Autoresposta - HocketZap',
             funnels: activeFunnels
         });
     } catch (error) {

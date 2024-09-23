@@ -318,7 +318,7 @@ if (state.status === 'waiting_for_input') {
                 case 'randomMessage':
     const randomIndex = Math.floor(Math.random() * currentNode.messages.length);
     await sendTextMessage(instanceKey, currentNode.messages[randomIndex], chatId);
-    await saveAutoResponseMessage(instanceKey, chatId, randomMessage, 'text');
+    await saveAutoResponseMessage(instanceKey, chatId, currentNode.messages[randomIndex], 'text');
     break;
     case 'apiRequest':
         try {

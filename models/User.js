@@ -160,6 +160,10 @@ elevenlabsVoiceId: {
     type: String,
     default: null
 },
+elevenlabsIntegrationActive: {
+  type: Boolean,
+  default: false
+},
 autoResponseCampaigns: [campaignSchema],
 mercadopago: {
   xCsrfToken: String,

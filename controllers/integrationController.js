@@ -113,7 +113,7 @@ async function readTonsConfig() {
 
 exports.checkElevenLabsConfig = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('elevenlabsApiKey elevenlabsVoiceId plan');
+        const user = await User.findById(req.user.id).select('elevenlabsApiKey elevenlabsVoiceId elevenlabsIntegrationActive plan');
         
         if (!user) {
             return res.status(404).json({ error: 'Usuário não encontrado' });
@@ -121,11 +121,15 @@ exports.checkElevenLabsConfig = async (req, res) => {
 
         const hasAccess = checkFeatureAccess(user.plan, 'voiceGenerator');
         const isConfigured = !!(user.elevenlabsApiKey && user.elevenlabsVoiceId);
+        const isActive = user.elevenlabsIntegrationActive;
 
         res.json({
             configured: isConfigured,
+            active: isActive,
             hasAccess: hasAccess,
-            message: isConfigured ? 'ElevenLabs está configurado' : 'ElevenLabs não está configurado',
+            message: isActive ? 'ElevenLabs está ativo e configurado' : 
+                     isConfigured ? 'ElevenLabs está configurado, mas não testado' : 
+                     'ElevenLabs não está configurado',
             planMessage: hasAccess ? null : 'Seu plano atual não inclui acesso ao gerador de voz.'
         });
     } catch (error) {
@@ -310,6 +314,10 @@ exports.testElevenLabsIntegration = async (req, res) => {
 
         res.set('Content-Type', 'audio/mpeg');
         res.send(Buffer.from(response.data, 'binary'));
+
+        user.elevenlabsIntegrationActive = true;
+        await user.save();
+
     } catch (error) {
         console.error('Erro ao testar integração do ElevenLabs:', error);
         res.status(500).json({ error: 'Falha ao testar integração do ElevenLabs' });

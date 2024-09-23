@@ -116,7 +116,8 @@ passport.deserializeUser(async (id, done) => {
 
 const subscriptionRoutes = require('./routes/subscription');
 app.use('/subscription', subscriptionRoutes);
-
+const webhookController = require('./controllers/webhookController');
+app.post('/pagbank-pix', webhookController.handlePagBankPixWebhook);
 
 // Em qualquer arquivo onde você precisa usar essas funções:
 const stripeHelpers = require('./Helpers/stripeHelpers');

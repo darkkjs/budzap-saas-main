@@ -2,6 +2,7 @@
 const CommunityFunnel = require('../models/CommunityFunnel');
 const User = require('../models/User');
 const redisClient = require('../config/redisConfig');
+const UserPurchase = require('../models/UserPurchase');
 
 exports.listCommunityFunnels = async (req, res) => {
     try {
@@ -27,17 +28,27 @@ exports.listCommunityFunnels = async (req, res) => {
             default:
                 sortOption = { createdAt: -1 };
         }
+   // Contar o total de documentos que correspondem à query
+   const total = await CommunityFunnel.countDocuments(query);
 
         const funnels = await CommunityFunnel.find(query)
             .sort(sortOption)
             .skip((page - 1) * limit)
             .limit(Number(limit))
-            .populate('author', 'name profileImage'); // Adicionando profileImage aqui
+            .populate('author', 'name profileImage');
 
-        const total = await CommunityFunnel.countDocuments(query);
+        // Adicionar informação se o funil está liberado para o usuário
+        const funnelsWithAccess = funnels.map(funnel => {
+            const hasAccess = funnel.price === 0 || 
+                              (req.user && req.user.purchasedFunnels && req.user.purchasedFunnels.includes(funnel._id));
+            return {
+                ...funnel.toObject(),
+                hasAccess
+            };
+        });
 
         res.json({
-            funnels,
+            funnels: funnelsWithAccess,
             totalPages: Math.ceil(total / limit),
             currentPage: page
         });
@@ -47,10 +58,53 @@ exports.listCommunityFunnels = async (req, res) => {
     }
 };
 
+
+// Adicione esta nova função para iniciar o processo de compra
+exports.initiatePurchase = async (req, res) => {
+    try {
+        const { funnelId } = req.params;
+        const userId = req.user.id;
+
+        const funnel = await CommunityFunnel.findById(funnelId);
+        if (!funnel) {
+            return res.status(404).json({ error: 'Funil não encontrado' });
+        }
+
+        const purchase = new UserPurchase({
+            userId,
+            funnelId,
+            price: funnel.price,
+            paymentStatus: 'pending'
+        });
+
+        await purchase.save();
+
+        // Aqui você pode integrar com seu sistema de pagamento (por exemplo, gerar QR code PIX)
+        // Por enquanto, vamos apenas simular a geração de um código de pagamento
+        const paymentCode = `PAY-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+        res.json({
+            message: 'Compra iniciada',
+            purchaseId: purchase._id,
+            paymentCode,
+            price: funnel.price
+        });
+    } catch (error) {
+        console.error('Erro ao iniciar compra:', error);
+        res.status(500).json({ error: 'Erro ao iniciar compra' });
+    }
+};
+
 exports.shareFunnel = async (req, res) => {
     try {
-        const { funnelId, name, description, category, tags } = req.body;
+        const { funnelId, name, description, category, tags, price, requiredPlan } = req.body;
         const userId = req.user.id;
+
+
+         // Verificar se o usuário é admin
+         if (price && req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Apenas administradores podem definir preço e plano requerido' });
+        }
 
         // Buscar o funil original do Redis
         const originalFunnelData = await redisClient.get(`funnel:${funnelId}`);
@@ -67,7 +121,9 @@ exports.shareFunnel = async (req, res) => {
             nodes: originalFunnel.nodes,
             connections: originalFunnel.connections,
             category,
-            tags
+            tags,
+            price: price || 0,
+            requiredPlan: requiredPlan || null
         });
 
         await newFunnel.save();
@@ -79,20 +135,94 @@ exports.shareFunnel = async (req, res) => {
     }
 };
 
+
+exports.generatePixPayment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const funnel = await CommunityFunnel.findById(id);
+
+        if (!funnel) {
+            return res.status(404).json({ error: 'Funil não encontrado' });
+        }
+
+        const pixPaymentData = {
+            reference_id: `funnel_${funnel._id}`,
+            customer: {
+                name: req.user.name,
+                email: req.user.email,
+                tax_id: req.user.taxId, // Certifique-se de ter esse campo no modelo de usuário
+            },
+            items: [
+                {
+                    name: funnel.name,
+                    quantity: 1,
+                    unit_amount: funnel.price * 100 // O valor deve ser em centavos
+                }
+            ],
+            qr_codes: [
+                {
+                    amount: {
+                        value: funnel.price * 100
+                    },
+                    expiration_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 horas de validade
+                }
+            ],
+            notification_urls: [
+                `${process.env.BASE_URL}/api/webhooks/pagbank-pix`
+            ]
+        };
+
+        const response = await axios.post('https://sandbox.api.pagseguro.com/orders', pixPaymentData, {
+            headers: {
+                'Authorization': `Bearer ${process.env.PAGBANK_API_TOKEN}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const qrCodeData = response.data.qr_codes[0];
+
+        res.json({
+            qrCodeImage: qrCodeData.links.find(link => link.media === 'image/png').href,
+            pixCode: qrCodeData.text
+        });
+    } catch (error) {
+        console.error('Erro ao gerar QR Code PIX:', error);
+        res.status(500).json({ error: 'Erro ao gerar QR Code PIX' });
+    }
+};
+
 exports.downloadCommunityFunnel = async (req, res) => {
     try {
         const { id } = req.params;
+        const userId = req.user.id;
         const funnel = await CommunityFunnel.findById(id);
 
         if (!funnel) {
             return res.status(404).json({ error: 'Funil da comunidade não encontrado' });
         }
 
-        // Incrementar o contador de downloads
+        // Verificar se o usuário tem o plano necessário
+        if (funnel.requiredPlan && req.user.plan !== funnel.requiredPlan) {
+            return res.status(403).json({ error: 'Você não tem o plano necessário para baixar este funil', requiresPurchase: true });
+        }
+
+        // Verificar se o funil é pago e se o usuário já comprou
+        if (funnel.price > 0) {
+            const hasPurchased = await UserPurchase.findOne({ userId, funnelId: id });
+            if (!hasPurchased) {
+                return res.status(402).json({ 
+                    error: 'Pagamento necessário',
+                    requiresPurchase: true,
+                    funnelId: id,
+                    price: funnel.price
+                });
+            }
+        }
+
+        // Se chegou aqui, o usuário pode baixar o funil
         funnel.downloads += 1;
         await funnel.save();
 
-        // Preparar o funil para download
         const downloadableFunnel = {
             name: funnel.name,
             description: funnel.description,
@@ -102,13 +232,12 @@ exports.downloadCommunityFunnel = async (req, res) => {
             tags: funnel.tags
         };
 
-        res.json(downloadableFunnel);
+        res.json({ funnel: downloadableFunnel, message: 'Download autorizado' });
     } catch (error) {
         console.error('Erro ao baixar funil da comunidade:', error);
         res.status(500).json({ error: 'Erro ao baixar funil da comunidade' });
     }
 };
-
 exports.addComment = async (req, res) => {
     try {
         const { id } = req.params;
@@ -140,6 +269,49 @@ exports.getCategories = async (req, res) => {
         res.status(500).json({ error: 'Erro ao buscar categorias' });
     }
 };
+
+
+exports.checkPaymentStatus = async (req, res) => {
+    try {
+        const { paymentId } = req.params;
+        const payment = await PendingPayment.findById(paymentId);
+
+        if (!payment) {
+            return res.status(404).json({ error: 'Pagamento não encontrado' });
+        }
+
+        // Aqui você integraria com a API da PagSeguro para verificar o status do pagamento
+        // Por enquanto, vamos simular uma verificação aleatória
+        const isPaid = Math.random() < 0.5;
+
+        if (isPaid) {
+            payment.status = 'paid';
+            await payment.save();
+
+            // Permitir o download do funil
+            const funnel = await CommunityFunnel.findById(payment.funnelId);
+            funnel.downloads += 1;
+            await funnel.save();
+
+            const downloadableFunnel = {
+                name: funnel.name,
+                description: funnel.description,
+                nodes: funnel.nodes,
+                connections: funnel.connections,
+                category: funnel.category,
+                tags: funnel.tags
+            };
+
+            return res.json({ status: 'paid', funnel: downloadableFunnel });
+        }
+
+        res.json({ status: payment.status });
+    } catch (error) {
+        console.error('Erro ao verificar status do pagamento:', error);
+        res.status(500).json({ error: 'Erro ao verificar status do pagamento' });
+    }
+};
+
 
 exports.getComments = async (req, res) => {
     try {
