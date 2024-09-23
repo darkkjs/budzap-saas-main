@@ -142,6 +142,11 @@ console.log(planKey)
     }
 });
 
+
+app.get('/events', (req, res) => {
+  res.render('events', {user: req.user});
+});
+
 // Exemplo de uso da função getPlanFromPriceId:
 app.get('/subscription-details', async (req, res) => {
     const subscription = await stripeHelpers.retrieveSubscription(req.user.stripeSubscriptionIde);
@@ -152,6 +157,7 @@ app.get('/subscription-details', async (req, res) => {
 
 
 app.use('/', require('./routes/auth'));
+app.use('/api-events', require('./routes/events'));
 app.use('/profile', require('./routes/profile'));
 app.use('/funcoes', require('./routes/someFeature'));
 app.use('/admin', require('./routes/admin'));

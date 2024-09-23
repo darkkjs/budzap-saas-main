@@ -8,6 +8,7 @@ const AUTO_RESPONSE_EXPIRY = 60 * 60; // 1 hora em segundos
 const { uploadbase64 } = require('../Helpers/uploader'); // Ajuste o caminho conforme necessário
 const github = require('../config/git');
 const { getChats, getMessages, markChatAsRead, saveMessage } = require('../Helpers/redisHelpers');
+const { saveEvent } = require('./eventService');
 
 async function saveAutoResponseMessage(instanceKey, chatId, content, type = 'text') {
     const messageKey = `${chatId}:${Date.now()}`;
@@ -97,6 +98,13 @@ async function generatePayment(instanceKey, chatId, node) {
             if (qrCode) {
                 await sendTextMessage(instanceKey, `${qrCode}`, chatId);
             }
+
+              // Salvar o evento de geração de pagamento
+        await saveEvent(user._id, chatId, 'PAYMENT_GENERATED', {
+            amount: node.amount,
+            description: node.description,
+            paymentId: payment.id
+        });
         }
 
         return node.paymentId;
@@ -269,7 +277,40 @@ if (state.status === 'waiting_for_input') {
 
         try {
             switch (currentNode.type) {
-               
+                case 'collectNumber':
+                    state.variables.currentChatNumber = chatId.split('@')[0];
+                    console.log(`Número do chat coletado: ${state.variables.currentChatNumber}`);
+                    break;
+
+                case 'savePurchaseEvent':
+                    const eventData = {
+                        chatId: state.variables.currentChatNumber,
+                        eventType: currentNode.eventType,
+                        timestamp: Date.now()
+                    };
+                    await saveEvent(eventData);
+                    console.log(`Evento de compra salvo: ${JSON.stringify(eventData)}`);
+                    break;
+
+                case 'sendToOtherNumber':
+                    const targetNumber = replaceVariables(currentNode.targetNumber, state);
+                    const messageContent2 = replaceVariables(currentNode.messageContent, state);
+                    
+                    switch (currentNode.messageType) {
+                        case 'text':
+                            await sendTextMessage(instanceKey, messageContent2, targetNumber);
+                            break;
+                        case 'image':
+                        case 'video':
+                        case 'audio':
+                            await sendMediaMessage(instanceKey, messageContent2, targetNumber, currentNode.messageType, `${currentNode.messageType}.${currentNode.messageType === 'image' ? 'jpg' : currentNode.messageType === 'video' ? 'mp4' : 'mp3'}`, currentNode.caption || '');
+                            break;
+                        default:
+                            console.log(`Tipo de mensagem não suportado: ${currentNode.messageType}`);
+                    }
+                    console.log(`Mensagem enviada para ${targetNumber}`);
+                    break;
+
     case 'aiAgent':
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });

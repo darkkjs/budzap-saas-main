@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventos do Sistema</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/forms@0.5.3/dist/forms.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">Eventos do Sistema</h1>
+
+        <!-- Filtros -->
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <div class="flex flex-wrap -mx-3 mb-6">
+                <div class="w-full md:w-1/4 px-3 mb-6 md:mb-0">
+                    <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="eventType">
+                        Tipo de Evento
+                    </label>
+                    <select id="eventType" class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                        <option value="">Todos</option>
+                        <option value="PAYMENT_GENERATED">Pagamento Gerado</option>
+                        <!-- Adicione mais opções conforme necessário -->
+                    </select>
+                </div>
+                <div class="w-full md:w-1/4 px-3">
+                    <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="dateFrom">
+                        Data Inicial
+                    </label>
+                    <input id="dateFrom" type="date" class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                </div>
+                <div class="w-full md:w-1/4 px-3">
+                    <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="dateTo">
+                        Data Final
+                    </label>
+                    <input id="dateTo" type="date" class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                </div>
+                <div class="w-full md:w-1/4 px-3 flex items-end">
+                    <button onclick="applyFilters()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Eventos -->
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Alvo (WhatsApp)</th>
+                        <th class="py-3 px-6 text-left">Tipo de Evento</th>
+                        <th class="py-3 px-6 text-left">Valor</th>
+                        <th class="py-3 px-6 text-left">Data e Hora</th>
+                    </tr>
+                </thead>
+                <tbody id="eventsTableBody">
+                    <!-- Os eventos serão inseridos aqui dinamicamente -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação -->
+        <div class="flex justify-center">
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <button id="prevPage" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    Anterior
+                </button>
+                <button id="nextPage" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    Próxima
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        function formatWhatsAppNumber(number) {
+            // Implemente a formatação do número do WhatsApp aqui
+            return number;
+        }
+
+        function applyFilters() {
+            currentPage = 1;
+            fetchEvents();
+        }
+
+        function fetchEvents() {
+            const eventType = document.getElementById('eventType').value;
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+
+            fetch(`/api-events/events?page=${currentPage}&limit=${itemsPerPage}&eventType=${eventType}&dateFrom=${dateFrom}&dateTo=${dateTo}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('eventsTableBody');
+                    tableBody.innerHTML = '';
+                    data.events.forEach(event => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="py-3 px-6 text-left">${formatWhatsAppNumber(event.targetId)}</td>
+                            <td class="py-3 px-6 text-left">${event.eventType}</td>
+                            <td class="py-3 px-6 text-left">${event.data.amount ? `R$ ${event.data.amount.toFixed(2)}` : '-'}</td>
+                            <td class="py-3 px-6 text-left">${new Date(event.timestamp).toLocaleString()}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    document.getElementById('prevPage').disabled = currentPage === 1;
+                    document.getElementById('nextPage').disabled = data.events.length < itemsPerPage;
+                })
+                .catch(error => console.error('Erro ao carregar eventos:', error));
+        }
+
+        document.getElementById('prevPage').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchEvents();
+            }
+        });
+
+        document.getElementById('nextPage').addEventListener('click', () => {
+            currentPage++;
+            fetchEvents();
+        });
+
+        // Carregar eventos iniciais
+        fetchEvents();
+    </script>
+</body>
+</html>
