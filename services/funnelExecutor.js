@@ -138,6 +138,16 @@ async function checkPayment(instanceKey, frontendPaymentId) {
         const paymentClient = new mercadopago.Payment(client);
 
         const payment = await paymentClient.get({ id: realPaymentId });
+        const isPaid = payment.status === 'approved';
+
+        // Salvar o evento de pagamento (pago ou não pago)
+        const eventType = isPaid ? 'PAYMENT_PAID' : 'PAYMENT_NOT_PAID';
+        await saveEvent(user._id, payment.payer.email.split('@')[0], eventType, {
+            amount: payment.transaction_amount,
+            paymentId: realPaymentId,
+            status: payment.status
+        });
+        
         console.log('Resposta da verificação de pagamento:', payment);
         return payment.status === 'approved';
     } catch (error) {
