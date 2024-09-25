@@ -204,7 +204,7 @@ async function setStatus(instanceKey, status, chatId, duration) {
 
 async function addToGroup(instanceKey, groupId, userId) {
     try {
-        await axios.post('https://budzap.online/group/invite', {
+        await axios.post('https://hocketzap.com/group/invite', {
             instanceKey,
             id: groupId,
             users: [userId]
@@ -216,7 +216,7 @@ async function addToGroup(instanceKey, groupId, userId) {
 
 async function removeFromGroup(instanceKey, groupId, userId) {
     try {
-       const response = await axios.post('https://budzap.online/group/remove', {
+       const response = await axios.post('https://hocketzap.com/group/remove', {
             instanceKey,
             id: groupId,
             users: [userId]

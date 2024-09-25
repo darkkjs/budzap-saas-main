@@ -134,8 +134,8 @@ router.post('/create-checkout-session', async (req, res) => {
         }
       ],
       mode: 'subscription',
-      success_url: `https://budzap.online/update-user-plan?userId=${userId}&plan=${plan}`,
-      cancel_url: `https://budzap.online/dashboard`
+      success_url: `https://hocketzap.com/update-user-plan?userId=${userId}&plan=${plan}`,
+      cancel_url: `https://hocketzap.com/dashboard`
     });
 
     res.json({ id: session.id });
@@ -189,9 +189,9 @@ router.post('/create-checkout-session', async (req, res) => {
           installments: 1
         },
         back_urls: {
-          success: `https://budzap.online/update-user-plan?userId=${userId}&plan=${plan}`,
-          failure: `https://budzap.online/dashboard`,
-          pending: `https://budzap.online/update-user-plan?userId=${userId}&plan=${plan}`
+          success: `https://hocketzap.com/update-user-plan?userId=${userId}&plan=${plan}`,
+          failure: `https://hocketzap.com/dashboard`,
+          pending: `https://hocketzap.com/update-user-plan?userId=${userId}&plan=${plan}`
         },
         auto_return: 'approved',
         external_reference: userId,
@@ -806,7 +806,7 @@ Sua conta no Budzap tá prontinha e você já tá no plano gratuito. 💸
     
 Quer começar a automatizar sua operação? É só escolher um plano e começar a escalar! 🚀
     
-👉 Clique aqui para mudar de plano: https://budzap.online/change-plan
+👉 Clique aqui para mudar de plano: https://hocketzap.com/change-plan
     
 Assim que você escolher um plano, sua conta já vai ser ativada automaticamente. Fácil, né? 😎
     

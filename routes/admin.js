@@ -57,7 +57,7 @@ Ao renovar agora, você garante:
 ✅ Acesso ininterrupto às nossas ferramentas avançadas
 ✅ Suporte prioritário da nossa equipe
 
-Para renovar, é fácil! Basta acessar sua conta em https://budzap.online e clicar em "Renovar Plano".
+Para renovar, é fácil! Basta acessar sua conta em https://hocketzap.com e clicar em "Renovar Plano".
 
 Tem alguma dúvida ou precisa de ajuda? Estamos aqui para você! Responda esta mensagem ou entre em contato pelo nosso suporte.
 

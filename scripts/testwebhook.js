@@ -2,7 +2,7 @@ const axios = require('axios');
 const { faker } = require('@faker-js/faker');
 
 // Configuração
-const WEBHOOK_URL = 'https://budzap.online/app/webhook/dasdaa'; // Ajuste a URL conforme necessário
+const WEBHOOK_URL = 'https://hocketzap.com/app/webhook/dasdaa'; // Ajuste a URL conforme necessário
 const NUM_MESSAGES = 5; // Número de mensagens a serem enviadas
 
 // Função para gerar um chat fictício
