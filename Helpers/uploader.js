@@ -72,8 +72,8 @@ async function uploadMediaToGithub(file, type, github) {
     mediaUrl = response.data.content.download_url;
     console.log(`${type} hospedado com sucesso no GitHub:`, mediaUrl);
   } catch (error) {
-    console.error(`Erro ao hospedar o arquivo no GitHub:`, error);
-    throw error;
+    console.error(`Erro ao hospedar o arquivo no GitHub:`)
+    //throw error;
   }
 
   return mediaUrl;
@@ -115,8 +115,8 @@ async function uploadbase64(base64File, type, github) {
     mediaUrl = response.data.content.download_url;
     console.log(`${type} hospedado com sucesso no GitHub:`, mediaUrl);
   } catch (error) {
-    console.error(`Erro ao hospedar o arquivo no GitHub:`, error);
-    throw error;
+    console.error(`Erro ao hospedar o arquivo no GitHub:`)
+   // throw error;
   }
 
   return mediaUrl;
