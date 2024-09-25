@@ -14,7 +14,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 async function getChatInfo(event, isGroup) {
   if (isGroup) {
     try {
-      const response = await axios.get(`https://budzap.shop/group/getallgroups`, {
+      const response = await axios.get(`http://localhost:3333/group/getallgroups`, {
         params: { key: event.instanceKey }
     });
       const groups = response.data;

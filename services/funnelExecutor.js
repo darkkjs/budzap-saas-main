@@ -321,6 +321,109 @@ if (state.status === 'waiting_for_input') {
                     console.log(`Mensagem enviada para ${targetNumber}`);
                     break;
 
+                    case 'nameExtractor':
+    const { GoogleGenerativeAI } = require("@google/generative-ai");
+    const apiKey = process.env.GEMINI_API_KEY;
+    const genAI4 = new GoogleGenerativeAI(apiKey);
+
+
+    const aiPrompt = replaceVariables(currentNode.aiPrompt, state);
+    console.log("Prompt para extração de nome:", aiPrompt);
+
+    const model4 = genAI4.getGenerativeModel({
+        model: "gemini-1.5-flash",
+        systemInstruction: "Irei te fornecer uma frase e quero que voce extraia o nome (independe do sexo ou nacionalidade) que contenha nela (caso contenha)",
+      });
+      
+      const generationConfig = {
+        temperature: 1,
+        topP: 0.95,
+        topK: 64,
+        maxOutputTokens: 8192,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            response: {
+              type: "string"
+            }
+          }
+        },
+      };
+
+      try {
+      const chatSession = model4.startChat({
+        generationConfig,
+     // safetySettings: Adjust safety settings
+     // See https://ai.google.dev/gemini-api/docs/safety-settings
+        history: [
+          {
+            role: "user",
+            parts: [
+              {text: "oi sou o higor\n"},
+            ],
+          },
+          {
+            role: "model",
+            parts: [
+              {text: "```json\n{\"response\": \"higor\"} \n```"},
+            ],
+          },
+          {
+            role: "user",
+            parts: [
+              {text: "kadkaskd\n"},
+            ],
+          },
+          {
+            role: "model",
+            parts: [
+              {text: "```json\n{} \n```"},
+            ],
+          },
+          {
+            role: "user",
+            parts: [
+              {text: "ata, higor.\n"},
+            ],
+          },
+          {
+            role: "model",
+            parts: [
+              {text: "```json\n{\"response\": \"higor\"} \n```"},
+            ],
+          },
+        ],
+      });
+    
+  
+
+  
+// Preparar o prompt substituindo variáveis
+
+  
+
+console.log("PROMPT", aiPrompt);
+const result = await chatSession.sendMessage(aiPrompt);
+const jsonResponse = JSON.parse(result.response.text());
+
+// Verificação adicional para o caso de resposta vazia
+if (jsonResponse.response === undefined || jsonResponse.response === '') {
+    console.log("Nenhum nome encontrado na resposta");
+    state.variables[currentNode.outputVariable] = "undefined";
+} else {
+    const extractedName = jsonResponse.response;
+    state.variables[currentNode.outputVariable] = extractedName;
+    console.log(`Nome extraído: "${extractedName}"`);
+}
+console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
+    } catch (error) {
+        console.error('Erro ao extrair nome:', error);
+        state.variables[currentNode.shortId] = '';
+    }
+    break;
+    
+
     case 'aiAgent':
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -549,6 +652,7 @@ function replaceVariables(content, state) {
         console.error('Content is not a string:', content);
         return content;
     }
+    
     return content.replace(/{{([\w:.]+)}}/g, (match, path) => {
         const [type, key, field] = path.split(':');
         console.log('Replacing variable:', { type, key, field, state }); // Log para debug
@@ -570,10 +674,13 @@ function replaceVariables(content, state) {
             const aiValue = Object.entries(state.variables).find(([nodeId, value]) => nodeId.endsWith(key));
             if (aiValue) {
                 return aiValue[1];
+            } else if (type === 'nameExtractor') {
+                return state.variables[key] || '';
             }
         } else if (state.variables && state.variables[key]) {
             return state.variables[key];
         }
+        
         return match; // Retorna o placeholder original se não encontrar um valor
     });
 }
@@ -602,6 +709,9 @@ function evaluateCondition(conditionNode, state) {
             // Procura pela variável AI usando o shortId
             const shortId = `AI_${varId.substr(-4)}`;
             value = state.variables[shortId];
+        } else if (varType === 'nameExtractor') {
+            // Procura pela variável de nome extraído
+            value = state.variables[varId];
         }
     } else if (conditionNode.inputKey) {
         value = state.userInputs[conditionNode.inputKey];
