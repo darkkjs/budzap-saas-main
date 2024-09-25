@@ -187,6 +187,8 @@ router.post('/:instanceKey', async (req, res) => {
           /*/
   // Iniciar a autoresposta
   const {updateCampaigns, getCampaigns, getAutoResponseReport, getAutoResponseUsage, handleAutoResponse} = require('../controllers/autoResponseController');
+
+  if (!dadoschat.id.includes("@g.us")) {
     await handleAutoResponse(
       req.params.instanceKey,
       dadoschat.id,
@@ -194,6 +196,8 @@ router.post('/:instanceKey', async (req, res) => {
       "webhook"
     );
   
+  }
+    
 
         }
 
