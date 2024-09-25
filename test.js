@@ -1,30 +1,72 @@
-const mongoose = require('mongoose');
-const User = require('./models/User'); // Ajuste o caminho conforme necessário
+//API DE RECEBIMENTO DE PIX E CHECAGEM DE STATUS  DA PAGBANK
+const axios = require("axios")
 
-// Conectar ao banco de dados MongoDB
-mongoose.connect('mongodb+srv://alancalhares123:senha123@cluster0.sgubjmv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('Conectado ao MongoDB');
-}).catch((error) => {
-  console.error('Erro ao conectar ao MongoDB:', error);
-});
 
-// Função para listar todos os usuários com o número de telefone especificado
-async function listarUsuariosPorTelefone(telefone) {
+async function criarPedidoPagSeguro(token, dadosPedido) {
   try {
-    const usuarios = await User.find({ phone: telefone });
-    console.log(`Usuários com o número ${telefone}:`);
-    usuarios.forEach(usuario => {
-      console.log(`- Nome: ${usuario.username}, Email: ${usuario.email}, Telefone: ${usuario.phone}`);
+    const resposta = await axios({
+      method: 'post',
+      url: 'https://api.pagseguro.com/orders',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'accept': 'application/json',
+        'content-type': 'application/json'
+      },
+      data: dadosPedido
     });
-  } catch (error) {
-    console.error('Erro ao buscar usuários:', error);
-  } finally {
-    mongoose.connection.close();
+
+    console.log('Pedido criado com sucesso:', resposta.data);
+    return resposta.data;
+  } catch (erro) {
+    console.error('Erro ao criar pedido:', erro.response ? erro.response.data : erro.message);
+    throw erro;
   }
 }
 
-// Chamar a função passando o número de telefone
-listarUsuariosPorTelefone('5517991134416');
+
+// O erro indica que as credenciais são inválidas. Verifique se o token está correto e atualizado.
+const token = '73009779-42ab-4ff0-80a1-d7fea6b1ba081a5fad904a9c93b17edcc4afad624079c217-100f-42f0-9010-7e20d4fb0d2f';
+
+const dadosPedido = {
+  reference_id: "ex-00001",
+  customer: {
+    name: "Jose da Silva",
+    email: "email@test.com",
+    tax_id: "12345678909",
+    phones: [
+      {
+        country: "55",
+        area: "11",
+        number: "999999999",
+        type: "MOBILE"
+      }
+    ]
+  },
+  items: [
+    {
+      reference_id: "referencia do item",
+      name: "nome do item",
+      quantity: 1,
+      unit_amount: 500
+    }
+  ],
+  shipping: {
+    address: {
+      street: "Avenida Brigadeiro Faria Lima",
+      number: "1384",
+      complement: "apto 12",
+      locality: "Pinheiros",
+      city: "São Paulo",
+      region_code: "SP",
+      country: "BRA",
+      postal_code: "01452002"
+    }
+  },
+  notification_urls: [
+    "https://meusite.com/notificacoes"
+  ]
+};
+
+criarPedidoPagSeguro(token, dadosPedido)
+  .then(resultado => console.log(resultado))
+  .catch(erro => console.error('Erro detalhado:', erro.response ? erro.response.data : erro.message));
