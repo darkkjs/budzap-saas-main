@@ -14,7 +14,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 async function getChatInfo(event, isGroup) {
   if (isGroup) {
     try {
-      const response = await axios.get(`http://localhost:3333/group/getallgroups`, {
+      const response = await axios.get(`https://budzap.shop/group/getallgroups`, {
         params: { key: event.instanceKey }
     });
       const groups = response.data;
@@ -77,7 +77,7 @@ router.post('/:instanceKey', async (req, res) => {
         }
 
         const event = req.body;
-        //console.log(event);
+        console.log(event);
 
         if (event.type === 'message') {
           console.log(`Processando webhook de mensagem para a instancia ${event.instanceKey}`.cyan);

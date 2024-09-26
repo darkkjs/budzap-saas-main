@@ -83,7 +83,7 @@ async function avisar(num, msg) {
     const config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: `http://localhost:3333/message/text?key=${process.env.admtokenapi}`,
+      url: `https://budzap.shop/message/text?key=${process.env.admtokenapi}`,
       headers: { 
         'Content-Type': 'application/json', 
         'Authorization': 'Bearer RANDOM_STRING_HERE', 
