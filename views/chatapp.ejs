@@ -11,17 +11,17 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.33/moment-timezone-with-data.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.33/moment-timezone-with-data.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: {"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a","950":"#172554"}
+                        primary: {"50":"#f0f4f8","100":"#d9e2ec","200":"#bcccdc","300":"#9fb3c8","400":"#829ab1","500":"#627d98","600":"#486581","700":"#334e68","800":"#243b53","900":"#102a43"}
+                    },
+                    fontFamily: {
+                        'sans': ['Poppins', 'sans-serif'],
                     }
-                },
-                fontFamily: {
-                    'sans': ['Inter', 'sans-serif'],
                 }
             }
         }
@@ -30,19 +30,17 @@
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
         :root {
-    --primary-color: #4a90e2;
-    --secondary-color: #f3f4f6;
-    --text-color: #333;
-    --light-text: #777;
-}
+            --primary-color: #627d98;
+            --secondary-color: #f0f4f8;
+            --text-color: #334e68;
+            --light-text: #829ab1;
+        }
 
-body {
-    font-family: 'Inter', sans-serif;
-    color: var(--text-color);
-}
-
-
-      
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-color);
+            background-color: var(--secondary-color);
+        }
 
         #activeFunnelsList {
             max-height: 300px;
@@ -54,7 +52,7 @@ body {
         }
 
         #activeFunnelsList div:hover {
-            background-color: #f3f4f6;
+            background-color: #d9e2ec;
         }
 
         #funnelDetails {
@@ -81,20 +79,44 @@ body {
         }
 
         .audio-player {
-            display: flex;
-            align-items: center;
-            background-color: #f0f0f0;
-            border-radius: 20px;
-            padding: 8px 12px;
-        }
+        display: flex;
+        align-items: center;
+        background-color: #DCF8C6;
+        border-radius: 18px;
+        padding: 10px 15px;
+        width: 100%;
+        max-width: 300px;
+        margin: 5px 0;
+    }
 
-        .audio-player::before {
-            content: '\f028';
-            /* FontAwesome speaker icon */
-            font-family: 'Font Awesome 5 Free';
-            font-weight: 900;
-            margin-right: 8px;
-        }
+    .audio-player-icon {
+        font-size: 24px;
+        color: #075E54;
+        margin-right: 15px;
+        cursor: pointer;
+    }
+
+    .audio-player-progress {
+        flex-grow: 1;
+        height: 4px;
+        background-color: #B3E5FC;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .audio-player-progress-bar {
+        height: 100%;
+        background-color: #075E54;
+        width: 0%;
+    }
+
+    .audio-player-time {
+        font-size: 12px;
+        color: #075E54;
+        margin-left: 10px;
+        white-space: nowrap;
+    }
+
 
         .video-thumbnail {
             position: relative;
@@ -103,7 +125,6 @@ body {
 
         .video-thumbnail::after {
             content: '\f144';
-            /* FontAwesome play icon */
             font-family: 'Font Awesome 5 Free';
             font-weight: 900;
             position: absolute;
@@ -118,7 +139,7 @@ body {
         .document-link {
             display: flex;
             align-items: center;
-            background-color: #f0f0f0;
+            background-color: #d9e2ec;
             border-radius: 8px;
             padding: 8px 12px;
             text-decoration: none;
@@ -155,25 +176,25 @@ body {
         }
 
         .chat-end .chat-bubble {
-    background-color: var(--primary-color);
-    color: white;
-}
+            background-color: var(--primary-color);
+            color: white;
+        }
 
-.chat-start .chat-bubble {
-    background-color: var(--secondary-color);
-}
+        .chat-start .chat-bubble {
+            background-color: var(--secondary-color);
+        }
 
-.message-list {
-    scroll-behavior: smooth;
-}
+        .message-list {
+            scroll-behavior: smooth;
+        }
 
-.chat-item {
-    transition: background-color 0.3s ease;
-}
+        .chat-item {
+            transition: background-color 0.3s ease;
+        }
 
-.chat-item:hover {
-    background-color: rgba(0,0,0,0.05);
-}
+        .chat-item:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
 
         @media (max-width: 768px) {
             #mobileGroupMembersButton {
@@ -182,31 +203,39 @@ body {
         }
 
         .chat-bubble {
-    border-radius: 18px;
-    padding: 10px 15px;
-    max-width: 80%;
-    word-wrap: break-word;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-}
+        border-radius: 18px;
+        padding: 10px 15px;
+        max-width: 80%; /* Aumentado de 70% para 80% */
+        width: fit-content; /* Ajusta a largura ao conteúdo */
+        min-width: 200px; /* Define uma largura mínima */
+        word-wrap: break-word;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
 
-        .chat-bubble.with-media {
-            padding: 4px;
-            overflow: hidden;
-        }
+    .chat-bubble.with-media {
+        padding: 4px;
+        overflow: hidden;
+        max-width: 80%; /* Aumentado para corresponder à bolha de texto */
+        width: 300px; /* Largura fixa para mídia */
+    }
 
-        .media-content {
-            max-width: 100%;
-            height: auto;
-            object-fit: cover;
-            border-radius: 8px;
-            overflow: hidden;
-        }
+
+    .media-content {
+        max-width: 100%;
+        height: auto;
+        object-fit: cover;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
 
         @media (max-width: 768px) {
-            .chat-bubble.with-media {
-                max-width: 80%;
-            }
+            .chat-bubble,
+        .chat-bubble.with-media {
+            max-width: 90%; /* Aumenta ainda mais em telas menores */
+            min-width: 150px; /* Ajusta a largura mínima para telas menores */
+        }
 
             .media-content {
                 width: 100%;
@@ -230,13 +259,13 @@ body {
         }
 
         .chat-end .chat-bubble {
-            background-color: #3b82f6;
+            background-color: #627d98;
             color: white;
         }
 
         .chat-start .chat-bubble {
             background-color: white;
-            color: #1f2937;
+            color: #334e68;
         }
         
         .full-size-media {
@@ -249,12 +278,12 @@ body {
         }
 
         .whitespace-pre-wrap {
-        white-space: pre-wrap;
-    }
+            white-space: pre-wrap;
+        }
 
-    .break-words {
-        word-break: break-word;
-    }
+        .break-words {
+            word-break: break-word;
+        }
 
         .full-size-media-container {
             position: relative;
@@ -322,7 +351,7 @@ body {
         }
 
         .bg-chat-pattern {
-            background-color: #e5ddd5;
+            background-color: #f0f4f8;
             background-image: url("/img/159160.png");
             background-size: cover;
         }
@@ -334,7 +363,7 @@ body {
         }
 
         .chat-item:hover {
-            background-color: #f5f5f5;
+            background-color: #d9e2ec;
             transform: translateY(-2px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
@@ -349,7 +378,7 @@ body {
             right: 20px;
             z-index: 1000;
             animation: slideIn 0.5s ease-out;
-            background-color: #075E54;
+            background-color: #334e68;
             color: white;
             padding: 12px;
             border-radius: 8px;
@@ -383,12 +412,12 @@ body {
         }
 
         .btn-primary {
-            background-color: #4a90e2;
+            background-color: #627d98;
             transition: all 0.3s ease;
         }
 
         .btn-primary:hover {
-            background-color: #3a7bc8;
+            background-color: #486581;
             transform: translateY(-2px);
         }
 
@@ -414,19 +443,19 @@ body {
             flex: 0 0 auto;
             margin-right: 10px;
             padding: 5px 10px;
-            background-color: #4a90e2;
+            background-color: #627d98;
             color: white;
             border-radius: 15px;
             font-size: 12px;
             white-space: nowrap;
         }
 
+        .audio-player {
+            max-width: 90%;
+        }
+        
         @media (max-width: 768px) {
-
-            .chat-bubble {
-                max-width: 80%;
-            }
-
+           
             .chat-container {
                 display: flex;
                 flex-direction: column;
@@ -448,10 +477,7 @@ body {
                 padding: 10px;
             }
 
-            .chat-bubble {
-                max-width: 80%;
-            }
-
+          
             #mobileMessageInput {
                 position: fixed;
                 bottom: 0;
@@ -510,8 +536,7 @@ body {
         <div class="hidden md:flex h-screen">
             <!-- Lista de chats -->
             <div class="w-1/3 bg-white border-r flex flex-col shadow-md">
-                <div
-                    class="p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white flex justify-between items-center">
+                <div class="p-4 bg-gradient-to-r from-primary-500 to-primary-700 text-white flex justify-between items-center">
                     <h1 class="text-2xl font-bold">HocketZap</h1>
                     <div>
                         <button id="refreshButton" class="btn btn-ghost btn-circle">
@@ -523,18 +548,15 @@ body {
                     </div>
                 </div>
                 <div class="p-4">
-                    <input type="text" id="searchChat" placeholder="Buscar chat..."
-                        class="input input-bordered w-full bg-gray-100" />
+                    <input type="text" id="searchChat" placeholder="Buscar chat..." class="input input-bordered w-full bg-gray-100" />
                 </div>
                 <div id="chatList" class="chat-list p-4 space-y-2 flex-grow overflow-y-auto"></div>
             </div>
             <!-- Área de mensagens -->
             <div class="w-2/3 flex flex-col">
-                <div id="chatHeader"
-                    class="p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white flex items-center justify-between">
+                <div id="chatHeader" class="p-4 bg-gradient-to-r from-primary-500 to-primary-700 text-white flex items-center justify-between">
                     <div class="flex items-center">
-                        <img id="chatAvatar" src="https://cdn-icons-png.flaticon.com/512/4792/4792929.png"
-                            alt="Chat Avatar" class="w-12 h-12 rounded-full mr-3 border-2 border-white">
+                        <img id="chatAvatar" src="https://cdn-icons-png.flaticon.com/512/4792/4792929.png" alt="Chat Avatar" class="w-12 h-12 rounded-full mr-3 border-2 border-white">
                         <div>
                             <h2 id="chatName" class="text-xl font-semibold">Selecione um chat</h2>
                             <p id="chatType" class="text-sm"></p>
@@ -551,7 +573,7 @@ body {
                 </div>
                 <div id="messageList" class="message-list flex-grow p-6 bg-chat-pattern overflow-y-auto"></div>
                 <div class="p-2 bg-white border-b">
-                    <input type="text" id="messageSearch" placeholder="Pesquisar mensagens..." class="w-full px-3 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="messageSearch" placeholder="Pesquisar mensagens..." class="w-full px-3 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
                 </div>
                 
                 <div class="p-4 bg-white">
@@ -560,8 +582,7 @@ body {
                         <button id="attachButton" class="btn btn-ghost btn-circle mr-2">
                             <i class="fas fa-paperclip"></i>
                         </button>
-                        <input type="text" id="messageInput" class="input input-bordered flex-grow mr-2 bg-gray-100"
-                            placeholder="Digite uma mensagem">
+                        <input type="text" id="messageInput" class="input input-bordered flex-grow mr-2 bg-gray-100" placeholder="Digite uma mensagem">
                         <button id="sendButton" class="btn btn-circle btn-primary">
                             <i class="fas fa-paper-plane"></i>
                         </button>
@@ -583,8 +604,7 @@ body {
         <div class="md:hidden">
             <!-- Lista de chats (tela inicial) -->
             <div id="mobileChats" class="h-screen flex flex-col">
-                <div
-                    class="p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white flex justify-between items-center">
+                <div class="p-4 bg-gradient-to-r from-primary-500 to-primary-700 text-white flex justify-between items-center">
                     <h1 class="text-2xl font-bold">HocketZap</h1>
                     <div>
                         <button id="mobileRefreshButton" class="btn btn-ghost btn-circle">
@@ -596,22 +616,19 @@ body {
                     </div>
                 </div>
                 <div class="p-2">
-                    <input type="text" id="mobileSearchChat" placeholder="Buscar chat..."
-                        class="input input-bordered w-full bg-gray-100" />
+                    <input type="text" id="mobileSearchChat" placeholder="Buscar chat..." class="input input-bordered w-full bg-gray-100" />
                 </div>
                 <div id="mobileChatList" class="chat-list flex-grow p-2 space-y-2 overflow-y-auto"></div>
             </div>
 
             <!-- Área de mensagens (aparece ao clicar em um chat) -->
             <div id="mobileMessages" class="hidden chat-container flex flex-col h-screen bg-white">
-                <div id="mobileChatHeader"
-                    class="p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white flex items-center justify-between">
+                <div id="mobileChatHeader" class="p-4 bg-gradient-to-r from-primary-500 to-primary-700 text-white flex items-center justify-between">
                     <div class="flex items-center">
                         <button id="backButton" class="mr-2">
                             <i class="fas fa-arrow-left"></i>
                         </button>
-                        <img id="mobileChatAvatar" src="https://cdn-icons-png.flaticon.com/512/4792/4792929.png"
-                            alt="Chat Avatar" class="w-10 h-10 rounded-full mr-3">
+                        <img id="mobileChatAvatar" src="https://cdn-icons-png.flaticon.com/512/4792/4792929.png" alt="Chat Avatar" class="w-10 h-10 rounded-full mr-3">
                         <div>
                             <h2 id="mobileChatName" class="text-xl font-semibold">Selecione um chat</h2>
                             <p id="mobileChatType" class="text-sm"></p>
@@ -634,8 +651,7 @@ body {
                         <button id="mobileAttachButton" class="btn btn-ghost btn-circle mr-2">
                             <i class="fas fa-paperclip"></i>
                         </button>
-                        <input type="text" id="mobileMessageInput"
-                            class="input input-bordered flex-grow mr-2 bg-gray-100" placeholder="Digite uma mensagem">
+                        <input type="text" id="mobileMessageInput" class="input input-bordered flex-grow mr-2 bg-gray-100" placeholder="Digite uma mensagem">
                         <button id="mobileSendButton" class="btn btn-circle btn-primary">
                             <i class="fas fa-paper-plane"></i>
                         </button>
@@ -673,8 +689,7 @@ body {
                     <label class="label cursor-pointer">
                         <span class="label-text">Mudar papel de parede</span>
                     </label>
-                    <input type="file" id="wallpaperInput" accept="image/*"
-                        class="file-input file-input-bordered w-full max-w-xs">
+                    <input type="file" id="wallpaperInput" accept="image/*" class="file-input file-input-bordered w-full max-w-xs">
                 </div>
                 <div class="modal-action">
                     <button id="closeSettingsModal" class="btn">Fechar</button>
@@ -686,17 +701,14 @@ body {
     <audio id="notificationSound" src="https://www.myinstants.com/media/sounds/web_whatsapp.mp3"></audio>
     <audio id="sendSound" src="/media/send.mp3"></audio>
 
-
-    <div id="funnelReportPopup"
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div id="funnelReportPopup" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
         <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
             <div class="mt-3">
                 <div class="flex justify-between items-center border-b pb-3">
-                    <h3 class="text-2xl font-bold text-indigo-700">Relatórios de Funis Ativos</h3>
+                    <h3 class="text-2xl font-bold text-primary-700">Relatórios de Funis Ativos</h3>
                     <button id="closeFunnelReport" class="text-gray-400 hover:text-gray-500">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
@@ -801,12 +813,19 @@ function createMessageHTML(message) {
                     <video src="${message.content}" class="media-content rounded-lg cursor-pointer" onclick="openMediaPopup('${message.content}', 'video')"></video>
                 </div>`;
             break;
-        case 'audio':
-            contentHtml = `
-                <div class="chat-bubble ${bubbleClass} p-1">
-                    <audio src="${message.content}" class="w-full" controls preload="none"></audio>
-                </div>`;
-            break;
+            case 'audio':
+                contentHtml = `
+                    <div class="chat-bubble ${bubbleClass} p-1">
+                        <div class="audio-player">
+                            <i class="fas fa-play audio-player-icon" onclick="toggleAudio(this)"></i>
+                            <div class="audio-player-progress">
+                                <div class="audio-player-progress-bar"></div>
+                            </div>
+                            <span class="audio-player-time">0:00</span>
+                            <audio src="${message.content}" preload="none"></audio>
+                        </div>
+                    </div>`;
+                break;
         case 'document':
             contentHtml = `
                 <div class="chat-bubble ${bubbleClass}">
@@ -843,6 +862,45 @@ function createMessageHTML(message) {
         </div>
     `;
 }
+
+function toggleAudio(icon) {
+        const audioPlayer = icon.closest('.audio-player');
+        const audio = audioPlayer.querySelector('audio');
+        const progressBar = audioPlayer.querySelector('.audio-player-progress-bar');
+        const timeDisplay = audioPlayer.querySelector('.audio-player-time');
+
+        if (audio.paused) {
+            audio.play();
+            icon.classList.replace('fa-play', 'fa-pause');
+            updateAudioProgress(audio, progressBar, timeDisplay);
+        } else {
+            audio.pause();
+            icon.classList.replace('fa-pause', 'fa-play');
+        }
+    }
+
+    function updateAudioProgress(audio, progressBar, timeDisplay) {
+        const updateProgress = () => {
+            const progress = (audio.currentTime / audio.duration) * 100;
+            progressBar.style.width = `${progress}%`;
+            timeDisplay.textContent = formatTime(audio.currentTime);
+        };
+
+        audio.addEventListener('timeupdate', updateProgress);
+        audio.addEventListener('ended', () => {
+            progressBar.style.width = '0%';
+            timeDisplay.textContent = '0:00';
+            audio.currentTime = 0;
+            const icon = audio.closest('.audio-player').querySelector('.audio-player-icon');
+            icon.classList.replace('fa-pause', 'fa-play');
+        });
+    }
+
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
 
 function addChatToList(chat) {
     const chatHTML = createChatHTML(chat);
