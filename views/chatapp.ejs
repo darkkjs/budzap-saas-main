@@ -7,7 +7,10 @@
     <title>HocketZap - Chat</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.33/moment-timezone-with-data.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -25,10 +28,20 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-        }
+        :root {
+    --primary-color: #4a90e2;
+    --secondary-color: #f3f4f6;
+    --text-color: #333;
+    --light-text: #777;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-color);
+}
+
+
+      
 
         #activeFunnelsList {
             max-height: 300px;
@@ -140,6 +153,26 @@
             color: #888;
         }
 
+        .chat-end .chat-bubble {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.chat-start .chat-bubble {
+    background-color: var(--secondary-color);
+}
+
+.message-list {
+    scroll-behavior: smooth;
+}
+
+.chat-item {
+    transition: background-color 0.3s ease;
+}
+
+.chat-item:hover {
+    background-color: rgba(0,0,0,0.05);
+}
 
         @media (max-width: 768px) {
             #mobileGroupMembersButton {
@@ -148,13 +181,13 @@
         }
 
         .chat-bubble {
-        max-width: 90%;
-        word-wrap: break-word;
-        white-space: pre-wrap;
-        padding: 8px 12px;
-        border-radius: 12px;
-        line-height: 1.4;
-    }
+    border-radius: 18px;
+    padding: 10px 15px;
+    max-width: 80%;
+    word-wrap: break-word;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
 
         .chat-bubble.with-media {
             padding: 4px;
@@ -697,6 +730,185 @@
     <div id="emojiPicker" class="hidden absolute bottom-16 right-16 bg-white rounded-lg shadow-xl p-4">
         <div id="emojiList" class="grid grid-cols-8 gap-2"></div>
     </div>
+
+    <script>
+        const socket = io();
+        
+        function joinInstance(instanceKey) {
+            socket.emit('join instance', instanceKey);
+            socket.emit('request initial chats', instanceKey);
+            console.log('Entrando na instância:', instanceKey);
+        }
+        
+        socket.on('connect', () => {
+            console.log('Conectado ao servidor Socket.IO');
+        });
+        
+ socket.on('new message', (data) => {
+    console.log('Nova mensagem recebida:', data);
+    if (data.chatId === currentChatId) {
+        appendMessage(data.message);
+    } else {
+        updateChatInList(data.chatId, data.message);
+    }
+    moveChatToTop(data.chatId);
+});
+
+
+socket.on('new chat', (chat) => {
+    console.log('Novo chat recebido:', chat);
+    addChatToList(chat);
+});
+
+socket.on('chat messages', (data) => {
+    if (data.chatId === currentChatId) {
+        renderMessages(data.messages);
+    }
+});
+
+function appendMessage(message) {
+    const messageHTML = createMessageHTML(message);
+    messageList.insertAdjacentHTML('beforeend', messageHTML);
+    scrollToBottom();
+}
+
+socket.on('chat info', (chat) => {
+    addChatToList(chat);
+});
+
+
+function createMessageHTML(message) {
+    const messageClass = message.fromMe ? 'chat-end' : 'chat-start';
+    const bubbleClass = message.fromMe ? 'bg-blue-500 text-white' : 'bg-white text-gray-800';
+    const formattedTimestamp = moment(message.timestamp * 1000).tz('America/Sao_Paulo').format('DD/MM/YYYY HH:mm:ss');
+
+    let contentHtml = '';
+
+    switch (message.type) {
+        case 'text':
+            contentHtml = `<div class="chat-bubble ${bubbleClass}">${formatTextWithLinks(message.content)}</div>`;
+            break;
+        case 'image':
+            contentHtml = `
+                <div class="chat-bubble ${bubbleClass} p-1">
+                    <img src="${message.content}" alt="Image" class="media-content rounded-lg cursor-pointer" onclick="openMediaPopup('${message.content}', 'image')">
+                </div>`;
+            break;
+        case 'video':
+            contentHtml = `
+                <div class="chat-bubble ${bubbleClass} p-1">
+                    <video src="${message.content}" class="media-content rounded-lg cursor-pointer" onclick="openMediaPopup('${message.content}', 'video')"></video>
+                </div>`;
+            break;
+        case 'audio':
+            contentHtml = `
+                <div class="chat-bubble ${bubbleClass} p-1">
+                    <audio src="${message.content}" class="w-full" controls preload="none"></audio>
+                </div>`;
+            break;
+        case 'document':
+            contentHtml = `
+                <div class="chat-bubble ${bubbleClass}">
+                    <a href="${message.content}" target="_blank" class="flex items-center space-x-2 text-blue-600 hover:underline">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Ver documento</span>
+                    </a>
+                </div>`;
+            break;
+        case 'sticker':
+            contentHtml = `
+                <div class="chat-bubble ${bubbleClass} p-1">
+                    <img src="${message.content}" alt="Sticker" class="max-w-[150px] max-h-[150px]">
+                </div>`;
+            break;
+        default:
+            contentHtml = `<div class="chat-bubble ${bubbleClass}">${formatTextWithLinks(message.content)}</div>`;
+    }
+
+    return `
+        <div class="chat ${messageClass} mb-4">
+            <div class="chat-image avatar">
+                <div class="w-10 rounded-full">
+                    <img src="${message.senderImage || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png'}" alt="${message.sender}">
+                </div>
+            </div>
+            <div class="chat-header text-xs opacity-50 mb-1">
+                ${message.sender}
+                ${formattedTimestamp}
+            </div>
+            <div class="chat-bubble-wrapper">
+                ${contentHtml}
+            </div>
+        </div>
+    `;
+}
+
+function addChatToList(chat) {
+    const chatHTML = createChatHTML(chat);
+    chatList.insertAdjacentHTML('afterbegin', chatHTML);
+    addChatListeners();
+}
+
+function createChatHTML(chat) {
+    const lastMessageContent = getMediaDescription(chat.lastMessageType, chat.lastMessage);
+    const chatTypeIcon = chat.chatType === 'grupo' ? '👥' : '👤';
+    const unreadCount = chat.unreadCount || 0;
+    const unreadClass = unreadCount > 0 ? 'bg-primary-100' : '';
+    const unreadIndicator = unreadCount > 0 ? `<span class="bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full">${unreadCount}</span>` : '';
+
+    return `
+        <div class="chat-item p-3 hover:bg-gray-100 cursor-pointer rounded-lg transition duration-200 ease-in-out ${unreadClass}" data-chat-id="${chat.id}" data-chat-type="${chat.chatType}">
+            <div class="flex items-center space-x-3">
+                <img src="${chat.image || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png'}" alt="${chat.name}" class="w-12 h-12 rounded-full object-cover">
+                <div class="flex-grow min-w-0">
+                    <div class="flex justify-between items-baseline">
+                        <h3 class="font-semibold text-gray-900 truncate">${chatTypeIcon} ${chat.name}</h3>
+                        <span class="text-xs text-gray-500">${new Date(chat.lastMessageTimestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 truncate">${lastMessageContent}</p>
+                </div>
+                ${unreadIndicator}
+            </div>
+        </div>
+    `;
+}
+
+socket.on('initial chats', (initialChats) => {
+    chats = initialChats;
+    renderChats(chats);
+});
+
+
+
+
+        // Função para atualizar a lista de chats com a nova mensagem
+        function updateChatInList(chatId, lastMessage) {
+    const chatElement = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+    if (chatElement) {
+        const lastMessageElement = chatElement.querySelector('.text-sm.text-gray-600');
+        lastMessageElement.textContent = getMediaDescription(lastMessage.type, lastMessage.content);
+      const timestampElement = chatElement.querySelector('.text-xs.text-gray-500');
+      ///  timestampElement.textContent = new Date(lastMessage.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+           const formattedTime = moment.tz(lastMessage.timestamp * 1000, "America/Sao_Paulo").format('HH:mm');
+        timestampElement.textContent = formattedTime;
+
+        const chat = chats.find(c => c.id === chatId);
+        if (chat && chatId !== currentChatId) {
+            chat.unreadCount = (chat.unreadCount || 0) + 1;
+            const unreadIndicator = chatElement.querySelector('.bg-primary-500') || document.createElement('span');
+            unreadIndicator.className = 'bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full';
+            unreadIndicator.textContent = chat.unreadCount;
+            chatElement.querySelector('.flex-grow').appendChild(unreadIndicator);
+        }
+        
+        moveChatToTop(chatId);
+    } else {
+        socket.emit('request chat info', chatId);
+    }
+}
+        </script>
+
     <script>
         const messageSearch = document.getElementById('messageSearch');
     
@@ -888,9 +1100,11 @@
             currentInstanceKey = instanceKey;
             instanceModal.classList.remove('modal-open');
             chatContainer.classList.remove('hidden');
-            loadChats(currentInstanceKey);
+            currentInstanceKey = instanceKey;
+            joinInstance(instanceKey);
+           // loadChats(currentInstanceKey);
             loadUserFunnels();
-            setInterval(() => updateChats(), 5000); // Atualiza a cada 5 segundos
+           // setInterval(() => updateChats(), 5000); // Atualiza a cada 5 segundos
         }
 
         // Função para carregar os funis do usuário
@@ -1249,7 +1463,7 @@
         }
 
         // Carregar chats
-        async function loadChats(instanceKey) {
+       /*/ async function loadChats(instanceKey) {
 
 
     // Seleciona o elemento <nav> pela classe ou qualquer seletor apropriado
@@ -1272,10 +1486,12 @@ if (breadcrumbNav) {
             const response = await fetch(`/chat/chats/${instanceKey}`);
             chats = await response.json();
             renderChats(chats);
-        }
+        }/*/
 
         function renderChats(chatsToRender) {
-    const chatHTML = chatsToRender.map(chat => {
+            const sortedChats = chatsToRender.sort((a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp);
+
+const chatHTML = sortedChats.map(chat => {
         const lastMessageContent = getMediaDescription(chat.lastMessageType, chat.lastMessage);
         const chatTypeIcon = chat.chatType === 'grupo' ? '👥' : '👤';
         const unreadCount = chat.unreadCount || 0;
@@ -1305,7 +1521,7 @@ if (breadcrumbNav) {
 }
 
         // Função para carregar mensagens atualizada
-        async function loadMessages(instanceKey, chatId) {
+     /*/   async function loadMessages(instanceKey, chatId) {
             try {
                 const response = await fetch(`/chat/messages/${instanceKey}/${chatId}`);
                 const messages = await response.json();
@@ -1315,7 +1531,11 @@ if (breadcrumbNav) {
                 console.error('Erro ao carregar mensagens:', error);
                 showPopup('Erro ao carregar mensagens', 'error');
             }
-        }
+        }/*/
+
+        function loadMessages(instanceKey, chatId) {
+    socket.emit('request chat messages', instanceKey, chatId);
+}
 
         async function markChatAsRead(chatId) {
             try {
@@ -1327,28 +1547,39 @@ if (breadcrumbNav) {
         }
 
         function updateChatReadStatus(chatId) {
-            const chatElement = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
-            if (chatElement) {
-                chatElement.classList.remove('unread');
-                const unreadIndicator = chatElement.querySelector('.unread-indicator');
-                if (unreadIndicator) {
-                    unreadIndicator.remove();
-                }
-            }
+    const chatElement = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+    if (chatElement) {
+        chatElement.classList.remove('unread');
+        const unreadIndicator = chatElement.querySelector('.bg-primary-500');
+        if (unreadIndicator) {
+            unreadIndicator.remove();
         }
+        const chat = chats.find(c => c.id === chatId);
+        if (chat) {
+            chat.unreadCount = 0;
+        }
+    }
+}
 
         function getSenderName(message, chatId, currentChatInfo) {
-            if (currentChatInfo.chatType !== 'grupo' || message.fromMe) {
-                return '';
-            }
+    if (!currentChatInfo || (currentChatInfo.chatType !== 'grupo')) {
+        return '';
+    }
 
-            let senderName = message.sender;
-            if (chatId.includes("@g.us") && message.info && message.info.userQueEnviou) {
-                senderName = message.info.userQueEnviou;
-            }
+    let senderName = message.sender;
+    if (message.info && message.info.userQueEnviou) {
+        senderName = message.info.userQueEnviou;
+    }
 
-            return `<div class="chat-header text-xs font-bold">${senderName}</div>`;
-        }
+    return `<div class="chat-header text-xs font-bold">${senderName}</div>`;
+}
+
+function moveChatToTop(chatId) {
+    const chatElement = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+    if (chatElement && chatElement.parentNode) {
+        chatElement.parentNode.prepend(chatElement);
+    }
+}
 
         function getAvatarUrl(chat, chatId) {
             const defaultGroupImage = "https://portais.univasf.edu.br/reitoria/imagens/5ba6d9f7590b4a7d8f4456737206be0e.png/@@images/image.png";
@@ -1384,12 +1615,12 @@ if (breadcrumbNav) {
                         <video src="${message.content}" class="media-content rounded-lg cursor-pointer" onclick="openMediaPopup('${message.content}', 'video')"></video>
                     </div>`;
                 break;
-            case 'audio':
-                contentHtml = `
-                    <div class="chat-bubble ${bubbleClass} p-1">
-                        <audio src="${message.content}" class="w-full" controls></audio>
-                    </div>`;
-                break;
+                case 'audio':
+    contentHtml = `
+        <div class="chat-bubble ${bubbleClass} p-1">
+            <audio src="${message.content}" class="w-full" controls preload="none"></audio>
+        </div>`;
+    break;
             case 'document':
                 contentHtml = `
                     <div class="chat-bubble ${bubbleClass}">
@@ -1399,6 +1630,12 @@ if (breadcrumbNav) {
                         </a>
                     </div>`;
                 break;
+                case 'sticker':
+    contentHtml = `
+        <div class="chat-bubble ${bubbleClass} p-1">
+            <img src="${message.content}" alt="Sticker" class="max-w-[150px] max-h-[150px]">
+        </div>`;
+    break;
             default:
                 contentHtml = `<div class="chat-bubble ${bubbleClass}">${formatTextWithLinks(message.content)}</div>`;
         }
@@ -1486,21 +1723,21 @@ function formatTextWithLinks(text) {
         }
 
         function addChatListeners() {
-            document.querySelectorAll('.chat-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    currentChatId = item.dataset.chatId;
-                    const chatType = item.dataset.chatType;
-                    const chat = chats.find(c => c.id === currentChatId);
-                    displayChatInfo(chat);
-                    loadMessages(currentInstanceKey, currentChatId);
-                    if (window.innerWidth < 768) {
-                        mobileChats.classList.add('hidden');
-                        mobileMessages.classList.remove('hidden');
-                    }
-                    markChatAsRead(currentChatId);
-                });
-            });
-        }
+    document.querySelectorAll('.chat-item').forEach(item => {
+        item.addEventListener('click', () => {
+            currentChatId = item.dataset.chatId;
+            const chatType = item.dataset.chatType;
+            const chat = chats.find(c => c.id === currentChatId);
+            displayChatInfo(chat);
+            loadMessages(currentInstanceKey, currentChatId);
+            if (window.innerWidth < 768) {
+                mobileChats.classList.add('hidden');
+                mobileMessages.classList.remove('hidden');
+            }
+            markChatAsRead(currentChatId);
+        });
+    });
+}
 
         function showGroupMembers() {
             if (currentChatInfo && currentChatInfo.chatType === 'grupo') {
@@ -1563,50 +1800,73 @@ function formatTextWithLinks(text) {
         }, 300);
     }, 5000);
 }
-        async function sendMessage(content) {
-            if (!currentInstanceKey || !currentChatId || !content.trim()) {
-                console.error('Missing required information to send message');
-                return;
+async function sendMessage(content) {
+    if (!currentInstanceKey || !currentChatId || !content.trim()) {
+        console.error('Missing required information to send message');
+        return;
+    }
+
+    try {
+        const response = await fetch('/chat/send-message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                instanceKey: currentInstanceKey,
+                chatId: currentChatId,
+                content: content.trim()
+            }),
+        });
+
+        if (response.ok) {
+            console.log('Message sent successfully');
+            const messageData = await response.json();
+
+            if (sendSoundToggle.checked) {
+                sendSound.play();
             }
 
-            try {
-                const response = await fetch('/chat/send-message', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        instanceKey: currentInstanceKey,
-                        chatId: currentChatId,
-                        content: content.trim()
-                    }),
-                });
+            showPopup('Mensagem enviada');
 
-                if (response.ok) {
-                    console.log('Message sent successfully');
-                    const messageData = await response.json();
+            messageInput.value = '';
+            mobileMessageInput.value = '';
 
-                    if (sendSoundToggle.checked) {
-                        sendSound.play();
-                    }
+            // Atualizar o chat na lista com a nova mensagem
+            updateChatInList(currentChatId, {
+                type: 'text', // Assumindo que é uma mensagem de texto
+                content: content.trim(),
+                timestamp: Date.now() / 1000 // Timestamp atual em segundos
+            });
 
-                    showPopup('Mensagem enviada');
+            // Mover o chat para o topo da lista
+            moveChatToTop(currentChatId);
 
-                    messageInput.value = '';
-                    mobileMessageInput.value = '';
+            // Emitir a mensagem para o socket
+            socket.emit('send message', {
+                instanceKey: currentInstanceKey,
+                chatId: currentChatId,
+                content: content.trim()
+            });
 
-                    await updateChats();
-                    await loadMessages(currentInstanceKey, currentChatId);
-                } else {
-                    console.error('Error sending message');
-                    showPopup('Erro ao enviar mensagem', 'error');
-                }
-            } catch (error) {
-                console.error('Error sending message:', error);
-                showPopup('Erro ao enviar mensagem', 'error');
-            }
+            // Adicionar a mensagem à lista de mensagens atual
+            appendMessage({
+                fromMe: true,
+                sender: 'You', // ou o nome do usuário atual
+                content: content.trim(),
+                timestamp: Date.now() / 1000,
+                type: 'text'
+            });
+
+        } else {
+            console.error('Error sending message');
+            showPopup('Erro ao enviar mensagem', 'error');
         }
-
+    } catch (error) {
+        console.error('Error sending message:', error);
+        showPopup('Erro ao enviar mensagem', 'error');
+    }
+}
         function showPopup(message, type = 'success') {
             const popup = document.createElement('div');
             popup.className = `fixed top-4 right-4 px-4 py-2 rounded shadow-lg transform transition-all duration-300 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`;
@@ -1647,9 +1907,9 @@ function formatTextWithLinks(text) {
             if (currentInstanceKey) {
                 instanceModal.classList.remove('modal-open');
                 chatContainer.classList.remove('hidden');
-                loadChats(currentInstanceKey);
+            //    loadChats(currentInstanceKey);
                 loadUserFunnels();
-                setInterval(() => updateChats(), 5000);
+            //    setInterval(() => updateChats(), 5000);
             } else {
                 alert('Por favor, selecione uma instância antes de continuar.');
             }

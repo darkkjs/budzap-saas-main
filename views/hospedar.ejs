@@ -100,6 +100,30 @@
             const mediaUrlInput = document.getElementById('mediaUrl');
             const copyButton = document.getElementById('copyButton');
 
+
+
+    function validateFileSize(file) {
+        const maxSize = 30 * 1024 * 1024; // 30MB em bytes
+        if (file.size > maxSize) {
+            showAlert('error', 'O arquivo excede o tamanho máximo permitido de 30MB.');
+            return false;
+        }
+        return true;
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const file = fileInput.files[0];
+        if (!file) {
+            showAlert('error', 'Por favor, selecione um arquivo para upload.');
+            return;
+        }
+
+        if (!validateFileSize(file)) {
+            return;
+        }
+    })
+    
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const file = fileInput.files[0];

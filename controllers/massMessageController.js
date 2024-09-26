@@ -45,7 +45,7 @@ exports.renderMassMessagePage = async (req, res) => {
 };
 
 exports.startMassMessage = async (req, res) => {
-    const { numbers, funnelName, instanceIds, alternateInstances } = req.body;
+    const { numbers, funnelName, instanceIds, alternateInstances, waitTime } = req.body;
     const userId = req.user.id;
   
     try {
@@ -128,10 +128,10 @@ exports.startMassMessage = async (req, res) => {
             currentIndex: 0,
             report: report,
             isStopped: false,
-            alternateInstances: alternateInstances
+            alternateInstances: alternateInstances,
+            waitTime: waitTime // Adicione esta linha
         };
         activeJobs.set(jobId, job);
-
         // Inicie o processamento do job de forma assíncrona
         processJob(job, userId);
 
@@ -143,7 +143,7 @@ exports.startMassMessage = async (req, res) => {
 };
 
 async function processJob(job, userId) {
-    const { numbers, funnel, instances, report } = job;
+    const { numbers, funnel, instances, report, waitTime } = job;
     let currentInstanceIndex = 0;
     const user = await User.findById(userId);
 
@@ -177,6 +177,14 @@ async function processJob(job, userId) {
 
             report.sent += 1;
             console.log(`Funil iniciado para ${numbers[i]} usando instância ${instance.name}`);
+
+              // Adicione a lógica de espera aqui
+              if (waitTime > 0 && i < numbers.length - 1) {
+                console.log(`Aguardando ${waitTime} segundos antes do próximo envio...`);
+                await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+            }
+
+
         } catch (error) {
             console.error(`Erro ao processar número ${numbers[i]} usando instância ${instance.name}:`, error);
             report.errors += 1;

@@ -50,6 +50,10 @@
                             <span>Alternar entre instâncias selecionadas</span>
                         </label>
                     </div>
+                    <div class="mt-4">
+                        <label for="waitTime" class="block mb-2 font-medium text-gray-700">Tempo de espera entre envios (segundos)</label>
+                        <input type="number" id="waitTime" name="waitTime" min="0" class="w-full p-2 border rounded focus:ring focus:ring-purple-300" value="0">
+                    </div>
                     <button type="submit" class="btn btn-primary w-full"><i class="fas fa-play mr-2"></i>Iniciar Envio em Massa</button>
                 </form>
             </div>
@@ -306,7 +310,8 @@
     const funnelName = funnelSelect.value;
     const instanceIds = Array.from(document.querySelectorAll('input[name="instances"]:checked')).map(el => el.value);
     const alternateInstances = document.getElementById('alternateInstances').checked;
-
+    const waitTime = parseInt(document.getElementById('waitTime').value, 10) || 0;
+    
     console.log('Números:', numbers);
     console.log('Funil selecionado:', funnelName);
     console.log('Instâncias selecionadas:', instanceIds);
@@ -346,7 +351,7 @@
         const response = await fetch('/whatsapp/start-mass-message', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ numbers, funnelName, instanceIds, alternateInstances })
+            body: JSON.stringify({ numbers, funnelName, instanceIds, alternateInstances, waitTime })
         });
 
         if (!response.ok) {
@@ -355,9 +360,11 @@
         }
 
         const data = await response.json();
-        totalNumbers = data.totalNumbers;
-        currentReportId = data.reportId;
-        console.log('ReportId recebido:', currentReportId);
+totalNumbers = data.totalNumbers;
+currentReportId = data.reportId;
+currentJobId = data.jobId; // Adicione esta linha
+console.log('ReportId recebido:', currentReportId);
+console.log('JobId recebido:', currentJobId); // Adicione este log
         addLog(`Iniciando envio para ${totalNumbers} números`, 'info');
         startProgressPolling();
         initChart();
@@ -399,11 +406,11 @@ async function stopMassMessage() {
         return;
     }
     try {
-        console.log('Tentando interromper com reportId:', currentReportId); // Log para debug
+        console.log('Tentando interromper com reportId:', currentReportId);
         const response = await fetch('/whatsapp/stop-mass-message', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reportId: currentReportId })
+            body: JSON.stringify({ reportId: currentReportId, jobId: currentJobId }) // Adicione jobId aqui
         });
 
         if (response.ok) {

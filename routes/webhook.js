@@ -10,6 +10,9 @@ const { v4: uuidv4 } = require('uuid');
 const axios = require("axios")
 const { downloadAndSaveMedia } = require('../Helpers/uploader');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { getChats } = require('../Helpers/redisHelpers');
+
+
 
 async function getChatInfo(event, isGroup) {
   if (isGroup) {
@@ -166,6 +169,40 @@ router.post('/:instanceKey', async (req, res) => {
             type: dadoschat.mensagem.tipomsg,
             senderImage: dadoschat.imagemPerfil
           });
+
+          const io = req.app.get('io');
+          // Após processar a mensagem recebida
+io.to(req.params.instanceKey).emit('new message', {
+  chatId: dadoschat.id,
+  message: {
+      key: messageKey,
+      sender: dadoschat.puhsname,
+      info: chatInfo,
+      content: dadoschat.mensagem.conteudomsg,
+      timestamp: dadoschat.messageTimestamp,
+      fromMe: dadoschat.fromMe,
+      type: dadoschat.mensagem.tipomsg,
+      senderImage: dadoschat.imagemPerfil
+  }
+});
+
+// Verificar se é um novo chat
+const isNewChat = await checkIfNewChat(req.params.instanceKey, dadoschat.id);
+if (isNewChat) {
+  io.to(req.params.instanceKey).emit('new chat', {
+      id: dadoschat.id,
+      name: chatInfo.name,
+      lastMessage: dadoschat.mensagem.conteudomsg,
+      lastMessageTimestamp: dadoschat.messageTimestamp,
+      chatType: chatInfo.chatType,
+      image: dadoschat.imagemPerfil
+  });
+}
+
+async function checkIfNewChat(instanceKey, chatId) {
+  const chats = await getChats(instanceKey);
+  return !chats.some(chat => chat.id === chatId);
+}
 
        //   console.log('Mensagem salva:'.green, dadoschat.mensagem.conteudomsg);
          

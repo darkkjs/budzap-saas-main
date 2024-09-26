@@ -7,7 +7,7 @@ const axios = require("axios")
 const { executeFunnel } = require('../services/funnelExecutor');
 const redisClient = require('../config/redisConfig');
 const funnelController = require('../controllers/funnelController'); // Adicione esta linha no topo do arquivo
-
+const moment = require('moment-timezone');
 const AUTO_RESPONSE_EXPIRY = 60 * 60; // 1 hora em segundos
 
 
@@ -275,7 +275,7 @@ router.post('/send-message', async (req, res) => {
         key: `${chatId}:${Date.now()}`,
         sender: req.user.username, // Assuming you have user info in the request
         content: content,
-        timestamp: Math.floor(Date.now() / 1000),
+        timestamp: moment().tz('America/Sao_Paulo').unix(), // Usa o timestamp de São Paulo
         fromMe: true,
         type: 'text',
         senderImage: req.user.profileImage || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png'
@@ -293,13 +293,15 @@ router.post('/send-message', async (req, res) => {
 });
 
 router.post('/mark-as-read/:instanceKey/:chatId', async (req, res) => {
-    try {
-        await markChatAsRead(req.params.instanceKey, req.params.chatId);
-        res.status(200).send('Chat marcado como lido');
-    } catch (error) {
-        console.error('Erro ao marcar chat como lido:', error);
-        res.status(500).json({ error: 'Erro ao marcar chat como lido' });
-    }
+  try {
+      await markChatAsRead(req.params.instanceKey, req.params.chatId);
+      // Reset unread count in Redis
+      await redisClient.hset(`chat:${req.params.instanceKey}:${req.params.chatId}`, 'unreadCount', '0');
+      res.status(200).send('Chat marcado como lido');
+  } catch (error) {
+      console.error('Erro ao marcar chat como lido:', error);
+      res.status(500).json({ error: 'Erro ao marcar chat como lido' });
+  }
 });
 
 // Função para marcar o chat como lido no Redis

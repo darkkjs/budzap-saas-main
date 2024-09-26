@@ -92,6 +92,9 @@ const uploadMediaToGithub = async (file, type, github) => {
     return mediaUrl;
   };
 
+  const minioClient = require('../config/minioConfig');
+  const { Readable } = require('stream');
+  
   router.post('/upload-media', upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {
@@ -107,13 +110,41 @@ const uploadMediaToGithub = async (file, type, github) => {
         return res.status(400).json({ error: 'Tipo de arquivo não suportado' });
       }
   
-      const mediaUrl = await uploadMediaToGithub(file, type, github);
-      
-      if (mediaUrl) {
-        res.json({ url: mediaUrl });
-      } else {
-        throw new Error('Falha no upload para o GitHub');
+      const bucketName = 'chat-media'; // Nome do seu bucket no MinIO
+      const objectName = `${Date.now()}-${file.originalname}`; // Nome único para o objeto
+  
+      // Verifica se o bucket existe, se não, cria
+      const bucketExists = await minioClient.bucketExists(bucketName);
+      if (!bucketExists) {
+        await minioClient.makeBucket(bucketName);
       }
+  
+      // Configura a política de acesso público para o bucket
+      const policy = {
+        Version: '2012-10-17',
+        Statement: [
+          {
+            Effect: 'Allow',
+            Principal: '*',
+            Action: ['s3:GetObject'],
+            Resource: [`arn:aws:s3:::${bucketName}/*`]
+          }
+        ]
+      };
+      await minioClient.setBucketPolicy(bucketName, JSON.stringify(policy));
+  
+      // Cria um stream legível a partir do buffer do arquivo
+      const fileStream = new Readable();
+      fileStream.push(file.buffer);
+      fileStream.push(null);
+  
+      // Upload do arquivo para o MinIO
+      await minioClient.putObject(bucketName, objectName, fileStream, file.size);
+  
+      // Constrói a URL permanente
+      const mediaUrl = `http://147.79.111.143:9000/${bucketName}/${objectName}`;
+  
+      res.json({ url: mediaUrl });
     } catch (error) {
       console.error('Erro no upload:', error);
       res.status(500).json({ error: 'Falha no upload do arquivo' });

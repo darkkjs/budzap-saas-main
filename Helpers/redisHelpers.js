@@ -22,7 +22,23 @@ async function saveChat(instanceKey, chatId, chatData) {
     }
   }
   
-
+  async function saveAndSendMessage(instanceKey, chatId, content) {
+    const messageData = {
+      key: `${chatId}:${Date.now()}`,
+      sender: 'Hocketzap', // Você pode querer ajustar isso dependendo de como você identifica o remetente
+      content: content,
+      timestamp: Date.now(),
+      fromMe: true,
+      type: 'text'
+    };
+  
+    await saveMessage(instanceKey, chatId, messageData);
+  
+    // Atualiza as informações do chat
+    await updateChatInfo(instanceKey, chatId, { lastMessage: content }, messageData);
+  
+    return messageData;
+  }
 
   async function getChats(instanceKey) {
     const chatIds = await redisClient.smembers(`chats:${instanceKey}`);
@@ -90,6 +106,8 @@ async function saveMessage(instanceKey, chatId, messageData) {
         await redisClient.hincrby(chatKey, 'unreadCount', 1);
         await redisClient.hset(chatKey, 'unread', 'true');
     }
+
+    
   
     console.log(`Mensagem salva para o chat ${chatId}`.green);
     return true;
@@ -129,4 +147,5 @@ module.exports = {
   saveMessage,
   getChats,
   getMessages,
+  saveAndSendMessage
 };

@@ -33,21 +33,63 @@ const expressLayouts = require('express-ejs-layouts');
 
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
+const { getChats, getMessages, saveAndSendMessage } = require('./Helpers/redisHelpers');
 
-// Configuração global do io
 app.set('io', io);
 
 io.on('connection', (socket) => {
-    console.log('Um usuário se conectou');
-    
-    socket.on('join instance', (instanceKey) => {
-        socket.join(instanceKey);
-    });
+  console.log('Um usuário se conectou');
+  
+  socket.on('join instance', (instanceKey) => {
+      console.log(`Cliente tentando entrar na instância: ${instanceKey}`);
+      socket.join(instanceKey);
+      console.log(`Cliente entrou na instância: ${instanceKey}`);
+  });
 
-    socket.on('disconnect', () => {
-        console.log('Um usuário se desconectou');
-    });
+  socket.on('request initial chats', async (instanceKey) => {
+      const chats = await fetchInitialChats(instanceKey);
+      socket.emit('initial chats', chats);
+  });
+
+  socket.on('request chat messages', async (instanceKey, chatId) => {
+      const messages = await fetchChatMessages(instanceKey, chatId);
+      socket.emit('chat messages', { chatId, messages });
+  });
+
+  socket.on('send message', async (data) => {
+      const { instanceKey, chatId, content } = data;
+      const message = await saveAndSendMessage(instanceKey, chatId, content);
+      io.to(instanceKey).emit('new message', { chatId, message });
+  });
+
+  socket.on('disconnect', () => {
+      console.log('Um usuário se desconectou');
+  });
 });
+
+
+async function fetchInitialChats(instanceKey) {
+    try {
+        const chats = await getChats(instanceKey);
+        return chats.sort((a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp);
+    } catch (error) {
+        console.error('Erro ao buscar chats iniciais:', error);
+        return [];
+    }
+}
+
+async function fetchChatMessages(instanceKey, chatId, limit = 50) {
+  try {
+      const messages = await getMessages(instanceKey, chatId, limit);
+      return messages.sort((a, b) => a.timestamp - b.timestamp);
+  } catch (error) {
+      console.error('Erro ao buscar mensagens do chat:', error);
+      return [];
+  }
+}
+
+
+
 
 app.use(expressLayouts);
 app.set('layout', 'layout');
