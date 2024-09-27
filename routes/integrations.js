@@ -101,57 +101,77 @@ const uploadMediaToGithub = async (file, type, github) => {
   const fs2 = require('fs').promises;
  const path = require("path")
   
-  router.post('/upload-media', upload.single('file'), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: 'Nenhum arquivo enviado' });
-      }
-  
-      const file = req.file;
-      const type = file.mimetype.startsWith('image/') ? 'image' :
-                   file.mimetype.startsWith('video/') ? 'video' :
-                   file.mimetype.startsWith('audio/') || file.mimetype === 'application/ogg' ? 'audio' : null;
-  
-      if (!type) {
-        return res.status(400).json({ error: 'Tipo de arquivo não suportado' });
-      }
-  
-      // Lê o arquivo do disco
-      const fileBuffer = await fs2.readFile(file.path);
-  
-      const bucketName = 'chat-media';
-      const fileHash = crypto.createHash('md5').update(fileBuffer).digest('hex');
-      const fileExtension = path.extname(file.originalname).slice(1);
-      const objectName = `${type}/${fileHash}.${fileExtension}`;
-  
-      // ... (resto do código permanece o mesmo)
-  
-      // Cria um stream legível a partir do buffer do arquivo
-      const fileStream = new Readable();
-      fileStream.push(fileBuffer);
-      fileStream.push(null);
-  
-      // Upload do arquivo para o MinIO
-      await minioClient.putObject(bucketName, objectName, fileStream, file.size, {
-        'Content-Type': file.mimetype
-      });
-  
-      // Constrói a URL permanente
-      const mediaUrl = `https://hocketzap.com/integrations/media/${objectName}`;
-  
-      // Remove o arquivo temporário
-      await fs2.unlink(file.path);
-  
-      res.json({ 
-        url: mediaUrl,
-        type: type
-      });
-  
-    } catch (error) {
-      console.error('Erro no upload:', error);
-      res.status(500).json({ error: 'Falha no upload do arquivo' });
+ router.post('/upload-media', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nenhum arquivo enviado' });
     }
-  });
+
+    const file = req.file;
+    const type = file.mimetype.startsWith('image/') ? 'image' :
+                 file.mimetype.startsWith('video/') ? 'video' :
+                 file.mimetype.startsWith('audio/') || file.mimetype === 'application/ogg' ? 'audio' : null;
+
+    if (!type) {
+      return res.status(400).json({ error: 'Tipo de arquivo não suportado' });
+    }
+
+    // Lê o arquivo do disco
+    const fileBuffer = await fs.readFile(file.path);
+
+    // Converte o buffer para base64
+    const base64File = fileBuffer.toString('base64');
+
+    // Gera um nome de arquivo único
+    const filename = uuidv4();
+    let fileExtension;
+    switch (type) {
+      case 'image':
+        fileExtension = '.jpg';
+        break;
+      case 'audio':
+        fileExtension = '.mp3';
+        break;
+      case 'video':
+        fileExtension = '.mp4';
+        break;
+      default:
+        fileExtension = path.extname(file.originalname);
+    }
+    const objectName = `${type}/${filename}${fileExtension}`;
+
+  
+    // Upload para o GitHub
+    const response = await axios.put(
+      `https://api.github.com/repos/${github.GITHUB_USERNAME}/${github.GITHUB_REPO}/contents/${objectName}`,
+      {
+        message: `Upload de ${type} via API`,
+        content: base64File
+      },
+      {
+        headers: {
+          'Authorization': `token ${github.GITHUB_TOKEN}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    // Obtém a URL do arquivo no GitHub
+    const mediaUrl = response.data.content.download_url;
+
+    // Remove o arquivo temporário
+    await fs.unlink(file.path);
+
+    res.json({ 
+      url: mediaUrl,
+      type: type
+    });
+
+  } catch (error) {
+    console.error('Erro no upload:', error);
+    res.status(500).json({ error: 'Falha no upload do arquivo' });
+  }
+});
   
   // Nova rota para servir os arquivos de mídia
   const mime = require('mime-types');

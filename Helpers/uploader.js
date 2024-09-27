@@ -8,7 +8,7 @@ const github = require('../config/git');
 const minioClient = require('../config/minioConfig');
 const { Readable } = require('stream');
 
-
+/*/
 async function uploadbase64(base64File, type) {
   const fileName = `${uuidv4()}.${type}`;
   const bucketName = 'chat-media';
@@ -30,6 +30,8 @@ async function uploadbase64(base64File, type) {
     throw error;
   }
 }
+  /*/
+  /*/
 async function downloadAndSaveMedia(mediaData, mediaType) {
   const mediaId = uuidv4();
   const fileName = `${mediaId}.${mediaType}`;
@@ -59,8 +61,8 @@ async function downloadAndSaveMedia(mediaData, mediaType) {
     throw error;
   }
 }
-
 /*/
+
 async function downloadAndSaveMedia(mediaData, mediaType) {
   const mediaId = uuidv4();
   const tempDir = path.join(__dirname, '..', 'temp');
@@ -91,7 +93,7 @@ async function downloadAndSaveMedia(mediaData, mediaType) {
     }
   }
 }
-/*/
+
 async function uploadMediaToGithub(file, type, github) {
   let base64File;
   let mediaUrl;
@@ -136,7 +138,7 @@ async function uploadMediaToGithub(file, type, github) {
 }
 
 
-/*/
+
 async function uploadbase64(base64File, type, github) {
 
   let mediaUrl;
@@ -179,7 +181,7 @@ async function uploadbase64(base64File, type, github) {
 
   return mediaUrl;
 }
-/*/
+
 module.exports = {
   downloadAndSaveMedia,
   uploadbase64
