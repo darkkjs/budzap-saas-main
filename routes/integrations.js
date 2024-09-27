@@ -117,7 +117,7 @@ const uploadMediaToGithub = async (file, type, github) => {
     }
 
     // Lê o arquivo do disco
-    const fileBuffer = await fs.readFile(file.path);
+    const fileBuffer = await fs2.readFile(file.path);
 
     // Converte o buffer para base64
     const base64File = fileBuffer.toString('base64');
@@ -160,7 +160,7 @@ const uploadMediaToGithub = async (file, type, github) => {
     const mediaUrl = response.data.content.download_url;
 
     // Remove o arquivo temporário
-    await fs.unlink(file.path);
+    await fs2.unlink(file.path);
 
     res.json({ 
       url: mediaUrl,
