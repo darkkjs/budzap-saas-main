@@ -132,7 +132,7 @@ const uploadMediaToGithub = async (file, type, github) => {
       fileStream.push(null);
   
       // Upload do arquivo para o MinIO
-      await minioClient.putObject(bucketName, objectName, fileStream, fileBuffer.length, {
+      await minioClient.putObject(bucketName, objectName, fileStream, file.size, {
         'Content-Type': file.mimetype
       });
   
@@ -159,14 +159,25 @@ const uploadMediaToGithub = async (file, type, github) => {
     const objectName = `${req.params.type}/${req.params.filename}`;
   
     try {
+      const stat = await minioClient.statObject(bucketName, objectName);
       const stream = await minioClient.getObject(bucketName, objectName);
+  
+      // Definir o tipo de conteúdo correto
+      res.setHeader('Content-Type', stat.metaData['content-type'] || 'application/octet-stream');
+      res.setHeader('Content-Length', stat.size);
+  
+      // Se for um arquivo de áudio, adicione o cabeçalho Content-Disposition
+      if (req.params.type === 'audio') {
+        res.setHeader('Content-Disposition', `inline; filename="${req.params.filename}"`);
+      }
+  
       stream.pipe(res);
     } catch (error) {
       console.error('Error serving media:', error);
       res.status(404).send('Media not found');
     }
   });
-
+  
 router.get('/elevenlabs/config', ensureAuthenticated, integrationController.getElevenLabsConfig);
 
 
