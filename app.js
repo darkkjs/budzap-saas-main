@@ -161,6 +161,13 @@ app.use('/subscription', subscriptionRoutes);
 const webhookController = require('./controllers/webhookController');
 app.post('/pagbank-pix', webhookController.handlePagBankPixWebhook);
 
+
+const whatsappCampaignRoutes = require('./routes/whatsappCampaign');
+const redirectRoutes = require('./routes/redirect');
+
+app.use('/api/whatsapp-campaigns', whatsappCampaignRoutes);
+app.use('/r', redirectRoutes);
+
 // Em qualquer arquivo onde você precisa usar essas funções:
 const stripeHelpers = require('./Helpers/stripeHelpers');
 

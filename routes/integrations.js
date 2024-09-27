@@ -93,7 +93,10 @@ const uploadMediaToGithub = async (file, type, github) => {
   };
 
   const minioClient = require('../config/minioConfig');
+
+  
   const { Readable } = require('stream');
+  const crypto = require('crypto');
   
   router.post('/upload-media', upload.single('file'), async (req, res) => {
     try {
@@ -104,14 +107,16 @@ const uploadMediaToGithub = async (file, type, github) => {
       const file = req.file;
       const type = file.mimetype.startsWith('image/') ? 'image' :
                    file.mimetype.startsWith('video/') ? 'video' :
-                   file.mimetype.startsWith('audio/') ? 'audio' : null;
-      
+                   file.mimetype.startsWith('audio/') || file.mimetype === 'application/ogg' ? 'audio' : null;
+  
       if (!type) {
         return res.status(400).json({ error: 'Tipo de arquivo não suportado' });
       }
   
-      const bucketName = 'chat-media'; // Nome do seu bucket no MinIO
-      const objectName = `${Date.now()}-${file.originalname}`; // Nome único para o objeto
+      const bucketName = 'chat-media';
+      const fileHash = crypto.createHash('md5').update(file.buffer).digest('hex');
+      const fileExtension = file.originalname.split('.').pop();
+      const objectName = `${type}/${fileHash}.${fileExtension}`;
   
       // Verifica se o bucket existe, se não, cria
       const bucketExists = await minioClient.bucketExists(bucketName);
@@ -139,12 +144,22 @@ const uploadMediaToGithub = async (file, type, github) => {
       fileStream.push(null);
   
       // Upload do arquivo para o MinIO
-      await minioClient.putObject(bucketName, objectName, fileStream, file.size);
+      await minioClient.putObject(bucketName, objectName, fileStream, file.size, {
+        'Content-Type': file.mimetype
+      });
+  
+      // Gera uma URL pré-assinada com validade de 7 dias
+      const presignedUrl = await minioClient.presignedGetObject(bucketName, objectName, 7 * 24 * 60 * 60);
   
       // Constrói a URL permanente
       const mediaUrl = `http://147.79.111.143:9000/${bucketName}/${objectName}`;
   
-      res.json({ url: mediaUrl });
+      res.json({ 
+        url: mediaUrl,
+        presignedUrl: presignedUrl,
+        type: type
+      });
+  
     } catch (error) {
       console.error('Erro no upload:', error);
       res.status(500).json({ error: 'Falha no upload do arquivo' });

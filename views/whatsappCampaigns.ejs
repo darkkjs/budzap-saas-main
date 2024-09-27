@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Links Antiban WhatsApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-slide-in {
+            animation: slideIn 0.5s ease-in-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-r from-purple-50 to-pink-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-5xl font-bold mb-2 text-center text-purple-800 animate-fade-in">Links Antiban WhatsApp</h1>
+        <p class="text-xl text-center text-gray-600 mb-8 animate-fade-in">Use esses links nas suas campanhas para maior segurança e eficácia</p>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8 animate-slide-in">
+            <h2 class="text-2xl font-semibold mb-4 text-purple-700">Criar Novo Link</h2>
+            <form id="newCampaignForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">Nome da Campanha</label>
+                        <input type="text" id="name" name="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50">
+                    </div>
+                    <div>
+                        <label for="customPath" class="block text-sm font-medium text-gray-700">Caminho Personalizado</label>
+                        <div class="mt-1 flex rounded-md shadow-sm">
+                            <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                                <%= baseUrl %>
+                            </span>
+                            <input type="text" id="customPath" name="customPath" required class="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50 sm:text-sm">
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tipo de Redirecionamento</label>
+                    <div class="mt-2">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="redirectType" value="single" checked class="form-radio text-purple-600">
+                            <span class="ml-2">Número Único</span>
+                        </label>
+                        <label class="inline-flex items-center ml-6">
+                            <input type="radio" name="redirectType" value="multiple" class="form-radio text-purple-600">
+                            <span class="ml-2">Randomizar Vários</span>
+                        </label>
+                        <label class="inline-flex items-center ml-6">
+                            <input type="radio" name="redirectType" value="rotative" class="form-radio text-purple-600">
+                            <span class="ml-2">Rotativo</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="numberInputContainer" class="hidden">
+                    <!-- O container para os inputs de número será preenchido dinamicamente -->
+                </div>
+                
+                <button type="button" id="addNumberBtn" class="mt-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hidden">
+                    <i class="fas fa-plus mr-2"></i>Adicionar Número
+                </button>
+                
+                <div>
+                    <label for="messageDelay" class="block text-sm font-medium text-gray-700">Atraso na Mensagem (segundos)</label>
+                    <input type="number" id="messageDelay" name="messageDelay" min="0" max="60" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50">
+                </div>
+                
+                <div>
+                    <label for="customMessage" class="block text-sm font-medium text-gray-700">Mensagem Personalizada (opcional)</label>
+                    <textarea id="customMessage" name="customMessage" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50"></textarea>
+                </div>
+                
+                <div class="flex justify-between items-center mt-6">
+                    <button type="button" onclick="previewLink()" class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-purple-600 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        <i class="fas fa-eye mr-2"></i>Pré-visualizar
+                    </button>
+                    <button type="submit" class="px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        <i class="fas fa-save mr-2"></i>Criar Link
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="linkPreview" class="bg-white rounded-lg shadow-lg p-6 mb-8 hidden animate-fade-in">
+            <h2 class="text-2xl font-semibold mb-4 text-purple-700">Pré-visualização do Link</h2>
+            <div id="previewContent" class="bg-gray-100 p-4 rounded-md"></div>
+        </div>
+
+          <!-- Lista de campanhas ativas -->
+          <div class="bg-white rounded-lg shadow-lg p-6 mb-8 animate-slide-in">
+            <h2 class="text-2xl font-semibold mb-4 text-indigo-700">Links Ativos</h2>
+            <div id="campaignsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <% campaigns.forEach(campaign => { %>
+                    <div class="border rounded-lg p-4 hover:shadow-md transition-shadow duration-300 bg-gradient-to-r from-indigo-50 to-purple-50">
+                        <h3 class="font-semibold text-lg mb-2 text-indigo-800"><%= campaign.name %></h3>
+                        <p class="text-sm text-gray-600 mb-1">
+                            <i class="fas fa-link mr-2"></i><%= baseUrl %><%= campaign.customPath %>
+                        </p>
+                        <p class="text-sm text-gray-600 mb-2">
+                            <i class="fas fa-phone mr-2"></i><%= campaign.numbers.length %> número(s)
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <div id="camuflageStatus-<%= campaign._id %>" class="flex items-center <%= campaign.metaTags ? 'text-green-600' : 'hidden' %>">
+                                <i class="fas fa-shield-alt mr-2"></i>
+                                <span>Camuflado</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="generateMetaTags('<%= campaign._id %>')" class="text-blue-600 hover:text-blue-800 transition-colors duration-300">
+                                    <i class="fas fa-mask"></i>
+                                </button>
+                                <button onclick="editCampaign('<%= campaign._id %>')" class="text-green-600 hover:text-green-800 transition-colors duration-300">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteCampaign('<%= campaign._id %>')" class="text-red-600 hover:text-red-800 transition-colors duration-300">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <button onclick="showStats('<%= campaign._id %>')" class="text-indigo-600 hover:text-indigo-800 transition-colors duration-300">
+                                    <i class="fas fa-chart-bar"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+
+           <!-- Gráficos gerais -->
+           <div class="bg-white rounded-lg shadow-lg p-6 mb-8 animate-slide-in">
+            <h2 class="text-2xl font-semibold mb-4 text-indigo-700">Estatísticas Gerais</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-2 text-indigo-600">Campanhas Mais Ativadas</h3>
+                    <canvas id="campaignsChart"></canvas>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2 text-indigo-600">Números Mais Ativados</h3>
+                    <canvas id="numbersChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="statsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-center">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="statsModalTitle">Estatísticas da Campanha</h3>
+                    <div class="mt-2 px-7 py-3">
+                        <canvas id="statsChart"></canvas>
+                    </div>
+                    <div class="items-center px-4 py-3">
+                        <button id="closeStatsModal" class="px-4 py-2 bg-purple-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-300">
+                            Fechar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let numberCounter = 0;
+        let chart = null;
+
+
+        async function loadGeneralStats() {
+            try {
+                const response = await fetch('/api/whatsapp-campaigns/general-stats');
+                if (!response.ok) {
+                    throw new Error('Falha ao obter estatísticas gerais');
+                }
+                const stats = await response.json();
+
+                // Gráfico de campanhas mais ativadas
+                new Chart(document.getElementById('campaignsChart').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: stats.campaigns.map(c => c.name),
+                        datasets: [{
+                            label: 'Cliques',
+                            data: stats.campaigns.map(c => c.clicks),
+                            backgroundColor: 'rgba(99, 102, 241, 0.5)',
+                            borderColor: 'rgb(99, 102, 241)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: { y: { beginAtZero: true } },
+                        responsive: true
+                    }
+                });
+
+                // Gráfico de números mais ativados
+                new Chart(document.getElementById('numbersChart').getContext('2d'), {
+                    type: 'pie',
+                    data: {
+                        labels: stats.numbers.map(n => n.number),
+                        datasets: [{
+                            data: stats.numbers.map(n => n.activations),
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.5)',
+                                'rgba(54, 162, 235, 0.5)',
+                                'rgba(255, 206, 86, 0.5)',
+                                'rgba(75, 192, 192, 0.5)',
+                                'rgba(153, 102, 255, 0.5)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true
+                    }
+                });
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas gerais:', error);
+            }
+        }
+
+        // Carregar estatísticas gerais quando a página carregar
+        document.addEventListener('DOMContentLoaded', loadGeneralStats);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const redirectTypeRadios = document.querySelectorAll('input[name="redirectType"]');
+            const numberInputContainer = document.getElementById('numberInputContainer');
+            const addNumberBtn = document.getElementById('addNumberBtn');
+
+            function updateNumberInput() {
+                const selectedType = document.querySelector('input[name="redirectType"]:checked').value;
+                numberInputContainer.innerHTML = '';
+                if (selectedType === 'single') {
+                    numberInputContainer.innerHTML = `
+                        <div class="mt-2">
+                            <label for="singleNumber" class="block text-sm font-medium text-gray-700">Número de WhatsApp</label>
+                            <input type="text" id="singleNumber" name="numbers[]" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50">
+                        </div>
+                    `;
+                    addNumberBtn.classList.add('hidden');
+                } else {
+                    addNumberCard();
+                    addNumberBtn.classList.remove('hidden');
+                }
+                numberInputContainer.classList.remove('hidden');
+            }
+
+            redirectTypeRadios.forEach(radio => {
+                radio.addEventListener('change', updateNumberInput);
+            });
+
+            addNumberBtn.addEventListener('click', addNumberCard);
+
+            updateNumberInput();
+        });
+
+        function addNumberCard() {
+            const numberInputContainer = document.getElementById('numberInputContainer');
+            const card = document.createElement('div');
+            card.className = 'mt-2 bg-gray-50 rounded-md p-3 flex items-center animate-fade-in';
+            card.innerHTML = `
+                <input type="text" name="numbers[]" placeholder="Número WhatsApp" required
+                       class="flex-grow mr-2 rounded-md border-gray-300 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50">
+                <button type="button" onclick="this.parentElement.remove()" class="text-red-600 hover:text-red-800 transition-colors duration-300">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            numberInputContainer.appendChild(card);
+        }
+
+        async function generateMetaTags(campaignId) {
+            try {
+                const response = await fetch(`/api/whatsapp-campaigns/${campaignId}/meta-tags`, {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const statusElement = document.getElementById(`camuflageStatus-${campaignId}`);
+                    statusElement.classList.remove('hidden');
+                    statusElement.classList.add('text-green-600', 'animate-fade-in');
+                    alert('Meta tags geradas com sucesso!');
+                } else {
+                    alert('Erro ao gerar meta tags');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao gerar meta tags');
+            }
+        }
+
+        async function createCampaign(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.numbers = formData.getAll('numbers[]').filter(n => n.trim());
+
+            try {
+                const response = await fetch('/api/whatsapp-campaigns', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                    alert('Link criado com sucesso!');
+                    location.reload();
+                } else {
+                    alert('Erro ao criar link');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        async function editCampaign(id) {
+            // Implementar lógica de edição
+            console.log('Editar campanha:', id);
+            alert('Funcionalidade de edição em desenvolvimento');
+        }
+
+        async function deleteCampaign(id) {
+            if (confirm('Tem certeza que deseja excluir este link?')) {
+                try {
+                    const response = await fetch(`/api/whatsapp-campaigns/${id}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        alert('Link excluído com sucesso!');
+                        location.reload();
+                    } else {
+                        alert('Erro ao excluir link');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                }
+            }
+        }
+
+        function previewLink() {
+            const name = document.getElementById('name').value;
+            const customPath = document.getElementById('customPath').value;
+            const redirectType = document.querySelector('input[name="redirectType"]:checked').value;
+            const messageDelay = document.getElementById('messageDelay').value;
+            const customMessage = document.getElementById('customMessage').value;
+
+            let previewContent = `
+                <p><strong>Nome:</strong> ${name}</p>
+                <p><strong>Link:</strong>  <%= baseUrl %>${customPath}</p>
+                <p><strong>Tipo de Redirecionamento:</strong> ${redirectType}</p>
+                <p><strong>Atraso na Mensagem:</strong> ${messageDelay} segundos</p>
+            `;
+
+            if (customMessage) {
+                previewContent += `<p><strong>Mensagem Personalizada:</strong> ${customMessage}</p>`;
+            }
+
+            document.getElementById('previewContent').innerHTML = previewContent;
+            document.getElementById('linkPreview').classList.remove('hidden');
+        }
+
+        async function showStats(campaignId) {
+    try {
+        const response = await fetch(`/api/whatsapp-campaigns/${campaignId}/stats`);
+        if (!response.ok) {
+            throw new Error('Falha ao obter estatísticas');
+        }
+        const stats = await response.json();
+
+        const data = {
+            labels: ['Cliques', 'Conversões', 'Bloqueios'],
+            datasets: [{
+                label: 'Estatísticas da Campanha',
+                data: [stats.clicks, stats.conversions, stats.blocks],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+        const ctx = document.getElementById('statsChart').getContext('2d');
+        if (chart) {
+            chart.destroy();
+        }
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: data,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        document.getElementById('statsModal').classList.remove('hidden');
+    } catch (error) {
+        console.error('Erro ao obter estatísticas:', error);
+        alert('Erro ao carregar estatísticas da campanha');
+    }
+}
+        document.getElementById('closeStatsModal').addEventListener('click', function() {
+            document.getElementById('statsModal').classList.add('hidden');
+        });
+
+        document.getElementById('newCampaignForm').addEventListener('submit', createCampaign);
+    </script>
+</body>
+</html>
