@@ -161,6 +161,22 @@ app.use('/subscription', subscriptionRoutes);
 const webhookController = require('./controllers/webhookController');
 app.post('/pagbank-pix', webhookController.handlePagBankPixWebhook);
 
+const minioClient = require('./config/minioConfig');
+const { Readable } = require('stream');
+
+app.get('/media/:filename', async (req, res) => {
+  const bucketName = 'chat-media';
+  const fileName = req.params.filename;
+
+  try {
+    const stream = await minioClient.getObject(bucketName, fileName);
+    stream.pipe(res);
+  } catch (error) {
+    console.error('Error serving media:', error);
+    res.status(404).send('Media not found');
+  }
+});
+
 
 const whatsappCampaignRoutes = require('./routes/whatsappCampaign');
 const redirectRoutes = require('./routes/redirect');

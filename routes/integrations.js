@@ -98,6 +98,9 @@ const uploadMediaToGithub = async (file, type, github) => {
   const { Readable } = require('stream');
   const crypto = require('crypto');
   
+  const fs2 = require('fs').promises;
+ const path = require("path")
+  
   router.post('/upload-media', upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {
@@ -113,56 +116,54 @@ const uploadMediaToGithub = async (file, type, github) => {
         return res.status(400).json({ error: 'Tipo de arquivo não suportado' });
       }
   
+      // Lê o arquivo do disco
+      const fileBuffer = await fs2.readFile(file.path);
+  
       const bucketName = 'chat-media';
-      const fileHash = crypto.createHash('md5').update(file.buffer).digest('hex');
-      const fileExtension = file.originalname.split('.').pop();
+      const fileHash = crypto.createHash('md5').update(fileBuffer).digest('hex');
+      const fileExtension = path.extname(file.originalname).slice(1);
       const objectName = `${type}/${fileHash}.${fileExtension}`;
   
-      // Verifica se o bucket existe, se não, cria
-      const bucketExists = await minioClient.bucketExists(bucketName);
-      if (!bucketExists) {
-        await minioClient.makeBucket(bucketName);
-      }
-  
-      // Configura a política de acesso público para o bucket
-      const policy = {
-        Version: '2012-10-17',
-        Statement: [
-          {
-            Effect: 'Allow',
-            Principal: '*',
-            Action: ['s3:GetObject'],
-            Resource: [`arn:aws:s3:::${bucketName}/*`]
-          }
-        ]
-      };
-      await minioClient.setBucketPolicy(bucketName, JSON.stringify(policy));
+      // ... (resto do código permanece o mesmo)
   
       // Cria um stream legível a partir do buffer do arquivo
       const fileStream = new Readable();
-      fileStream.push(file.buffer);
+      fileStream.push(fileBuffer);
       fileStream.push(null);
   
       // Upload do arquivo para o MinIO
-      await minioClient.putObject(bucketName, objectName, fileStream, file.size, {
+      await minioClient.putObject(bucketName, objectName, fileStream, fileBuffer.length, {
         'Content-Type': file.mimetype
       });
   
-      // Gera uma URL pré-assinada com validade de 7 dias
-      const presignedUrl = await minioClient.presignedGetObject(bucketName, objectName, 7 * 24 * 60 * 60);
-  
       // Constrói a URL permanente
-      const mediaUrl = `http://147.79.111.143:9000/${bucketName}/${objectName}`;
+      const mediaUrl = `https://hocketzap.com/integrations/media/${objectName}`;
+  
+      // Remove o arquivo temporário
+      await fs2.unlink(file.path);
   
       res.json({ 
         url: mediaUrl,
-        presignedUrl: presignedUrl,
         type: type
       });
   
     } catch (error) {
       console.error('Erro no upload:', error);
       res.status(500).json({ error: 'Falha no upload do arquivo' });
+    }
+  });
+  
+  // Nova rota para servir os arquivos de mídia
+  router.get('/media/:type/:filename', async (req, res) => {
+    const bucketName = 'chat-media';
+    const objectName = `${req.params.type}/${req.params.filename}`;
+  
+    try {
+      const stream = await minioClient.getObject(bucketName, objectName);
+      stream.pipe(res);
+    } catch (error) {
+      console.error('Error serving media:', error);
+      res.status(404).send('Media not found');
     }
   });
 

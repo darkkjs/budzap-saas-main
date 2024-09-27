@@ -21,7 +21,7 @@ async function uploadbase64(base64File, type) {
 
     await minioClient.putObject(bucketName, fileName, stream, buffer.length);
 
-    const mediaUrl = await minioClient.presignedGetObject(bucketName, fileName, 24 * 60 * 60);
+    const mediaUrl = `/media/${fileName}`; // URL relativa permanente
 
     console.log(`${type} hospedado com sucesso no MinIO:`, mediaUrl);
     return mediaUrl;
@@ -30,7 +30,6 @@ async function uploadbase64(base64File, type) {
     throw error;
   }
 }
-
 async function downloadAndSaveMedia(mediaData, mediaType) {
   const mediaId = uuidv4();
   const fileName = `${mediaId}.${mediaType}`;
@@ -51,8 +50,8 @@ async function downloadAndSaveMedia(mediaData, mediaType) {
 
     await minioClient.putObject(bucketName, fileName, stream, buffer.length);
 
-    // Generate URL
-    const mediaUrl = await minioClient.presignedGetObject(bucketName, fileName, 24 * 60 * 60); // URL válida por 24 horas
+    // Generate permanent URL
+    const mediaUrl = `/media/${fileName}`;
 
     return mediaUrl;
   } catch (error) {
