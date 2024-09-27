@@ -154,30 +154,47 @@ const uploadMediaToGithub = async (file, type, github) => {
   });
   
   // Nova rota para servir os arquivos de mídia
+  const mime = require('mime-types');
+
   router.get('/media/:type/:filename', async (req, res) => {
     const bucketName = 'chat-media';
     const objectName = `${req.params.type}/${req.params.filename}`;
   
     try {
       const stat = await minioClient.statObject(bucketName, objectName);
-      const stream = await minioClient.getObject(bucketName, objectName);
-  
-      // Definir o tipo de conteúdo correto
-      res.setHeader('Content-Type', stat.metaData['content-type'] || 'application/octet-stream');
+      
+      // Determinar o tipo MIME
+      const mimeType = mime.lookup(req.params.filename) || 'application/octet-stream';
+      
+      // Configurar cabeçalhos
+      res.setHeader('Content-Type', mimeType);
       res.setHeader('Content-Length', stat.size);
+      res.setHeader('Accept-Ranges', 'bytes');
   
-      // Se for um arquivo de áudio, adicione o cabeçalho Content-Disposition
-      if (req.params.type === 'audio') {
-        res.setHeader('Content-Disposition', `inline; filename="${req.params.filename}"`);
+      // Lidar com solicitações de intervalo para streaming de vídeo
+      const range = req.headers.range;
+      if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+        const chunksize = (end - start) + 1;
+        
+        res.status(206);
+        res.setHeader('Content-Range', `bytes ${start}-${end}/${stat.size}`);
+        res.setHeader('Content-Length', chunksize);
+  
+        const stream = await minioClient.getPartialObject(bucketName, objectName, start, end);
+        stream.pipe(res);
+      } else {
+        // Para outros tipos de arquivos, incluindo imagens
+        const stream = await minioClient.getObject(bucketName, objectName);
+        stream.pipe(res);
       }
-  
-      stream.pipe(res);
     } catch (error) {
       console.error('Error serving media:', error);
       res.status(404).send('Media not found');
     }
   });
-  
 router.get('/elevenlabs/config', ensureAuthenticated, integrationController.getElevenLabsConfig);
 
 
