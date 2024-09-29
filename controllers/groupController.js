@@ -15,6 +15,66 @@ exports.renderGroupManagementPage = async (req, res) => {
     }
 };
 
+// Em groupController.js, adicione:
+
+exports.setWelcomeMessage = async (req, res) => {
+    const { instanceKey, groupId, isActive, message, mediaType, mediaUrl, caption } = req.body;
+    try {
+        const user = await User.findOne({ 'whatsappInstances.key': instanceKey });
+        if (!user) {
+            return res.status(404).json({ error: 'Instância não encontrada' });
+        }
+
+        const instance = user.whatsappInstances.find(inst => inst.key === instanceKey);
+        if (!instance) {
+            return res.status(404).json({ error: 'Instância não encontrada' });
+        }
+
+        instance.welcomeMessage = {
+            isActive,
+            message,
+            mediaType,
+            mediaUrl,
+            caption
+        };
+
+        await user.save();
+
+        res.json({ success: true, message: 'Mensagem de boas-vindas configurada com sucesso' });
+    } catch (error) {
+        console.error('Erro ao configurar mensagem de boas-vindas:', error);
+        res.status(500).json({ error: 'Erro ao configurar mensagem de boas-vindas' });
+    }
+};
+
+exports.getWelcomeMessageSettings = async (req, res) => {
+    const { instanceKey, groupId } = req.query;
+    try {
+        const user = await User.findOne({ 'whatsappInstances.key': instanceKey });
+        if (!user) {
+            return res.status(404).json({ error: 'Instância não encontrada' });
+        }
+
+        const instance = user.whatsappInstances.find(inst => inst.key === instanceKey);
+        if (!instance) {
+            return res.status(404).json({ error: 'Instância não encontrada' });
+        }
+
+        const welcomeMessage = instance.welcomeMessage || {
+            isActive: false,
+            message: '',
+            mediaType: 'none',
+            mediaUrl: '',
+            caption: ''
+        };
+
+        res.json({ success: true, settings: welcomeMessage });
+    } catch (error) {
+        console.error('Erro ao buscar configurações de boas-vindas:', error);
+        res.status(500).json({ error: 'Erro ao buscar configurações de boas-vindas' });
+    }
+};
+
 exports.createGroup = async (req, res) => {
     const { instanceKey, name, users } = req.body;
     try {

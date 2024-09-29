@@ -9,6 +9,58 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 60px;
+          height: 34px;
+        }
+        
+        .switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+        
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          transition: .4s;
+        }
+        
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 26px;
+          width: 26px;
+          left: 4px;
+          bottom: 4px;
+          background-color: white;
+          transition: .4s;
+        }
+        
+        input:checked + .slider {
+          background-color: #2196F3;
+        }
+        
+        input:checked + .slider:before {
+          transform: translateX(26px);
+        }
+        
+        .slider.round {
+          border-radius: 34px;
+        }
+        
+        .slider.round:before {
+          border-radius: 50%;
+        }
+        </style>
+    <style>
         .hidden {
             display: none;
         }
@@ -216,6 +268,9 @@ function displayGroups(groups) {
 
             modalGroupName.textContent = group.subject || 'Grupo sem nome';
             modalContent.innerHTML = `
+            <button onclick="setWelcomeMessage('${groupId}')" class="btn btn-primary mb-2">
+    <i class="fas fa-door-open mr-2"></i>Configurar Mensagem de Boas-vindas
+</button>
                 <button onclick="leaveGroup('${groupId}')" class="btn btn-warning mb-2"><i class="fas fa-sign-out-alt mr-2"></i>Sair do Grupo</button>
                 <button onclick="inviteUser('${groupId}')" class="btn btn-info mb-2"><i class="fas fa-user-plus mr-2"></i>Convidar Usuário</button>
                 <button onclick="removeUser('${groupId}')" class="btn btn-error mb-2"><i class="fas fa-user-minus mr-2"></i>Remover Usuário</button>
@@ -235,6 +290,144 @@ function displayGroups(groups) {
             document.getElementById('groupActionModal').classList.remove('modal-open');
         }
 
+        async function fetchWelcomeMessageSettings(groupId) {
+    try {
+        const response = await fetch(`/group/welcome-message-settings?instanceKey=${selectedInstance}&groupId=${groupId}`);
+        const data = await response.json();
+        if (data.success) {
+            return data.settings;
+        } else {
+            throw new Error(data.error || 'Erro ao buscar configurações de boas-vindas');
+        }
+    } catch (error) {
+        console.error('Erro ao buscar configurações de boas-vindas:', error);
+        return {
+            isActive: false,
+            mediaType: 'none',
+            mediaUrl: '',
+            message: ''
+        };
+    }
+}
+
+async function setWelcomeMessage(groupId) {
+    // Primeiro, busque as configurações atuais de boas-vindas
+    const currentSettings = await fetchWelcomeMessageSettings(groupId);
+
+    const { value: formValues } = await Swal.fire({
+        title: 'Configurar Mensagem de Boas-vindas',
+        html: `
+            <div class="flex items-center mb-4">
+                <label class="switch mr-2">
+                    <input type="checkbox" id="swal-welcome-active" ${currentSettings.isActive ? 'checked' : ''}>
+                    <span class="slider round"></span>
+                </label>
+                <span>Ativar mensagem de boas-vindas</span>
+            </div>
+            <select id="swal-media-type" class="swal2-select mb-4">
+                <option value="none" ${currentSettings.mediaType === 'none' ? 'selected' : ''}>Somente texto</option>
+                <option value="image" ${currentSettings.mediaType === 'image' ? 'selected' : ''}>Imagem</option>
+                <option value="video" ${currentSettings.mediaType === 'video' ? 'selected' : ''}>Vídeo</option>
+                <option value="audio" ${currentSettings.mediaType === 'audio' ? 'selected' : ''}>Áudio</option>
+            </select>
+            <div id="media-preview" class="mb-4 hidden">
+                <img id="image-preview" class="max-w-full h-auto hidden" />
+                <video id="video-preview" class="max-w-full h-auto hidden" controls></video>
+                <audio id="audio-preview" class="w-full hidden" controls></audio>
+            </div>
+            <input id="swal-media-url" class="swal2-input mb-4 hidden" placeholder="URL da mídia" value="${currentSettings.mediaUrl || ''}">
+          <textarea id="swal-caption" class="swal2-textarea mb-4 hidden" placeholder="Legenda da mídia" rows="3">${currentSettings.caption || ''}</textarea>
+            <div id="text-message-container" class="mb-4">
+                <textarea id="swal-message" class="swal2-textarea" placeholder="Mensagem de boas-vindas" rows="4">${currentSettings.message || ''}</textarea>
+            </div>
+        `,
+        focusConfirm: false,
+        didOpen: () => {
+            const mediaTypeSelect = document.getElementById('swal-media-type');
+            const mediaUrlInput = document.getElementById('swal-media-url');
+            const captionInput = document.getElementById('swal-caption');
+            const mediaPreview = document.getElementById('media-preview');
+            const imagePreview = document.getElementById('image-preview');
+            const videoPreview = document.getElementById('video-preview');
+            const audioPreview = document.getElementById('audio-preview');
+
+            mediaTypeSelect.addEventListener('change', function() {
+                if (this.value === 'none') {
+                    mediaUrlInput.classList.add('hidden');
+                    captionInput.classList.add('hidden');
+                    mediaPreview.classList.add('hidden');
+                } else {
+                    mediaUrlInput.classList.remove('hidden');
+                    mediaPreview.classList.remove('hidden');
+                    if (this.value !== 'audio') {
+                        captionInput.classList.remove('hidden');
+                    } else {
+                        captionInput.classList.add('hidden');
+                    }
+                    updateMediaPreview();
+                }
+            });
+
+            mediaUrlInput.addEventListener('input', updateMediaPreview);
+
+            function updateMediaPreview() {
+                const mediaType = mediaTypeSelect.value;
+                const url = mediaUrlInput.value;
+
+                imagePreview.classList.add('hidden');
+                videoPreview.classList.add('hidden');
+                audioPreview.classList.add('hidden');
+
+                if (url) {
+                    if (mediaType === 'image') {
+                        imagePreview.src = url;
+                        imagePreview.classList.remove('hidden');
+                    } else if (mediaType === 'video') {
+                        videoPreview.src = url;
+                        videoPreview.classList.remove('hidden');
+                    } else if (mediaType === 'audio') {
+                        audioPreview.src = url;
+                        audioPreview.classList.remove('hidden');
+                    }
+                }
+            }
+
+            // Inicializar com as configurações atuais
+            mediaTypeSelect.dispatchEvent(new Event('change'));
+        },
+        preConfirm: () => {
+            return {
+                isActive: document.getElementById('swal-welcome-active').checked,
+                mediaType: document.getElementById('swal-media-type').value,
+                mediaUrl: document.getElementById('swal-media-url').value,
+                caption: document.getElementById('swal-caption').value,
+                message: document.getElementById('swal-message').value
+            }
+        }
+    });
+
+    if (formValues) {
+        try {
+            const response = await fetch('/group/set-welcome-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    instanceKey: selectedInstance,
+                    groupId: groupId,
+                    ...formValues
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showAlert('Sucesso', 'Mensagem de boas-vindas configurada com sucesso!', 'success');
+            } else {
+                throw new Error(data.error || 'Erro ao configurar mensagem de boas-vindas');
+            }
+        } catch (error) {
+            showAlert('Erro', error.message, 'error');
+        }
+    }
+}
         async function leaveGroup(groupId) {
             try {
                 const response = await fetch('/group/leave', {

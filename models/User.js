@@ -19,6 +19,13 @@ const whatsappInstanceSchema = new mongoose.Schema({
     isActive: { type: Boolean, default: false },
     funnelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Funnel' }
   },
+  welcomeMessage: {
+    isActive: { type: Boolean, default: false },
+    message: String,
+    mediaType: { type: String, enum: ['none', 'image', 'audio', 'video'], default: 'none' },
+    mediaUrl: String,
+    caption: String
+  },
   autoResponseReports: [{
     chatId: String,
     funnelId: mongoose.Schema.Types.ObjectId,

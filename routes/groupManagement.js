@@ -21,7 +21,10 @@ router.get('/id-info', ensureAuthenticated, groupController.getGroupInfoFromId);
 router.post('/update-settings', ensureAuthenticated, groupController.updateGroupSettings);
 router.post('/update-subject', ensureAuthenticated, groupController.updateGroupSubject);
 router.post('/update-description', ensureAuthenticated, groupController.updateGroupDescription);
+// Em groupManagement.js, adicione:
 
+router.post('/set-welcome-message', groupController.setWelcomeMessage);
+router.get('/welcome-message-settings', groupController.getWelcomeMessageSettings);
 
 async function extractGroupMembers(instanceKey, groupId) {
     const API_BASE_URL = 'https://budzap.shop';

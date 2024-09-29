@@ -66,6 +66,89 @@ router.post('/stripe', express.raw({type: 'application/json'}), async (req, res)
   res.json({received: true});
 });
 
+
+async function sendTextMessage(instance, content, id, type) {
+  url = `https://budzap.shop/message/text?key=${instance}`
+  const messagePayload = {
+      id: `${id}`,
+      typeId: type,
+      message: content,
+      options: {
+          delay: 0,
+          replyFrom: ""
+      },
+      groupOptions: {
+          markUser: "ghostMention"
+      }
+  };
+
+console.log(messagePayload);
+
+  const requestOptions = {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(messagePayload)
+  };
+
+  try {
+      const response = await fetch(url, requestOptions);
+      const data = await response.json();
+      console.log('Success');
+  } catch (error) {
+      console.error('Error:', error);
+  }
+}
+
+const fs2 = require('fs')
+const FormData = require('form-data');
+
+async function sendMediaMessage(instanceKey, mediaUrl, id, filename, final, caption, type) {
+  let url = `https://budzap.shop/message/${filename}?key=${instanceKey}`
+  const mediaBuffer = await downloadMedia(mediaUrl);
+  const data = new FormData();
+  
+  // Salvando o buffer temporariamente como um arquivo
+  const tempFilePath = path.join(__dirname, 'temp_' + final);
+  fs2.writeFileSync(tempFilePath, mediaBuffer);
+
+  // Anexando o arquivo ao FormData
+  data.append('file', fs2.createReadStream(tempFilePath), final);
+  
+  data.append('id', `${id}`);
+
+  if (!final.includes('.mp3')) (
+      data.append('caption', caption)
+  )
+
+  data.append('userType', type);
+  data.append('delay', 0);
+
+  try {
+      const response = await axios.post(url, data, {
+          headers: data.getHeaders()
+      });
+      
+      if (response.data.error) {
+          throw new Error(response.data.message);
+      }
+  } catch (error) {
+      console.error('Error sending media message:', error);
+  } finally {
+      // Removendo o arquivo temporário
+      fs2.unlinkSync(tempFilePath);
+  }
+}
+
+async function downloadMedia(url) {
+  const response = await axios.get(url, { responseType: 'arraybuffer' });
+  return Buffer.from(response.data);
+}
+
+
+const replaceNewLines = (text) => text.replace(/\n/g, ' ');
+
 router.post('/:instanceKey', async (req, res) => {
   try {
     const maxRetries = 5;
@@ -80,7 +163,55 @@ router.post('/:instanceKey', async (req, res) => {
         }
 
         const event = req.body;
-        console.log(event);
+        
+
+        if (event.type === 'group-participants') {
+          if (event.body.data.action === "add") {
+              const newMember = event.body.data.participants[0];
+              const groupId = event.body.data.id;
+              console.log("Novo membro adicionado: " + newMember);
+              try {
+                  const user = await User.findOne({ 'whatsappInstances.key': event.instanceKey });
+                  if (user) {
+                      const instance = user.whatsappInstances.find(inst => inst.key === event.instanceKey);
+                      console.log('Instância encontrada:', instance);
+                      if (instance && instance.welcomeMessage && instance.welcomeMessage.isActive) {
+                          const { message, mediaType, mediaUrl, caption } = instance.welcomeMessage;
+                          console.log('Enviando mensagem de boas-vindas para o grupo:', groupId);
+                          // Enviar mensagem de boas-vindas
+                          if (message) {
+                            await sendTextMessage(event.instanceKey, message.replace('{name}', newMember.split('@')[0]), groupId, 'group');
+                             
+                          }
+                          
+                          // Enviar mídia, se configurada
+                          if (mediaType !== 'none' && mediaUrl) {
+
+                            let typmed;
+
+                            if(mediaType == "image") {
+                                typmed = "jpg"
+                            } else if (mediaType == "video") {
+                                typmed = "mp4"
+                            }
+
+                            await sendMediaMessage(
+                              event.instanceKey, 
+                              mediaUrl, 
+                              groupId, 
+                              mediaType === 'image' ? 'imageFile' : 'video', 
+                              typmed, 
+                              caption ? caption.replace('{name}', newMember.split('@')[0]) : 'Usuario', 
+                              'group'
+                          );
+                        }
+                      }
+                  }
+              } catch (error) {
+                  console.error('Erro ao enviar mensagem de boas-vindas:', error);
+              }
+          }
+      }
 
         if (event.type === 'message') {
           console.log(`Processando webhook de mensagem para a instancia ${event.instanceKey}`.cyan);

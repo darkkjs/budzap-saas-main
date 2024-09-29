@@ -180,23 +180,25 @@ async function executeTyping(instanceKey, chatId, duration) {
     await new Promise(resolve => setTimeout(resolve, delay));
 }
 
-async function executeRecordAudio(instanceKey, chatId, duration) {
+
+async function executeRecordAudio(instanceKey, chatId, duration, autoResponseKey, state) {
     await setStatus(instanceKey, 'recording', chatId, duration);
     const delay = parseInt(duration) * 1000; // Convertendo para milissegundos
     console.log(`Aguardando ${delay}ms antes do próximo passo`);
     await new Promise(resolve => setTimeout(resolve, delay));
+    await redisClient.setex(autoResponseKey, AUTO_RESPONSE_EXPIRY, JSON.stringify(state));
 }
 
 async function setStatus(instanceKey, status, chatId, duration) {
     try {
-        await axios.post(`https://budzap.shop/message/setstatus?key=${instanceKey}`, {
+         axios.post(`https://budzap.shop/message/setstatus?key=${instanceKey}`, {
             status: status,
             id: chatId,
             delay: duration * 1000, // Converter segundos para milissegundos
             type: 'user'
         });
-        console.log(`Aguardando ${duration * 1000}s antes do próximo passo`);
-        
+       // console.log(`Aguardando ${duration * 1000}s antes do próximo passo`);
+        return
     } catch (error) {
         console.error(`Erro ao definir status ${status}:`, error);
     }
@@ -261,6 +263,7 @@ function formatAIResponse(response) {
 async function executeFunnel(funnel, chatId, instanceKey, state) {
     console.log('Executando funil:', { funnelName: funnel.name, chatId, instanceKey, currentNodeId: state.currentNodeId });
 
+    console.log('funil completo:', funnel);
     const autoResponseKey = `auto_response:${instanceKey}:${chatId}`;
 
     while (state.currentNodeId) {
@@ -540,9 +543,10 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
                         await executeTyping(instanceKey, chatId, currentNode.duration);
                         
                         break;
-                    case 'recordAudio':
-                        await executeRecordAudio(instanceKey, chatId, currentNode.duration);
-                        break;
+                        case 'recordAudio':
+                            await executeRecordAudio(instanceKey, chatId, currentNode.duration, autoResponseKey, state);
+                            console.log('Gravação de áudio concluída, passando para o próximo nó');
+                            break;
                     case 'addToGroup':
                         await addToGroup(currentNode.instanceKey, currentNode.groupId, chatId);
                         break;
@@ -590,10 +594,12 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
                             await sendMediaMessage(instanceKey, currentNode.content, chatId, currentNode.type === 'image' ? 'imageFile' : 'video', `${currentNode.type}.${currentNode.type === 'image' ? 'jpg' : 'mp4'}`, currentNode.caption);
                             await saveAutoResponseMessage(instanceKey, chatId, currentNode.content, currentNode.type);
                             break;
-                    case 'audio':
-                        await sendMediaMessage(instanceKey, currentNode.content, chatId, 'audiofile', 'audio.mp3', '');
-                        await saveAutoResponseMessage(instanceKey, chatId, currentNode.content, 'audio');
-                        break;
+                            case 'audio':
+                                console.log('Iniciando envio de áudio');
+                                await sendMediaMessage(instanceKey, currentNode.content, chatId, 'audiofile', 'audio.mp3', '');
+                                console.log('Áudio enviado com sucesso');
+                                await saveAutoResponseMessage(instanceKey, chatId, currentNode.content, 'audio');
+                                break;
                     
                         case 'blockUser':
                             return `<p>Bloquear usuário</p>`;
@@ -610,6 +616,9 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
             const nextConnection = funnel.connections.find(conn => conn.sourceId === currentNode.id);
             state.currentNodeId = nextConnection ? nextConnection.targetId : null;
 
+            console.log(`Próximo nó: ${state.currentNodeId}`);
+
+            
             // Atualizar o estado
             await redisClient.setex(autoResponseKey, AUTO_RESPONSE_EXPIRY, JSON.stringify(state));
 
@@ -791,6 +800,7 @@ const fs = require('fs');
 const path = require('path');
 
 async function sendMediaMessage(instanceKey, mediaUrl, number, filename, final, caption) {
+    //console.log('Iniciando envio de mídia:', { instanceKey, mediaUrl, id, filename, final, caption, type });
     let url = `https://budzap.shop/message/${filename}?key=${instanceKey}`
     const mediaBuffer = await downloadMedia(mediaUrl);
     const data = new FormData();
@@ -819,6 +829,9 @@ async function sendMediaMessage(instanceKey, mediaUrl, number, filename, final, 
         if (response.data.error) {
             throw new Error(response.data.message);
         }
+
+        console.log('Resposta do envio de mídia:', response.data);
+
     } catch (error) {
         console.error('Error sending media message:', error);
     } finally {
