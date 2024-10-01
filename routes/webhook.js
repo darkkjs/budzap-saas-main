@@ -270,7 +270,7 @@ router.post('/:instanceKey', async (req, res) => {
               dadoschat.mensagem.conteudomsg = 'Abra o app para visualizar essa mensagem!';
               break;
           }
-
+console.log("Mensagem recebida: ", dadoschat.mensagem.conteudomsg);
           const messageKey = `${dadoschat.id}:${dadoschat.messageTimestamp}`;
        /*/   const exists = await messageExists(req.params.instanceKey, messageKey);
           if (exists) {
