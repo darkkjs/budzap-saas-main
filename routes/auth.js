@@ -512,18 +512,13 @@ function formatPhoneNumber(num) {
 }
 
 async function sendTextMessage(num, msg) {
-  const formattedNumber = formatPhoneNumber(num);
-   if (!formattedNumber) {
-     return res.status(400).json({ message: 'Número de telefone inválido.' });
-   }
-
-   const numfinal = formattedNumber.startsWith('55') 
-     ? await formatarNumeroBrasileiro(formattedNumber)
-     : formattedNumber;
-
+  const formattedNumber = num.replace(/\D/g, '');
+  if (formattedNumber.length < 10 || formattedNumber.length > 15) {
+    throw new Error('Número de telefone inválido');
+  }
 
   const data = {
-    id: numfinal,
+    id: formattedNumber,
     typeId: "user",
     message: msg,
     options: {
@@ -553,8 +548,13 @@ async function sendTextMessage(num, msg) {
     return response.data;
   } catch (error) {
     console.error('Error sending message:', error.message);
+    if (error.response) {
+      console.error('Error response:', error.response.data);
+      throw new Error(`Falha ao enviar mensagem: ${error.response.data.message || 'Erro desconhecido'}`);
+    }
     throw error;
   }
+
 }
 
 

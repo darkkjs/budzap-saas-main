@@ -113,7 +113,13 @@ const UserSchema = new mongoose.Schema({
   phone: {
     type: String,
     unique: true,
-    required: true
+    required: true,
+    validate: {
+      validator: function(v) {
+        return /^\d{10,15}$/.test(v);
+      },
+      message: props => `${props.value} não é um número de telefone válido!`
+    }
   },
   username: {
     type: String,
@@ -202,6 +208,9 @@ UserSchema.index({ email: 1 });
 UserSchema.index({ username: 1 });
 
 UserSchema.pre('save', async function(next) {
+  if (this.isModified('phone')) {
+    this.phone = this.phone.replace(/\D/g, '');
+  }
  // if (this.isModified('password')) {
   //  this.password = await bcrypt.hash(this.password, 10);
  // }
