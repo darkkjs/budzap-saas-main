@@ -908,17 +908,24 @@ function addChatToList(chat) {
     addChatListeners();
 }
 
+async function loadAllProfileImages(instanceKey, chats) {
+    const imagePromises = chats.map(chat => fetchProfileImage(instanceKey, chat.id));
+    await Promise.all(imagePromises);
+    renderChats(chats);
+}
+
 function createChatHTML(chat) {
     const lastMessageContent = getMediaDescription(chat.lastMessageType, chat.lastMessage);
     const chatTypeIcon = chat.chatType === 'grupo' ? '👥' : '👤';
     const unreadCount = chat.unreadCount || 0;
     const unreadClass = unreadCount > 0 ? 'bg-primary-100' : '';
     const unreadIndicator = unreadCount > 0 ? `<span class="bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full">${unreadCount}</span>` : '';
+    const avatarUrl = profileImageCache[chat.id] || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
 
     return `
         <div class="chat-item p-3 hover:bg-gray-100 cursor-pointer rounded-lg transition duration-200 ease-in-out ${unreadClass}" data-chat-id="${chat.id}" data-chat-type="${chat.chatType}">
             <div class="flex items-center space-x-3">
-                <img src="${chat.image || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png'}" alt="${chat.name}" class="w-12 h-12 rounded-full object-cover">
+                <img src="${avatarUrl}" alt="${chat.name}" class="w-12 h-12 rounded-full object-cover">
                 <div class="flex-grow min-w-0">
                     <div class="flex justify-between items-baseline">
                         <h3 class="font-semibold text-gray-900 truncate">${chatTypeIcon} ${chat.name}</h3>
@@ -935,6 +942,7 @@ function createChatHTML(chat) {
 socket.on('initial chats', (initialChats) => {
     chats = initialChats;
     renderChats(chats);
+     loadAllProfileImages(currentInstanceKey, chats);
 });
 
 
@@ -1548,15 +1556,14 @@ if (breadcrumbNav) {
         }/*/
 
         function renderChats(chatsToRender) {
-            const sortedChats = chatsToRender.sort((a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp);
-
-const chatHTML = sortedChats.map(chat => {
+    const sortedChats = chatsToRender.sort((a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp);
+    const chatHTML = sortedChats.map(chat => {
         const lastMessageContent = getMediaDescription(chat.lastMessageType, chat.lastMessage);
         const chatTypeIcon = chat.chatType === 'grupo' ? '👥' : '👤';
         const unreadCount = chat.unreadCount || 0;
         const unreadClass = unreadCount > 0 ? 'bg-primary-100' : '';
         const unreadIndicator = unreadCount > 0 ? `<span class="bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full">${unreadCount}</span>` : '';
-        const avatarUrl = getAvatarUrl(chat, chat.id);
+        const avatarUrl = profileImageCache[chat.id] || chat.image || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
 
         return `
             <div class="chat-item p-3 hover:bg-gray-100 cursor-pointer rounded-lg transition duration-200 ease-in-out ${unreadClass}" data-chat-id="${chat.id}" data-chat-type="${chat.chatType}">
@@ -1765,21 +1772,82 @@ function formatTextWithLinks(text) {
         }
 
         function displayChatInfo(chat) {
-            currentChatInfo = chat;
-            chatName.textContent = chat.name;
-            mobileChatName.textContent = chat.name;
-            chatAvatar.src = chat.image || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
-            mobileChatAvatar.src = chat.image || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
-            chatType.textContent = chat.chatType === 'grupo' ? 'Grupo' : 'Chat Individual';
+    currentChatInfo = chat;
+    chatName.textContent = chat.name;
+    mobileChatName.textContent = chat.name;
+    chatType.textContent = chat.chatType === 'grupo' ? 'Grupo' : 'Chat Individual';
 
-            if (chat.chatType === 'grupo') {
-                groupMembersButton.classList.remove('hidden');
-                mobileGroupMembersButton.classList.remove('hidden');
-            } else {
-                groupMembersButton.classList.add('hidden');
-                mobileGroupMembersButton.classList.add('hidden');
-            }
+    const imageUrl = profileImageCache[chat.id] || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
+    chatAvatar.src = imageUrl;
+    mobileChatAvatar.src = imageUrl;
+
+    if (chat.chatType === 'grupo') {
+        groupMembersButton.classList.remove('hidden');
+        mobileGroupMembersButton.classList.remove('hidden');
+    } else {
+        groupMembersButton.classList.add('hidden');
+        mobileGroupMembersButton.classList.add('hidden');
+    }
+}
+
+        const profileImageCache = {};
+
+async function fetchProfileImage(instanceKey, chatId) {
+    // Verificar se a imagem já está em cache
+    if (profileImageCache[chatId]) {
+        updateProfileImage(chatId, profileImageCache[chatId]);
+        return;
+    }
+
+    try {
+        const response = await fetch('/chat/profile-image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ instanceKey, chatId }),
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const imageUrl = URL.createObjectURL(blob);
+            
+            // Armazenar a imagem em cache
+            profileImageCache[chatId] = imageUrl;
+            
+            updateProfileImage(chatId, imageUrl);
+        } else {
+            console.error('Falha ao obter imagem de perfil');
         }
+    } catch (error) {
+        console.error('Erro ao buscar imagem de perfil:', error);
+    }
+}
+
+function updateProfileImage(chatId, imageUrl) {
+    if (!imageUrl) return;
+
+    // Atualizar a imagem no chat aberto
+    if (currentChatId === chatId) {
+        chatAvatar.src = imageUrl;
+        mobileChatAvatar.src = imageUrl;
+    }
+
+    // Atualizar a imagem na lista de chats
+    const chatItems = document.querySelectorAll(`.chat-item[data-chat-id="${chatId}"] img`);
+    chatItems.forEach(item => {
+        item.src = imageUrl;
+    });
+
+    // Atualizar o cache de chats
+    const chatIndex = chats.findIndex(chat => chat.id === chatId);
+    if (chatIndex !== -1) {
+        chats[chatIndex].image = imageUrl;
+    }
+
+    // Forçar uma re-renderização da lista de chats
+    renderChats(chats);
+}
 
         function addChatListeners() {
     document.querySelectorAll('.chat-item').forEach(item => {
@@ -1813,6 +1881,7 @@ function formatTextWithLinks(text) {
             const newChats = await response.json();
             const newChatIds = new Set(newChats.map(chat => chat.id));
             const oldChatIds = new Set(chats.map(chat => chat.id));
+            await loadAllProfileImages(currentInstanceKey, newChats);
 
             // Verificar novos chats ou mensagens
             newChats.forEach(newChat => {
@@ -1902,14 +1971,14 @@ async function sendMessage(content) {
             moveChatToTop(currentChatId);
 
             // Emitir a mensagem para o socket
-            socket.emit('send message', {
+          /*/  socket.emit('send message', {
                 instanceKey: currentInstanceKey,
                 chatId: currentChatId,
                 content: content.trim()
-            });
+            });/*/
 
             // Adicionar a mensagem à lista de mensagens atual
-            appendMessage({
+           appendMessage({
                 fromMe: true,
                 sender: 'You', // ou o nome do usuário atual
                 content: content.trim(),

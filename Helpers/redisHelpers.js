@@ -63,55 +63,54 @@ async function getMessages(instanceKey, chatId, limit = 50) {
 
 
 async function saveMessage(instanceKey, chatId, messageData) {
-    const chatKey = `chat:${instanceKey}:${chatId}`;
-    const messagesKey = `messages:${instanceKey}:${chatId}`;
-    const messageKeysSet = `messages:${instanceKey}:keys`;
-  
-    // Verifica se a mensagem já existe
- /*/   const messageExists = await redisClient.sismember(messageKeysSet, messageData.key);
-    if (messageExists) {
-      console.log('Mensagem duplicada detectada, ignorando.'.yellow);
-      return false;
-    }/*/
-  
-    // Verifica se o chat existe
-    const chatExists = await redisClient.exists(chatKey);
-  
-    if (!chatExists) {
+  const chatKey = `chat:${instanceKey}:${chatId}`;
+  const messagesKey = `messages:${instanceKey}:${chatId}`;
+  const messageKeysSet = `messages:${instanceKey}:keys`;
+
+  // Verifica se o chat existe
+  const chatExists = await redisClient.exists(chatKey);
+
+  if (!chatExists) {
       // Se o chat não existir, cria um novo com informações básicas
       await redisClient.hmset(chatKey, {
-        name: messageData.sender,
-        image: messageData.senderImage,
-        info: JSON.stringify(messageData.info || {})
+          name: messageData.sender,
+          image: messageData.senderImage,
+          info: JSON.stringify(messageData.info || {})
       });
       await redisClient.sadd(`chats:${instanceKey}`, chatId);
-    }
-  
-    // Salva a mensagem na lista de mensagens do chat
-    await redisClient.rpush(messagesKey, JSON.stringify(messageData));
-  
-    // Adiciona a chave da mensagem ao conjunto de chaves de mensagens
-    await redisClient.sadd(messageKeysSet, messageData.key);
-  
-    // Atualiza a última mensagem no chat
-    await redisClient.hmset(chatKey, {
+  }
+
+  // Salva a mensagem na lista de mensagens do chat com expiração de 1 dia
+  const ONE_DAY_IN_SECONDS = 24 * 60 * 60;
+  await redisClient.multi()
+      .rpush(messagesKey, JSON.stringify(messageData))
+      .expire(messagesKey, ONE_DAY_IN_SECONDS)
+      .exec();
+
+  // Adiciona a chave da mensagem ao conjunto de chaves de mensagens com expiração de 1 dia
+  await redisClient.multi()
+      .sadd(messageKeysSet, messageData.key)
+      .expire(messageKeysSet, ONE_DAY_IN_SECONDS)
+      .exec();
+
+  // Atualiza a última mensagem no chat
+  await redisClient.hmset(chatKey, {
       lastMessage: messageData.content,
       lastMessageTimestamp: messageData.timestamp,
       lastMessageType: messageData.type,
       info: JSON.stringify(messageData.info || {})
-    });
-  
-    // Se a mensagem não é do usuário, marca o chat como não lido
-    if (!messageData.fromMe) {
-        await redisClient.hincrby(chatKey, 'unreadCount', 1);
-        await redisClient.hset(chatKey, 'unread', 'true');
-    }
+  });
 
-    
-  
-    console.log(`Mensagem salva para o chat ${chatId}`.green);
-    return true;
+  // Se a mensagem não é do usuário, marca o chat como não lido
+  if (!messageData.fromMe) {
+      await redisClient.hincrby(chatKey, 'unreadCount', 1);
+      await redisClient.hset(chatKey, 'unread', 'true');
   }
+
+  console.log(`Mensagem salva para o chat ${chatId}`.green);
+  return true;
+}
+
   
   async function messageExists(instanceKey, messageKey) {
     const messageKeysSet = `messages:${instanceKey}:keys`;

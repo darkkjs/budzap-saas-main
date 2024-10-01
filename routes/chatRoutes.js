@@ -24,10 +24,54 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.post('/profile-image', async (req, res) => {
+  try {
+    const { instanceKey, chatId } = req.body;
+
+    if (!instanceKey || !chatId) {
+      return res.status(400).json({ error: 'Chave da instância e ID do chat são obrigatórios' });
+    }
+
+    const config = {
+      method: 'post',
+      url: `https://budzap.shop/misc/downProfile?key=${instanceKey}`,
+      headers: { 
+        'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({ id: chatId })
+    };
+
+    const response = await axios(config);
+
+    if (response.data.error === false && response.data.data) {
+      const imageUrl = response.data.data;
+      
+      // Fazer uma requisição para obter a imagem
+      const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+      const imageBuffer = Buffer.from(imageResponse.data, 'binary');
+      
+      // Enviar a imagem como resposta
+      res.set('Content-Type', 'image/jpeg');
+      res.send(imageBuffer);
+    } else {
+      res.status(404).json({ error: 'Imagem de perfil não encontrada' });
+    }
+  } catch (error) {
+    console.error('Erro ao obter imagem de perfil:', error);
+    res.status(500).json({ error: 'Erro ao obter imagem de perfil' });
+  }
+});
+
 router.post('/start-funnel', async (req, res) => {
   try {
     const { funnelId, instanceKey, chatId } = req.body;
     const userId = req.user.id;
+
+    const io = req.app.get('io');
+
+    const emitEvent = (instanceKey, eventName, data) => {
+      io.to(instanceKey).emit(eventName, data);
+  };
 
     // Buscar o funil do Redis
     const funnel = await funnelController.getFunnelById(funnelId, userId);
@@ -63,7 +107,7 @@ router.post('/start-funnel', async (req, res) => {
     );
 
     // Iniciar a execução do funil
-    executeFunnel(funnel, chatId, instanceKey, state);
+    executeFunnel(funnel, chatId, instanceKey, state, emitEvent);
 
     res.json({ message: 'Funil iniciado com sucesso', currentNodeId: state.currentNodeId });
   } catch (error) {

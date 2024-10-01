@@ -9,14 +9,17 @@ const { uploadbase64 } = require('../Helpers/uploader'); // Ajuste o caminho con
 const github = require('../config/git');
 const { getChats, getMessages, markChatAsRead, saveMessage } = require('../Helpers/redisHelpers');
 const { saveEvent } = require('./eventService');
+const io = require('../app'); // Importe o objeto io do seu arquivo app.js
+const moment = require('moment-timezone');
+const saoPauloTimestamp = moment().tz('America/Sao_Paulo').unix();
 
 async function saveAutoResponseMessage(instanceKey, chatId, content, type = 'text') {
     const messageKey = `${chatId}:${Date.now()}`;
     const messageData = {
         key: messageKey,
-        sender: 'Auto-resposta',
+        sender: 'Hocketzap',
         content: content,
-        timestamp: Math.floor(Date.now() / 1000),
+        timestamp: saoPauloTimestamp,
         fromMe: true,
         type: type,
             senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
@@ -200,7 +203,7 @@ async function setStatus(instanceKey, status, chatId, duration) {
        // console.log(`Aguardando ${duration * 1000}s antes do próximo passo`);
         return
     } catch (error) {
-        console.error(`Erro ao definir status ${status}:`, error);
+        console.error(`Erro ao definir status ${status}:`);
     }
 }
 
@@ -260,7 +263,7 @@ function formatAIResponse(response) {
 }
 
 
-async function executeFunnel(funnel, chatId, instanceKey, state) {
+async function executeFunnel(funnel, chatId, instanceKey, state, emitEvent) {
     console.log('Executando funil:', { funnelName: funnel.name, chatId, instanceKey, currentNodeId: state.currentNodeId });
 
     console.log('funil completo:', funnel);
@@ -517,6 +520,25 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
                     messageContent = replaceVariables(messageContent, state);
                     await sendTextMessage(instanceKey, messageContent, chatId);
                     await saveAutoResponseMessage(instanceKey, chatId, messageContent, 'text');
+
+                    const messageTimestamp = Date.now();
+                    const messageData = {
+                        key: `${chatId}:${saoPauloTimestamp}`,
+                        sender: 'Hocketzap',
+                        content: messageContent,
+                        timestamp: saoPauloTimestamp,
+                        fromMe: true,
+                        type: 'text',
+                        senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
+                    };
+
+                    //await saveAutoResponseMessage(instanceKey, chatId, messageContent, 'text');
+
+                    // Usar a função de callback para emitir o evento
+                    if (emitEvent) {
+                        emitEvent(instanceKey, 'new message', { chatId, message: messageData });
+                    }
+
                     break;
                     case 'generatePayment':
                         const paymentId = await generatePayment(instanceKey, chatId, currentNode);
@@ -564,6 +586,24 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
                             if (state.status !== 'waiting_for_input') {
                                 await sendTextMessage(instanceKey, currentNode.content, chatId);
                                 await saveAutoResponseMessage(instanceKey, chatId, currentNode.content, 'text');
+
+                                const messageData = {
+                                    key: `${chatId}:${saoPauloTimestamp}`,
+                                    sender: 'Hocketzap',
+                                    content: currentNode.content,
+                                    timestamp: saoPauloTimestamp,
+                                    fromMe: true,
+                                    type: 'text',
+                                    senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
+                                };
+            
+                                //await saveAutoResponseMessage(instanceKey, chatId, messageContent, 'text');
+            
+                                // Usar a função de callback para emitir o evento
+                                if (emitEvent) {
+                                    emitEvent(instanceKey, 'new message', { chatId, message: messageData });
+                                }
+
                                 state.status = 'waiting_for_input';
                                 state.expectedInput = currentNode.inputKey;
                                 await redisClient.setex(autoResponseKey, AUTO_RESPONSE_EXPIRY, JSON.stringify(state));

@@ -109,6 +109,8 @@ async function uploadMediaToGithub(file, type, github) {
       nomearqv = filename + ".mp3";
     } else if (type === "video") {
       nomearqv = filename + ".mp4";
+    } else if (type === "webp") {
+      nomearqv = filename + ".webp";
     } else {
       nomearqv = filename + "." + type;
     }

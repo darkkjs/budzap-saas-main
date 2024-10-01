@@ -263,7 +263,8 @@ router.post('/:instanceKey', async (req, res) => {
               break;
             case 'stickerMessage':
               dadoschat.mensagem.tipomsg = 'sticker';
-              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.body.msgContent, 'jpg');
+              console.log(event.body)
+              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.body.stickerMessage, 'webp');
               break;
             default:
               dadoschat.mensagem.tipomsg = 'texto';
