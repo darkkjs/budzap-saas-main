@@ -328,7 +328,7 @@ if (state.status === 'waiting_for_input') {
                     break;
 
                     case 'nameExtractor':
-    const { GoogleGenerativeAI } = require("@google/generative-ai");
+
     const apiKey = process.env.GEMINI_API_KEY;
     const genAI4 = new GoogleGenerativeAI(apiKey);
 
