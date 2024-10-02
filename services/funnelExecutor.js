@@ -510,8 +510,10 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
     
         try {
             const result = await chat.sendMessage(preparedPrompt);
-            const aiResponse = result.response.text();
+            const aiResponse = result.response.text().replace(/\n+$/, '')
     
+ 
+
             console.log('Resposta do agente IA:', aiResponse);
     
             // Adicionar a resposta da IA ao histórico
