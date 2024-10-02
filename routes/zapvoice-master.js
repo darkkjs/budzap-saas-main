@@ -74,7 +74,7 @@ router.post('/send-audio', ensureAuthenticated, upload.single('audio'), async (r
     console.log('Enviando arquivo:', audioFile.path);
 console.log(fs.createReadStream(audioFile.path))
     // Enviar o áudio usando a API fornecida
-    const response = await axios.post(`https;//budzap.shop/message/audiofile?key=${instanceKey}`, formData, {
+    const response = await axios.post(`https://budzap.shop/message/audiofile?key=${instanceKey}`, formData, {
       headers: {
         ...formData.getHeaders(),
         'accept': '*/*',
@@ -86,7 +86,7 @@ console.log(fs.createReadStream(audioFile.path))
         'sec-fetch-dest': 'empty',
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-origin',
-        'Referer': `https;//budzap.shop/chat?num=${chatId}&key=${instanceKey}`,
+        'Referer': `https://budzap.shop/chat?num=${chatId}&key=${instanceKey}`,
         'Referrer-Policy': 'strict-origin-when-cross-origin'
       }
     });

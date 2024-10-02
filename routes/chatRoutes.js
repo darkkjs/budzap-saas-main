@@ -34,7 +34,7 @@ router.post('/profile-image', async (req, res) => {
 
     const config = {
       method: 'post',
-      url: `https;//budzap.shop/misc/downProfile?key=${instanceKey}`,
+      url: `https://budzap.shop/misc/downProfile?key=${instanceKey}`,
       headers: { 
         'Content-Type': 'application/json'
       },
@@ -221,7 +221,7 @@ async function sendTextMessage(num, msg, instance_key) {
   const config = {
     method: 'post',
     maxBodyLength: Infinity,
-    url: `https;//budzap.shop/message/text?key=${instance_key}`,
+    url: `https://budzap.shop/message/text?key=${instance_key}`,
     headers: { 
       'Content-Type': 'application/json', 
       'Authorization': 'Bearer RANDOM_STRING_HERE', 

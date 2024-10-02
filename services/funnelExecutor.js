@@ -1,6 +1,6 @@
 // services/funnelExecutor.js
 const axios = require('axios');
-const API_BASE_URL = 'https;//budzap.shop';
+const API_BASE_URL = 'https://budzap.shop';
 const ADMIN_TOKEN = 'darklindo'; // Substitua pelo seu token admin real
 const redisClient = require('../config/redisConfig');
 const User = require('../models/User');
@@ -228,7 +228,7 @@ async function executeRecordAudio(instanceKey, chatId, duration, autoResponseKey
 
 async function setStatus(instanceKey, status, chatId, duration) {
     try {
-         axios.post(`https;//budzap.shop/message/setstatus?key=${instanceKey}`, {
+         axios.post(`https://budzap.shop/message/setstatus?key=${instanceKey}`, {
             status: status,
             id: chatId,
             delay: duration * 1000, // Converter segundos para milissegundos
@@ -992,7 +992,7 @@ function evaluateCondition(conditionNode, state) {
 
 
 async function sendTextMessage(instance, content, number) {
-    url = `https;//budzap.shop/message/text?key=${instance}`
+    url = `https://budzap.shop/message/text?key=${instance}`
     const messagePayload = {
         id: `${number}`,
         typeId: "user",
@@ -1030,7 +1030,7 @@ const path = require('path');
 
 async function sendMediaMessage(instanceKey, mediaUrl, number, filename, final, caption) {
     //console.log('Iniciando envio de mídia:', { instanceKey, mediaUrl, id, filename, final, caption, type });
-    let url = `https;//budzap.shop/message/${filename}?key=${instanceKey}`
+    let url = `https://budzap.shop/message/${filename}?key=${instanceKey}`
     const mediaBuffer = await downloadMedia(mediaUrl);
     const data = new FormData();
     

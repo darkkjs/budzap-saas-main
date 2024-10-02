@@ -17,7 +17,7 @@ const { getChats, chatExists } = require('../Helpers/redisHelpers');
 async function getChatInfo(event, isGroup) {
   if (isGroup) {
     try {
-      const response = await axios.get(`https;//budzap.shop/group/getallgroups`, {
+      const response = await axios.get(`https://budzap.shop/group/getallgroups`, {
         params: { key: event.instanceKey }
     });
       const groups = response.data;
@@ -68,7 +68,7 @@ router.post('/stripe', express.raw({type: 'application/json'}), async (req, res)
 
 
 async function sendTextMessage(instance, content, id, type) {
-  url = `https;//budzap.shop/message/text?key=${instance}`
+  url = `https://budzap.shop/message/text?key=${instance}`
   const messagePayload = {
       id: `${id}`,
       typeId: type,
@@ -105,7 +105,7 @@ const fs2 = require('fs')
 const FormData = require('form-data');
 
 async function sendMediaMessage(instanceKey, mediaUrl, id, filename, final, caption, type) {
-  let url = `https;//budzap.shop/message/${filename}?key=${instanceKey}`
+  let url = `https://budzap.shop/message/${filename}?key=${instanceKey}`
   const mediaBuffer = await downloadMedia(mediaUrl);
   const data = new FormData();
   
