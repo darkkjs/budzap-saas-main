@@ -1,5 +1,5 @@
 require('dotenv').config();
-const eventBus = require('./helpers/eventBus');
+const eventBus = require('./Helpers/eventBus');
 
 // Verificação da chave API
 if (!process.env.STRIPE_SECRET_KEY) {
