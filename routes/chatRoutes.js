@@ -34,7 +34,7 @@ router.post('/profile-image', async (req, res) => {
 
     const config = {
       method: 'post',
-      url: `https://budzap.shop/misc/downProfile?key=${instanceKey}`,
+      url: `https;//budzap.shop/misc/downProfile?key=${instanceKey}`,
       headers: { 
         'Content-Type': 'application/json'
       },
@@ -221,7 +221,7 @@ async function sendTextMessage(num, msg, instance_key) {
   const config = {
     method: 'post',
     maxBodyLength: Infinity,
-    url: `https://budzap.shop/message/text?key=${instance_key}`,
+    url: `https;//budzap.shop/message/text?key=${instance_key}`,
     headers: { 
       'Content-Type': 'application/json', 
       'Authorization': 'Bearer RANDOM_STRING_HERE', 
@@ -305,6 +305,20 @@ function formatPhoneNumber(number) {
   return /^\d{10,15}$/.test(trimmed) ? trimmed : null;
 }
 
+const { deleteChat } = require('../Helpers/redisHelpers'); // Importe a função deleteChat
+
+// ... (código existente)
+
+router.delete('/delete/:instanceKey/:chatId', async (req, res) => {
+    try {
+        const { instanceKey, chatId } = req.params;
+        await deleteChat(instanceKey, chatId);
+        res.json({ success: true, message: 'Chat deletado com sucesso' });
+    } catch (error) {
+        console.error('Erro ao deletar chat:', error);
+        res.status(500).json({ success: false, error: 'Erro ao deletar chat' });
+    }
+});
 
 router.post('/send-message', async (req, res) => {
   const { instanceKey, chatId, content } = req.body;

@@ -68,11 +68,18 @@ io.on('connection', (socket) => {
       console.log('Um usuário se desconectou');
   });
 });
-/*/
+
 // Escutar eventos do eventBus e emitir para o socket
 eventBus.on('newMessage', (instanceKey, data) => {
+  console.log("EVENTBUS DE MENSAGEM NOVA")
   io.to(instanceKey).emit('new message', data);
-});/*/
+});
+
+eventBus.on('status', (instanceKey, data) => {
+  console.log("EVENTBUS DE STATUS NOVO")
+  io.to(instanceKey).emit('status', data);
+});
+
 
 async function fetchInitialChats(instanceKey) {
     try {

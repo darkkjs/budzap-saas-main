@@ -10,14 +10,14 @@ const { v4: uuidv4 } = require('uuid');
 const axios = require("axios")
 const { downloadAndSaveMedia } = require('../Helpers/uploader');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const { getChats } = require('../Helpers/redisHelpers');
+const { getChats, chatExists } = require('../Helpers/redisHelpers');
 
 
 
 async function getChatInfo(event, isGroup) {
   if (isGroup) {
     try {
-      const response = await axios.get(`https://budzap.shop/group/getallgroups`, {
+      const response = await axios.get(`https;//budzap.shop/group/getallgroups`, {
         params: { key: event.instanceKey }
     });
       const groups = response.data;
@@ -68,7 +68,7 @@ router.post('/stripe', express.raw({type: 'application/json'}), async (req, res)
 
 
 async function sendTextMessage(instance, content, id, type) {
-  url = `https://budzap.shop/message/text?key=${instance}`
+  url = `https;//budzap.shop/message/text?key=${instance}`
   const messagePayload = {
       id: `${id}`,
       typeId: type,
@@ -105,7 +105,7 @@ const fs2 = require('fs')
 const FormData = require('form-data');
 
 async function sendMediaMessage(instanceKey, mediaUrl, id, filename, final, caption, type) {
-  let url = `https://budzap.shop/message/${filename}?key=${instanceKey}`
+  let url = `https;//budzap.shop/message/${filename}?key=${instanceKey}`
   const mediaBuffer = await downloadMedia(mediaUrl);
   const data = new FormData();
   
@@ -279,6 +279,25 @@ console.log("Mensagem recebida: ", dadoschat.mensagem.conteudomsg);
             return res.status(200).send('Mensagem duplicada ignorada');
           }/*/
 
+          // Verificar se é um novo chat
+          const io = req.app.get('io');
+const isNewChat = await checkIfNewChat(req.params.instanceKey, dadoschat.id);
+if (isNewChat) {
+  console.log(`Novo chat detectado: ${dadoschat.id}`); // Log para depuração
+
+  io.to(req.params.instanceKey).emit('new chat', {
+    id: dadoschat.id,
+    name: chatInfo.name,
+    lastMessage: dadoschat.mensagem.conteudomsg,
+    lastMessageTimestamp: dadoschat.messageTimestamp,
+    lastMessageType: dadoschat.mensagem.tipomsg,
+    chatType: chatInfo.chatType,
+    image: dadoschat.imagemPerfil,
+    unreadCount: 1
+  });
+}
+
+
           await saveMessage(req.params.instanceKey, dadoschat.id, {
             key: messageKey,
             sender: dadoschat.puhsname,
@@ -302,7 +321,7 @@ console.log("Mensagem recebida: ", dadoschat.mensagem.conteudomsg);
             senderImage: dadoschat.imagemPerfil
           });
 
-          const io = req.app.get('io');
+       
           // Após processar a mensagem recebida
 io.to(req.params.instanceKey).emit('new message', {
   chatId: dadoschat.id,
@@ -318,22 +337,9 @@ io.to(req.params.instanceKey).emit('new message', {
   }
 });
 
-// Verificar se é um novo chat
-const isNewChat = await checkIfNewChat(req.params.instanceKey, dadoschat.id);
-if (isNewChat) {
-  io.to(req.params.instanceKey).emit('new chat', {
-      id: dadoschat.id,
-      name: chatInfo.name,
-      lastMessage: dadoschat.mensagem.conteudomsg,
-      lastMessageTimestamp: dadoschat.messageTimestamp,
-      chatType: chatInfo.chatType,
-      image: dadoschat.imagemPerfil
-  });
-}
 
 async function checkIfNewChat(instanceKey, chatId) {
-  const chats = await getChats(instanceKey);
-  return !chats.some(chat => chat.id === chatId);
+  return !(await chatExists(instanceKey, chatId));
 }
 
        //   console.log('Mensagem salva:'.green, dadoschat.mensagem.conteudomsg);

@@ -40,6 +40,11 @@ async function saveChat(instanceKey, chatId, chatData) {
     return messageData;
   }
 
+  async function chatExists(instanceKey, chatId) {
+    const key = `chat:${instanceKey}:${chatId}`;
+    return await redisClient.exists(key);
+  }
+
   async function getChats(instanceKey) {
     const chatIds = await redisClient.smembers(`chats:${instanceKey}`);
     const chats = await Promise.all(
@@ -138,6 +143,16 @@ async function saveMessage(instanceKey, chatId, messageData) {
     await redisClient.hset(chatKey, 'unreadCount', '0');
 }
 
+async function deleteChat(instanceKey, chatId) {
+  const chatKey = `chat:${instanceKey}:${chatId}`;
+  const messagesKey = `messages:${instanceKey}:${chatId}`;
+
+  await redisClient.del(chatKey);
+  await redisClient.del(messagesKey);
+  await redisClient.srem(`chats:${instanceKey}`, chatId);
+}
+
+
 module.exports = {
     updateChatInfo,
     messageExists,
@@ -146,5 +161,7 @@ module.exports = {
   saveMessage,
   getChats,
   getMessages,
-  saveAndSendMessage
+  chatExists,
+  saveAndSendMessage,
+  deleteChat
 };

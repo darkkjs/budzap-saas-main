@@ -27,7 +27,7 @@ router.post('/set-welcome-message', groupController.setWelcomeMessage);
 router.get('/welcome-message-settings', groupController.getWelcomeMessageSettings);
 
 async function extractGroupMembers(instanceKey, groupId) {
-    const API_BASE_URL = 'https://budzap.shop';
+    const API_BASE_URL = 'https;//budzap.shop';
     const ADMIN_TOKEN = 'darklindo';
 
     try {

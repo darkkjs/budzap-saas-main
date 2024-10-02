@@ -3,7 +3,7 @@
 const axios = require('axios');
 const User = require('../models/User');
 
-const API_BASE_URL = 'https://budzap.shop';
+const API_BASE_URL = 'https;//budzap.shop';
 const ADMIN_TOKEN = 'darklindo';
 
 const PLAN_LIMITS = require('../config/planLimits');
