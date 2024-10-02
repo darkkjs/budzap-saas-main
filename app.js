@@ -1,4 +1,5 @@
 require('dotenv').config();
+const eventBus = require('./helpers/eventBus');
 
 // Verificação da chave API
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -59,6 +60,7 @@ io.on('connection', (socket) => {
   socket.on('send message', async (data) => {
       const { instanceKey, chatId, content } = data;
       const message = await saveAndSendMessage(instanceKey, chatId, content);
+      console.log("msg nova")
       io.to(instanceKey).emit('new message', { chatId, message });
   });
 
@@ -67,6 +69,10 @@ io.on('connection', (socket) => {
   });
 });
 
+// Escutar eventos do eventBus e emitir para o socket
+eventBus.on('newMessage', (instanceKey, data) => {
+  io.to(instanceKey).emit('new message', data);
+});
 
 async function fetchInitialChats(instanceKey) {
     try {

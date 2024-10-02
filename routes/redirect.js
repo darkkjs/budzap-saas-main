@@ -44,15 +44,16 @@ router.get('/:customPath', async (req, res) => {
           <meta property="og:description" content="${campaign.metaTags.description}">
           <meta property="og:image" content="${campaign.metaTags.image}">
           <meta property="og:url" content="${req.protocol}://${req.get('host')}${req.originalUrl}">
-          <meta http-equiv="refresh" content="${campaign.messageDelay};url=${whatsappUrl}">
           <script>
-            setTimeout(() => {
-              window.location.href = "${whatsappUrl}";
-            }, ${campaign.messageDelay * 1000});
+           setTimeout(() => {
+            window.location.href = "${whatsappUrl}";
+          }, ${randomDelay});
+
+         
           </script>
         </head>
         <body>
-          <p>Redirecionando para WhatsApp em ${campaign.messageDelay} segundos...</p>
+          <p> Aguarde ${campaign.messageDelay} segundos...</p>
         </body>
         </html>
       `;

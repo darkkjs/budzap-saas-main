@@ -10,16 +10,23 @@ const github = require('../config/git');
 const { getChats, getMessages, markChatAsRead, saveMessage } = require('../Helpers/redisHelpers');
 const { saveEvent } = require('./eventService');
 const io = require('../app'); // Importe o objeto io do seu arquivo app.js
+const saoPauloTimezone = 'America/Sao_Paulo';
+
 const moment = require('moment-timezone');
-const saoPauloTimestamp = moment().tz('America/Sao_Paulo').unix();
+
 
 async function saveAutoResponseMessage(instanceKey, chatId, content, type = 'text') {
+
+    const saoPauloTimestamp1 = await moment().tz(saoPauloTimezone).unix();
+
+
     const messageKey = `${chatId}:${Date.now()}`;
     const messageData = {
         key: messageKey,
         sender: 'Hocketzap',
         content: content,
-        timestamp: saoPauloTimestamp,
+        timestamp: saoPauloTimestamp1,
+
         fromMe: true,
         type: type,
             senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
@@ -151,6 +158,22 @@ async function checkPayment(instanceKey, frontendPaymentId, chatId) {
             status: payment.status
         });
         
+
+        if (emitEvent) {
+            emitEvent(instanceKey, 'new message', {
+                chatId,
+                message: {
+                    key: `${chatId}:${saoPauloTimestamp}`,
+                    sender: 'Hocketzap',
+                    content: `Verificação de pagamento: ${isPaid ? 'Pago' : 'Não pago'}`,
+                    timestamp: saoPauloTimestamp,
+                    fromMe: true,
+                    type: 'text',
+                    senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
+                }
+            });
+        }
+
         console.log('Resposta da verificação de pagamento:', payment);
         return payment.status === 'approved';
     } catch (error) {
@@ -269,6 +292,13 @@ async function executeFunnel(funnel, chatId, instanceKey, state, emitEvent) {
     console.log('funil completo:', funnel);
     const autoResponseKey = `auto_response:${instanceKey}:${chatId}`;
 
+
+
+
+
+
+
+
     while (state.currentNodeId) {
         const currentNode = funnel.nodes.find(node => node.id === state.currentNodeId);
         if (!currentNode) {
@@ -290,6 +320,7 @@ if (state.status === 'waiting_for_input') {
     state.lastMessage = await redisClient.get(`last_message:${instanceKey}:${chatId}`);
     console.log('Última mensagem recuperada:', state.lastMessage);
 }
+const saoPauloTimestamp = await moment().tz(saoPauloTimezone).unix();
 
         try {
             switch (currentNode.type) {
@@ -421,6 +452,22 @@ if (jsonResponse.response === undefined || jsonResponse.response === '') {
     const extractedName = jsonResponse.response;
     state.variables[currentNode.outputVariable] = extractedName;
     console.log(`Nome extraído: "${extractedName}"`);
+
+    if (emitEvent) {
+        emitEvent(instanceKey, 'new message', {
+            chatId,
+            message: {
+                key: `${chatId}:${saoPauloTimestamp}`,
+                sender: 'Hocketzap',
+                content: `Nome extraído: ${state.variables[currentNode.outputVariable]}`,
+                timestamp: saoPauloTimestamp,
+                fromMe: true,
+                type: 'text',
+                senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
+            }
+        });
+    }
+
 }
 console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
     } catch (error) {
@@ -468,6 +515,22 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
             // Formatar a resposta da IA para envio
             const formattedResponse = formatAIResponse(aiResponse);
     
+            await saveAutoResponseMessage(instanceKey, chatId, "Resposta da IA > " + formattedResponse, 'text');
+            if (emitEvent) {
+                emitEvent(instanceKey, 'new message', {
+                    chatId,
+                    message: {
+                        key: `${chatId}:${saoPauloTimestamp}`,
+                        sender: 'Hocketzap',
+                        content: "Resposta da IA > " + formattedResponse,
+                        timestamp: saoPauloTimestamp,
+                        fromMe: true,
+                        type: 'text',
+                        senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
+                    }
+                });
+            }
+
             // Enviar a resposta formatada
            // await sendTextMessage(instanceKey, formattedResponse, chatId);
         } catch (error) {
@@ -478,7 +541,22 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
                 case 'randomMessage':
     const randomIndex = Math.floor(Math.random() * currentNode.messages.length);
     await sendTextMessage(instanceKey, currentNode.messages[randomIndex], chatId);
+    
     await saveAutoResponseMessage(instanceKey, chatId, currentNode.messages[randomIndex], 'text');
+    if (emitEvent) {
+        emitEvent(instanceKey, 'new message', {
+            chatId,
+            message: {
+                key: `${chatId}:${saoPauloTimestamp}`,
+                sender: 'Hocketzap',
+                content: randomMessage,
+                timestamp: saoPauloTimestamp,
+                fromMe: true,
+                type: 'text',
+                senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
+            }
+        });
+    }
     break;
     case 'apiRequest':
         try {
@@ -502,6 +580,22 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
             state.apiResults[currentNode.id] = response.data;
             if (currentNode.responseVariable) {
                 state.variables[currentNode.responseVariable] = response.data;
+                await saveAutoResponseMessage(instanceKey, chatId, `API Request realizado: ${currentNode.apiUrl}`, 'text');
+                if (emitEvent) {
+                    emitEvent(instanceKey, 'new message', {
+                        chatId,
+                        message: {
+                            key: `${chatId}:${saoPauloTimestamp}`,
+                            sender: 'Hocketzap',
+                            content: `API Request realizado: ${currentNode.apiUrl}`,
+                            timestamp: saoPauloTimestamp,
+                            fromMe: true,
+                            type: 'text',
+                            senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
+                        }
+                    });
+                }
+
             }
         } catch (error) {
             console.error('Erro na requisição API:', error);
@@ -555,6 +649,22 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
                                     (isPaid ? conn.anchors[0] === 'Right' : conn.anchors[0] === 'Bottom')
                                 );
                                 state.currentNodeId = nextConnection2 ? nextConnection2.targetId : null;
+                                await saveAutoResponseMessage(instanceKey, chatId, `Pagamento gerado: ${paymentId}`, 'text');
+                                if (emitEvent) {
+                                    emitEvent(instanceKey, 'new message', {
+                                        chatId,
+                                        message: {
+                                            key: `${chatId}:${saoPauloTimestamp}`,
+                                            sender: 'Hocketzap',
+                                            content: `Pagamento gerado: ${paymentId}`,
+                                            timestamp: saoPauloTimestamp,
+                                            fromMe: true,
+                                            type: 'text',
+                                            senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
+                                        }
+                                    });
+                                }
+
                             } catch (error) {
                                 console.error(`Erro ao processar nó ${currentNode.id}:`, error);
                                 await sendTextMessage(instanceKey, `Erro ao verificar pagamento: ${error.message}`, chatId);
@@ -571,9 +681,39 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
                             break;
                     case 'addToGroup':
                         await addToGroup(currentNode.instanceKey, currentNode.groupId, chatId);
+                        await saveAutoResponseMessage(instanceKey, chatId, `Usuário adicionado ao grupo: ${currentNode.groupId}`, 'text');
+                        if (emitEvent) {
+                            emitEvent(instanceKey, 'new message', {
+                                chatId,
+                                message: {
+                                    key: `${chatId}:${saoPauloTimestamp}`,
+                                    sender: 'Hocketzap',
+                                    content: `Usuário adicionado ao grupo: ${currentNode.groupId}`,
+                                    timestamp: saoPauloTimestamp,
+                                    fromMe: true,
+                                    type: 'text',
+                                    senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
+                                }
+                            });
+                        }
                         break;
                     case 'removeFromGroup':
                         await removeFromGroup(currentNode.instanceKey, currentNode.groupId, chatId);
+                        await saveAutoResponseMessage(instanceKey, chatId, `Usuário removido do grupo: ${currentNode.groupId}`, 'text');
+                        if (emitEvent) {
+                            emitEvent(instanceKey, 'new message', {
+                                chatId,
+                                message: {
+                                    key: `${chatId}:${saoPauloTimestamp}`,
+                                    sender: 'Hocketzap',
+                                    content: `Usuário removido do grupo: ${currentNode.groupId}`,
+                                    timestamp: saoPauloTimestamp,
+                                    fromMe: true,
+                                    type: 'text',
+                                    senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
+                                }
+                            });
+                        }
                         break;
                     case 'sendFile':
                         await sendFile(instanceKey, chatId, currentNode.fileUrl);
@@ -633,12 +773,43 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
                         case 'video':
                             await sendMediaMessage(instanceKey, currentNode.content, chatId, currentNode.type === 'image' ? 'imageFile' : 'video', `${currentNode.type}.${currentNode.type === 'image' ? 'jpg' : 'mp4'}`, currentNode.caption);
                             await saveAutoResponseMessage(instanceKey, chatId, currentNode.content, currentNode.type);
+                            if (emitEvent) {
+                                emitEvent(instanceKey, 'new message', {
+                                    chatId,
+                                    message: {
+                                        key: `${chatId}:${saoPauloTimestamp}`,
+                                        sender: 'Hocketzap',
+                                        content: currentNode.content,
+                                        caption: currentNode.caption,
+                                        timestamp: saoPauloTimestamp,
+                                        fromMe: true,
+                                        type: currentNode.type,
+                                        senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
+                                    }
+                                });
+                            }
                             break;
                             case 'audio':
                                 console.log('Iniciando envio de áudio');
                                 await sendMediaMessage(instanceKey, currentNode.content, chatId, 'audiofile', 'audio.mp3', '');
                                 console.log('Áudio enviado com sucesso');
                                 await saveAutoResponseMessage(instanceKey, chatId, currentNode.content, 'audio');
+                                if (emitEvent) {
+                                    emitEvent(instanceKey, 'new message', {
+                                        chatId,
+                                        message: {
+                                            key: `${chatId}:${saoPauloTimestamp}`,
+                                            sender: 'Hocketzap',
+                                            content: currentNode.content,
+                                            caption: currentNode.caption,
+                                            timestamp: saoPauloTimestamp,
+                                            fromMe: true,
+                                            type: currentNode.type,
+                                            senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
+                                        }
+                                    });
+                                }
+
                                 break;
                     
                         case 'blockUser':
@@ -668,6 +839,8 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
         }
     }
 
+
+
     console.log(`Funil concluído para ${chatId}`);
     await redisClient.del(autoResponseKey);
 }
@@ -675,7 +848,7 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
 /*/function replaceVariables(content, state) {
     return content.replace(/{{([\w:.]+)}}/g, (match, path) => {
         const [type, key, field] = path.split(':');
-        if (type === 'input' && state.userInputs[key]) {
+        if (type === 'input' && state.userInswputs[key]) {
             return state.userInputs[key];
         } else if (type === 'api') {
             if (field && state.variables[`${key}_${field}`]) {

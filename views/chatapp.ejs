@@ -202,16 +202,7 @@
             }
         }
 
-        .chat-bubble {
-        border-radius: 18px;
-        padding: 10px 15px;
-        max-width: 80%; /* Aumentado de 70% para 80% */
-        width: fit-content; /* Ajusta a largura ao conteúdo */
-        min-width: 200px; /* Define uma largura mínima */
-        word-wrap: break-word;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-    }
+    
 
     .chat-bubble.with-media {
         padding: 4px;
@@ -229,6 +220,34 @@
         overflow: hidden;
     }
 
+    .message-container {
+  display: flex;
+  flex-direction: column;
+}
+
+    .message-text {
+  white-space: pre-wrap;
+}
+
+.chat-bubble {
+        border-radius: 18px;
+        padding: 10px 15px;
+        max-width: 80%; /* Aumentado de 70% para 80% */
+        width: fit-content; /* Ajusta a largura ao conteúdo */
+        min-width: 200px; /* Define uma largura mínima */
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .message-bubble {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 80%;
+  width: fit-content;
+  
+}
 
         @media (max-width: 768px) {
             .chat-bubble,
@@ -241,6 +260,10 @@
                 width: 100%;
             }
         }
+
+        .message-bubble {
+    max-width: 90%;
+  }
 
         .unread-indicator {
             background-color: #4CAF50;
@@ -455,62 +478,37 @@
         }
         
         @media (max-width: 768px) {
-           
-            .chat-container {
-                display: flex;
-                flex-direction: column;
-                height: 100vh;
-            }
+    .chat-container {
+        flex-direction: column;
+    }
 
-            #mobileChats,
-            #mobileMessages {
-                flex: 1;
-                overflow-y: auto;
-            }
+    .chat-sidebar {
+        width: 100%;
+        height: 60px;
+    }
 
-            #mobileChatList,
-            #mobileMessageList {
-                height: calc(100vh - 120px);
-            }
+    .chat-main {
+        width: 100%;
+        height: calc(100vh - 60px);
+    }
 
-            .chat-item {
-                padding: 10px;
-            }
+    .message {
+        max-width: 85%;
+    }
 
-          
-            #mobileMessageInput {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                padding: 10px;
-                background: white;
-                z-index: 1000;
-            }
+    .chat-input {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 0.5rem;
+    }
 
-            .funnels-container {
-                padding: 5px 0;
-            }
+    .chat-messages {
+        padding-bottom: 60px;
+    }
+}
 
-            .funnel-button {
-                padding: 3px 6px;
-                font-size: 10px;
-            }
-
-            #mobileChatHeader {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                z-index: 1000;
-            }
-
-            #mobileMessageList {
-                margin-top: 60px;
-                margin-bottom: 60px;
-                padding-bottom: 20px;
-            }
-        }
     </style>
 </head>
 
@@ -569,12 +567,16 @@
                         <button id="chatInfoButton" class="btn btn-ghost btn-circle">
                             <i class="fas fa-info-circle"></i>
                         </button>
+                        <button id="searchMessagesButton" class="btn btn-ghost btn-circle">
+                            <i class="fas fa-search"></i>
+                        </button>
                     </div>
                 </div>
                 <div id="messageList" class="message-list flex-grow p-6 bg-chat-pattern overflow-y-auto"></div>
-                <div class="p-2 bg-white border-b">
-                    <input type="text" id="messageSearch" placeholder="Pesquisar mensagens..." class="w-full px-3 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                </div>
+                <!-- Adicione este input de pesquisa (inicialmente oculto) -->
+<div id="searchMessagesContainer" class="hidden">
+    <input type="text" id="messageSearch" placeholder="Pesquisar mensagens..." class="w-full px-3 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
+</div>
                 
                 <div class="p-4 bg-white">
                     <div id="funnelsContainer" class="funnels-container"></div>
@@ -757,20 +759,23 @@
             console.log('Conectado ao servidor Socket.IO');
         });
         
- socket.on('new message', (data) => {
+        socket.on('new message', (data) => {
     console.log('Nova mensagem recebida:', data);
     if (data.chatId === currentChatId) {
         appendMessage(data.message);
-    } else {
-        updateChatInList(data.chatId, data.message);
+        scrollToBottom();
     }
+    updateChatInList(data.chatId, data.message);
     moveChatToTop(data.chatId);
+    showNotification(data);
 });
 
 
 socket.on('new chat', (chat) => {
     console.log('Novo chat recebido:', chat);
-    addChatToList(chat);
+     createNewChat(chat);
+    chats.unshift(chat); // Adiciona o novo chat ao início do array
+  //  addChatToList(chat);
 });
 
 socket.on('chat messages', (data) => {
@@ -789,11 +794,16 @@ socket.on('chat info', (chat) => {
     addChatToList(chat);
 });
 
+function formatTimestamp(timestamp) {
+    return moment.unix(timestamp).tz('America/Sao_Paulo').format('DD/MM/YYYY HH:mm:ss');
+}
+
+// Use esta função em vez de new Date().toLocaleString() em todos os lugares onde você exibe timestamps
 
 function createMessageHTML(message) {
     const messageClass = message.fromMe ? 'chat-end' : 'chat-start';
     const bubbleClass = message.fromMe ? 'bg-blue-500 text-white' : 'bg-white text-gray-800';
-    const formattedTimestamp = moment(message.timestamp * 1000).tz('America/Sao_Paulo').format('DD/MM/YYYY HH:mm:ss');
+    const formattedTimestamp = formatTimestamp(message.timestamp);
 
     let contentHtml = '';
 
@@ -954,29 +964,60 @@ socket.on('initial chats', (initialChats) => {
     if (chatElement) {
         const lastMessageElement = chatElement.querySelector('.text-sm.text-gray-600');
         lastMessageElement.textContent = getMediaDescription(lastMessage.type, lastMessage.content);
-      const timestampElement = chatElement.querySelector('.text-xs.text-gray-500');
-      ///  timestampElement.textContent = new Date(lastMessage.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
-           const formattedTime = moment.tz(lastMessage.timestamp * 1000, "America/Sao_Paulo").format('HH:mm');
+        const timestampElement = chatElement.querySelector('.text-xs.text-gray-500');
+        const formattedTime = moment(lastMessage.timestamp * 1000).format('HH:mm');
         timestampElement.textContent = formattedTime;
 
         const chat = chats.find(c => c.id === chatId);
-        if (chat && chatId !== currentChatId) {
-            chat.unreadCount = (chat.unreadCount || 0) + 1;
-            const unreadIndicator = chatElement.querySelector('.bg-primary-500') || document.createElement('span');
-            unreadIndicator.className = 'bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full';
-            unreadIndicator.textContent = chat.unreadCount;
-            chatElement.querySelector('.flex-grow').appendChild(unreadIndicator);
+        if (chat) {
+            chat.lastMessage = lastMessage.content;
+            chat.lastMessageTimestamp = lastMessage.timestamp;
+            chat.lastMessageType = lastMessage.type;
+            if (chatId !== currentChatId) {
+                chat.unreadCount = (chat.unreadCount || 0) + 1;
+                const unreadIndicator = chatElement.querySelector('.bg-primary-500') || document.createElement('span');
+                unreadIndicator.className = 'bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full';
+                unreadIndicator.textContent = chat.unreadCount;
+                chatElement.querySelector('.flex-grow').appendChild(unreadIndicator);
+            }
         }
-        
         moveChatToTop(chatId);
     } else {
+        // Se o chat não existir na lista, solicite as informações do chat
         socket.emit('request chat info', chatId);
     }
 }
         </script>
 
     <script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Remover o elemento nav com classe "text-gray-500 dark:text-gray-400 text-sm mb-4"
+    const breadcrumbNav = document.querySelector('nav.text-gray-500.dark\\:text-gray-400.text-sm.mb-4');
+    if (breadcrumbNav) {
+        breadcrumbNav.remove();
+    }
+
+    // Remover o elemento nav com classe "bg-white dark:bg-gray-800 shadow-md"
+    const headerNav = document.querySelector('nav.bg-white.dark\\:bg-gray-800.shadow-md');
+    if (headerNav) {
+        headerNav.remove();
+    }
+
+    console.log('Elementos de navegação removidos');
+});
+
+        const searchMessagesButton = document.getElementById('searchMessagesButton');
+const searchMessagesContainer = document.getElementById('searchMessagesContainer');
+
+searchMessagesButton.addEventListener('click', () => {
+    searchMessagesContainer.classList.toggle('hidden');
+    if (!searchMessagesContainer.classList.contains('hidden')) {
+        document.getElementById('messageSearch').focus();
+    }
+});
+
         const messageSearch = document.getElementById('messageSearch');
     
         messageSearch.addEventListener('input', (e) => {
@@ -1564,7 +1605,7 @@ if (breadcrumbNav) {
         const unreadClass = unreadCount > 0 ? 'bg-primary-100' : '';
         const unreadIndicator = unreadCount > 0 ? `<span class="bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full">${unreadCount}</span>` : '';
         const avatarUrl = profileImageCache[chat.id] || chat.image || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
-
+        const formattedTime = formatTimestamp(chat.lastMessageTimestamp);
         return `
             <div class="chat-item p-3 hover:bg-gray-100 cursor-pointer rounded-lg transition duration-200 ease-in-out ${unreadClass}" data-chat-id="${chat.id}" data-chat-type="${chat.chatType}">
                 <div class="flex items-center space-x-3">
@@ -1572,7 +1613,7 @@ if (breadcrumbNav) {
                     <div class="flex-grow min-w-0">
                         <div class="flex justify-between items-baseline">
                             <h3 class="font-semibold text-gray-900 truncate">${chatTypeIcon} ${chat.name}</h3>
-                            <span class="text-xs text-gray-500">${new Date(chat.lastMessageTimestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            <span class="text-xs text-gray-500">${formattedTime}</span>
                         </div>
                         <p class="text-sm text-gray-600 truncate">${lastMessageContent}</p>
                     </div>
@@ -1895,19 +1936,28 @@ function updateProfileImage(chatId, imageUrl) {
             renderChats(chats);
         }
 
-        function showNotification(chat) {
-    if (chat.fromMe == true) return;
+        function createNewChat(chat) {
+    const chatHTML = createChatHTML(chat);
+    chatList.insertAdjacentHTML('afterbegin', chatHTML);
+    mobileChatList.insertAdjacentHTML('afterbegin', chatHTML);
+    addChatListeners();
+}
+
+function showNotification(data) {
+    if (data.message.fromMe === true) return;
+    
     if (receiveSoundToggle.checked) {
-        notificationSound.play();
+        notificationSound.play().catch(error => console.error('Erro ao tocar som:', error));
     }
-    const lastMessageContent = getMediaDescription(chat.lastMessageType, chat.lastMessage);
+
+    const lastMessageContent = getMediaDescription(data.message.type, data.message.content);
     const notification = document.createElement('div');
     notification.className = 'fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-sm w-full transition-all duration-300 ease-in-out transform translate-y-0';
     notification.innerHTML = `
         <div class="flex items-center">
-            <img src="${chat.image || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png'}" alt="${chat.name}" class="w-10 h-10 rounded-full mr-3 object-cover">
+            <img src="${data.message.senderImage || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png'}" alt="${data.message.sender}" class="w-10 h-10 rounded-full mr-3 object-cover">
             <div class="flex-grow min-w-0">
-                <h4 class="font-semibold text-gray-900 truncate">${chat.name}</h4>
+                <h4 class="font-semibold text-gray-900 truncate">${data.message.sender}</h4>
                 <p class="text-sm text-gray-600 truncate">${lastMessageContent}</p>
             </div>
             <button class="text-gray-400 hover:text-gray-600 transition-colors duration-200 ml-2">
@@ -1928,6 +1978,8 @@ function updateProfileImage(chatId, imageUrl) {
         }, 300);
     }, 5000);
 }
+
+
 async function sendMessage(content) {
     if (!currentInstanceKey || !currentChatId || !content.trim()) {
         console.error('Missing required information to send message');
