@@ -16,7 +16,6 @@ router.get('/', async (req, res) => {
         // Aqui você pode passar dados adicionais para a view, se necessário
         res.render('chatapp', {
             title: 'HocketZap Chat',
-            layout: false,
             user: req.user // Assumindo que você está usando algum middleware de autenticação
         });
     } catch (error) {
