@@ -17,12 +17,10 @@ router.get('/subscription-success', async (req, res) => {
     const { id, userId } = req.query;
 
     try {
-        // Recupera a sessão do Stripe
         const session = await stripe.checkout.sessions.retrieve(id);
         console.log(session);
         console.log(session.payment_status);
-
-        // Verifica se a sessão foi bem-sucedida
+        
         if (session.payment_status === 'paid') {
             const subscriptionId = session.subscription;
 
