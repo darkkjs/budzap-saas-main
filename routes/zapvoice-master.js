@@ -9,6 +9,11 @@ const axios = require('axios');
 const FormData = require('form-data');
 const User = require('../models/User');
 const { ensureAuthenticated } = require('../middleware/auth');
+const { saveMessage } = require('../Helpers/redisHelpers');
+const eventBus = require('../Helpers/eventBus');
+const moment = require('moment-timezone');
+const saoPauloTimezone = 'America/Sao_Paulo';
+
 
 // Configuração do Multer para upload de arquivos
 const storage = multer.diskStorage({
@@ -58,11 +63,7 @@ router.post('/send-audio', ensureAuthenticated, upload.single('audio'), async (r
       return res.status(404).json({ error: 'Instância do WhatsApp não encontrada' });
     }
 
-    let usrtype = 'user'
-
-    if (chatId.includes("@g.us")) {
-        usrtype = 'group'
-    }
+    let usrtype = chatId.includes("@g.us") ? 'group' : 'user';
 
     // Criar um novo FormData
     const formData = new FormData();
@@ -72,7 +73,7 @@ router.post('/send-audio', ensureAuthenticated, upload.single('audio'), async (r
     formData.append('delay', '0');
 
     console.log('Enviando arquivo:', audioFile.path);
-console.log(fs.createReadStream(audioFile.path))
+
     // Enviar o áudio usando a API fornecida
     const response = await axios.post(`https://budzap.shop/message/audiofile?key=${instanceKey}`, formData, {
       headers: {
@@ -92,6 +93,26 @@ console.log(fs.createReadStream(audioFile.path))
     });
 
     console.log('Resposta da API:', response.data);
+
+    // Salvar a mensagem no Redis
+    const saoPauloTimestamp = await moment().tz(saoPauloTimezone).unix();
+    const messageData = {
+      key: `${chatId}:${Date.now()}`,
+      sender: 'Hocketzap',
+      content: response.data.url || 'Audio enviado', // Use a URL do áudio se disponível
+      timestamp: saoPauloTimestamp,
+      fromMe: true,
+      type: 'audio',
+      senderImage: 'https://img.freepik.com/vetores-premium/robo-bonito-icon-ilustracao-conceito-de-icone-de-robo-de-tecnologia-isolado-estilo-cartoon-plana_138676-1220.jpg'
+    };
+
+    await saveMessage(instanceKey, chatId, messageData);
+
+    // Emitir evento para o socket
+    eventBus.emit('newMessage', instanceKey, {
+      chatId,
+      message: messageData
+    });
 
     // Limpar o arquivo temporário
     await unlinkAsync(audioFile.path);

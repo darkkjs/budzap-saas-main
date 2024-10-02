@@ -26,6 +26,7 @@
             }
         }
     </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
@@ -37,7 +38,7 @@
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', sans-serif;
             color: var(--text-color);
             background-color: var(--secondary-color);
         }
@@ -390,10 +391,23 @@
         }
 
         .bg-chat-pattern {
-            background-color: #f0f4f8;
-            background-image: url("/img/159160.png");
-            background-size: cover;
-        }
+    background-color: #f7fafc;
+    background-image: url("https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEislNx1UnufXgjbxK03rtuj7SfB7Wvrre4Y5KoRAONHc00S3yOck7DF7AJ-75EuBxZNVaSGE1aPfcLi6ki7RGJ2i9Skh2oitUd1V4DOel4iYLpsYw8XoFkPyAx6Nm7BNDt77vcHjFVFKVd4dgZfRi4DHyaNr1Rc2iVIu3gPnQSwxRRSfUnXfwcR2MaXyw/s3840-rw/030622-MINIMAL-ROCKET.png");
+    background-size: 300px 300px;
+    background-repeat: repeat;
+    position: relative;
+}
+
+.bg-chat-pattern::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.3));
+    pointer-events: none;
+}
 
         .chat-item {
             transition: all 0.3s ease;
@@ -543,48 +557,63 @@
             </div>
         </div>
     </div>
-
-    <!-- Container principal do chat -->
-    <div id="chatContainer" class="hidden">
-        <!-- Layout para PC -->
-        <div class="hidden md:flex h-screen">
-            <!-- Lista de chats -->
-            <div class="w-1/3 bg-white border-r flex flex-col shadow-md">
-                <div class="p-4 bg-gradient-to-r from-primary-500 to-primary-700 text-white flex justify-between items-center">
-                    <h1 class="text-2xl font-bold">HocketZap</h1>
-                    <div>
-                        <button id="refreshButton" class="btn btn-ghost btn-circle">
-                            <i class="fas fa-sync-alt"></i>
+<!-- Container principal do chat -->
+<div id="chatContainer" class="hidden">
+    <!-- Layout para PC -->
+    <div class="hidden md:flex h-screen">
+        <!-- Lista de chats -->
+        <div class="w-1/3 bg-gray-50 border-r flex flex-col shadow-lg">
+            <div class="p-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-b-2xl shadow-md">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-bold text-white tracking-wide">HocketZap</h1>
+                    <div class="flex space-x-2">
+                        <button id="refreshButton" class="text-white hover:text-indigo-200 transition duration-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
                         </button>
-                        <button id="settingsButton" class="btn btn-ghost btn-circle">
-                            <i class="fas fa-cog"></i>
+                        <button id="settingsButton" class="text-white hover:text-indigo-200 transition duration-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
                         </button>
                     </div>
                 </div>
-                <div class="p-4">
-                    <input type="text" id="searchChat" placeholder="Buscar chat..." class="input input-bordered w-full bg-gray-100" />
-                </div>
-                <div id="chatList" class="chat-list p-4 space-y-2 flex-grow overflow-y-auto"></div>
             </div>
+            <div class="p-4">
+                <input type="text" id="searchChat" placeholder="Buscar chat..." class="w-full px-4 py-2 rounded-full bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+            </div>
+            <div id="chatList" class="chat-list p-4 space-y-2 flex-grow overflow-y-auto"></div>
+        </div>
             <!-- Área de mensagens -->
             <div class="w-2/3 flex flex-col">
-                <div id="chatHeader" class="p-4 bg-gradient-to-r from-primary-500 to-primary-700 text-white flex items-center justify-between">
+                <div id="chatHeader" class="p-4 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between">
                     <div class="flex items-center">
-                        <img id="chatAvatar" src="https://cdn-icons-png.flaticon.com/512/4792/4792929.png" alt="Chat Avatar" class="w-12 h-12 rounded-full mr-3 border-2 border-white">
-                        <div>
-                            <h2 id="chatName" class="text-xl font-semibold">Selecione um chat</h2>
-                            <p id="chatType" class="text-sm"></p>
+                        <div class="relative">
+                            <img id="chatAvatar" src="https://cdn-icons-png.flaticon.com/512/4792/4792929.png" alt="Chat Avatar" class="w-12 h-12 rounded-full object-cover">
+                            <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
+                        </div>
+                        <div class="ml-4">
+                            <h2 id="chatName" class="text-lg font-semibold text-gray-800">Selecione um chat</h2>
+                            <p id="chatType" class="text-sm text-gray-500"></p>
                         </div>
                     </div>
-                    <div>
-                        <button id="groupMembersButton" class="btn btn-ghost btn-circle hidden">
-                            <i class="fas fa-users"></i>
+                    <div class="flex space-x-4">
+                        <button id="groupMembersButton" class="text-gray-600 hover:text-gray-800 transition duration-300 hidden">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
                         </button>
-                        <button id="chatInfoButton" class="btn btn-ghost btn-circle">
-                            <i class="fas fa-info-circle"></i>
+                        <button id="chatInfoButton" class="text-gray-600 hover:text-gray-800 transition duration-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
                         </button>
-                        <button id="searchMessagesButton" class="btn btn-ghost btn-circle">
-                            <i class="fas fa-search"></i>
+                        <button id="searchMessagesButton" class="text-gray-600 hover:text-gray-800 transition duration-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -601,6 +630,9 @@
                             <i class="fas fa-paperclip"></i>
                         </button>
                         <input type="text" id="messageInput" class="input input-bordered flex-grow mr-2 bg-gray-100" placeholder="Digite uma mensagem">
+                        <button id="voiceButton" class="btn btn-ghost btn-circle mr-2">
+                            <i class="fas fa-microphone"></i>
+                        </button>
                         <button id="sendButton" class="btn btn-circle btn-primary">
                             <i class="fas fa-paper-plane"></i>
                         </button>
@@ -622,21 +654,28 @@
         <div class="md:hidden">
             <!-- Lista de chats (tela inicial) -->
             <div id="mobileChats" class="h-screen flex flex-col">
-                <div class="p-4 bg-gradient-to-r from-primary-500 to-primary-700 text-white flex justify-between items-center">
-                    <h1 class="text-2xl font-bold">HocketZap</h1>
-                    <div>
-                        <button id="mobileRefreshButton" class="btn btn-ghost btn-circle">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                        <button id="mobileSettingsButton" class="btn btn-ghost btn-circle">
-                            <i class="fas fa-cog"></i>
-                        </button>
+                <div class="p-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-b-2xl shadow-md">
+                    <div class="flex justify-between items-center">
+                        <h1 class="text-2xl font-bold text-white tracking-wide">HocketZap</h1>
+                        <div class="flex space-x-2">
+                            <button id="mobileRefreshButton" class="text-white hover:text-indigo-200 transition duration-300">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                            </button>
+                            <button id="mobileSettingsButton" class="text-white hover:text-indigo-200 transition duration-300">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="p-2">
-                    <input type="text" id="mobileSearchChat" placeholder="Buscar chat..." class="input input-bordered w-full bg-gray-100" />
+                <div class="p-4">
+                    <input type="text" id="mobileSearchChat" placeholder="Buscar chat..." class="w-full px-4 py-2 rounded-full bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
                 </div>
-                <div id="mobileChatList" class="chat-list flex-grow p-2 space-y-2 overflow-y-auto"></div>
+                <div id="mobileChatList" class="chat-list flex-grow p-4 space-y-2 overflow-y-auto"></div>
             </div>
 
             <!-- Área de mensagens (aparece ao clicar em um chat) -->
@@ -747,7 +786,24 @@
             </div>
         </div>
     </div>
-
+<!-- Modal de Geração de Voz -->
+<div id="voiceModal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">Gerar Mensagem de Voz</h3>
+        <textarea id="voiceText" class="textarea textarea-bordered w-full mb-4" placeholder="Digite o texto para converter em áudio"></textarea>
+        <select id="voiceSelect" class="select select-bordered w-full mb-4">
+            <option disabled selected>Selecione uma voz</option>
+        </select>
+        <div class="modal-action">
+            <button id="generateVoiceButton" class="btn btn-primary">Gerar Áudio</button>
+            <button id="closeVoiceModal" class="btn">Fechar</button>
+        </div>
+        <div id="audioPreview" class="mt-4 hidden">
+            <audio id="generatedAudio" controls></audio>
+            <button id="sendVoiceButton" class="btn btn-success mt-2">Enviar Áudio</button>
+        </div>
+    </div>
+</div>
     <button id="openFunnelReport"
         class="fixed bottom-4 right-4 px-4 py-2 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hidden">
         <svg class="w-6 h-6 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -770,6 +826,118 @@
     <script>
         const socket = io();
         
+
+        // Funcionalidade de geração de voz
+const voiceButton = document.getElementById('voiceButton');
+const voiceModal = document.getElementById('voiceModal');
+const closeVoiceModal = document.getElementById('closeVoiceModal');
+const generateVoiceButton = document.getElementById('generateVoiceButton');
+const voiceText = document.getElementById('voiceText');
+const voiceSelect = document.getElementById('voiceSelect');
+const audioPreview = document.getElementById('audioPreview');
+const generatedAudio = document.getElementById('generatedAudio');
+const sendVoiceButton = document.getElementById('sendVoiceButton');
+
+let generatedAudioBlob = null;
+
+voiceButton.addEventListener('click', () => {
+    voiceModal.classList.add('modal-open');
+    loadVoices();
+});
+
+closeVoiceModal.addEventListener('click', () => {
+    voiceModal.classList.remove('modal-open');
+    resetVoiceModal();
+});
+
+async function loadVoices() {
+    try {
+        const response = await fetch('/integrations/elevenlabs/config');
+        const data = await response.json();
+        voiceSelect.innerHTML = '<option disabled selected>Selecione uma voz</option>';
+        data.tonsOptions.forEach(voice => {
+            const option = document.createElement('option');
+            option.value = voice.nome;
+            option.textContent = voice.nome;
+            voiceSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Erro ao carregar vozes:', error);
+        showPopup('Erro ao carregar vozes', 'error');
+    }
+}
+
+generateVoiceButton.addEventListener('click', async () => {
+    const text = voiceText.value;
+    const selectedVoice = voiceSelect.value;
+
+    if (!text || !selectedVoice) {
+        showPopup('Por favor, preencha o texto e selecione uma voz', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/integrations/elevenlabs/test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text, tom: selectedVoice }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Erro ao gerar áudio');
+        }
+
+        const audioBlob = await response.blob();
+        generatedAudioBlob = audioBlob;
+        const audioUrl = URL.createObjectURL(audioBlob);
+        generatedAudio.src = audioUrl;
+        audioPreview.classList.remove('hidden');
+    } catch (error) {
+        console.error('Erro ao gerar áudio:', error);
+        showPopup('Erro ao gerar áudio', 'error');
+    }
+});
+
+sendVoiceButton.addEventListener('click', async () => {
+    if (!generatedAudioBlob) {
+        showPopup('Por favor, gere um áudio primeiro', 'error');
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('audio', generatedAudioBlob, 'audio.mp3');
+        formData.append('instanceKey', currentInstanceKey);
+        formData.append('chatId', currentChatId);
+
+        const response = await fetch('/zapvoice/send-audio', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error('Erro ao enviar áudio');
+        }
+
+        showPopup('Áudio enviado com sucesso', 'success');
+        voiceModal.classList.remove('modal-open');
+        resetVoiceModal();
+    } catch (error) {
+        console.error('Erro ao enviar áudio:', error);
+        showPopup('Erro ao enviar áudio', 'error');
+    }
+});
+
+function resetVoiceModal() {
+    voiceText.value = '';
+    voiceSelect.selectedIndex = 0;
+    audioPreview.classList.add('hidden');
+    generatedAudio.src = '';
+    generatedAudioBlob = null;
+}
+
         function joinInstance(instanceKey) {
             socket.emit('join instance', instanceKey);
             socket.emit('request initial chats', instanceKey);
@@ -1155,6 +1323,9 @@ searchMessagesButton.addEventListener('click', () => {
         });
     </script>
     <script>
+
+
+
         const instanceModal = document.getElementById('instanceModal');
         const instanceSelect = document.getElementById('instanceSelect');
         const confirmInstance = document.getElementById('confirmInstance');
