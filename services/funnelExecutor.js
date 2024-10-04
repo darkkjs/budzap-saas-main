@@ -649,30 +649,27 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
                     break;
                     case 'generatePayment':
                         const paymentId = await generatePayment(instanceKey, chatId, currentNode);
-                        state.variables.lastGeneratedPaymentId = paymentId; // Armazena o ID do pagamento no estado
+                        currentNode.paymentId = paymentId; // Atualizar o nó com o ID do pagamento
                         break;
                         case 'checkPayment':
                             try {
                                 if (!currentNode.paymentToCheck) {
                                     throw new Error('Nenhum pagamento selecionado para verificação');
                                 }
-
-                                const paymentIdToCheck = state.variables.lastGeneratedPaymentId || currentNode.paymentToCheck;
-
-                                   const isPaid = await checkPayment(instanceKey, paymentIdToCheck, chatId);
+                                const isPaid = await checkPayment(instanceKey, currentNode.paymentToCheck, chatId);
                                 const nextConnection2 = funnel.connections.find(conn => 
                                     conn.sourceId === currentNode.id && 
                                     (isPaid ? conn.anchors[0] === 'Right' : conn.anchors[0] === 'Bottom')
                                 );
                                 state.currentNodeId = nextConnection2 ? nextConnection2.targetId : null;
-                                await saveAutoResponseMessage(instanceKey, chatId, `Pagamento gerado: ${paymentId}`, 'text');
+                                await saveAutoResponseMessage(instanceKey, chatId, `Pagamento gerado: ${currentNode.paymentId}`, 'text');
                               
                                    eventBus.emit('newMessage', instanceKey, {
                                         chatId,
                                         message: {
                                             key: `${chatId}:${saoPauloTimestamp}`,
                                             sender: 'Hocketzap',
-                                            content: `Pagamento gerado: ${paymentId}`,
+                                            content: `Pagamento gerado: ${currentNode.paymentId}`,
                                             timestamp: saoPauloTimestamp,
                                             fromMe: true,
                                             type: 'text',
