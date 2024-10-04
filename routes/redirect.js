@@ -47,7 +47,7 @@ router.get('/:customPath', async (req, res) => {
           <script>
            setTimeout(() => {
             window.location.href = "${whatsappUrl}";
-          }, ${randomDelay});
+          }, 200);
 
          
           </script>
