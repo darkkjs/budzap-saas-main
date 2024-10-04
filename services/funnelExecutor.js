@@ -563,7 +563,7 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
             message: {
                 key: `${chatId}:${saoPauloTimestamp}`,
                 sender: 'Hocketzap',
-                content: randomMessage,
+                content: currentNode.messages[randomIndex],
                 timestamp: saoPauloTimestamp,
                 fromMe: true,
                 type: 'text',
