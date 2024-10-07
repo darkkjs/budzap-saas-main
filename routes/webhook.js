@@ -258,23 +258,23 @@ router.post('/:instanceKey', async (req, res) => {
     
             case 'imageMessage':
               dadoschat.mensagem.tipomsg = 'image';
-              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.imageMessage.base64, 'image', github);
+              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.base64, 'image', github);
               break
             case 'videoMessage':
               dadoschat.mensagem.tipomsg = 'video';
-              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.videoMessage.base64, "video", github);
+              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.base64, "video", github);
               break
             case 'audioMessage':
               dadoschat.mensagem.tipomsg = 'audio';
-              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.audioMessage.base64, 'audio', github);
+              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.base64, 'audio', github);
               break
             case 'documentMessage':
               dadoschat.mensagem.tipomsg = 'document';
-              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.documentMessage.base64, "document", github);
+              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.base64, "document", github);
               break;
             case 'stickerMessage':
               dadoschat.mensagem.tipomsg = 'sticker';
-              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.stickerMessage.base64, 'sticker', github);
+              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.base64, 'sticker', github);
               break;
 
 
