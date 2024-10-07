@@ -17,33 +17,44 @@ const { getChats, chatExists } = require('../Helpers/redisHelpers');
 async function getChatInfo(event, isGroup) {
   if (isGroup) {
     try {
-      const response = await axios.get(`https://budzap.shop/group/getallgroups`, {
-        params: { key: event.instanceKey }
-    });
+      const config = {
+        method: 'get',
+        maxBodyLength: Infinity,
+        url: `https://evolution.hocketzap.com/group/fetchAllGroups/${event.instance}?getParticipants=false`,
+        headers: { 
+          'apikey': 'darkadm'
+        }
+      };
+
+      const response = await axios.request(config);
       const groups = response.data;
-      //console.log(groups)
-      const currentGroup = groups.data[event.body.key.remoteJid];
-   //   console.log(currentGroup)
+
+      const currentGroup = groups.find(group => group.id === event.data.key.remoteJid);
+
       if (currentGroup) {
         return {
-          userQueEnviou: event.body.pushName,
+          userQueEnviou: event.data.pushName,
           name: currentGroup.subject,
-          participants: currentGroup.participants,
-          chatType: 'grupo'
+          participants: currentGroup.size, // Número de participantes
+          chatType: 'grupo',
+          owner: currentGroup.owner,
+          creation: currentGroup.creation,
+          desc: currentGroup.desc,
+          restrict: currentGroup.restrict,
+          announce: currentGroup.announce
         };
       } else {
-        console.warn(`Grupo não encontrado para o JID: ${event.body.key.remoteJid}`);
-        return { name: 'Grupo Desconhecido' };
+        console.warn(`Grupo não encontrado para o JID: ${event.data.key.remoteJid}`);
+        return { name: 'Grupo Desconhecido', chatType: 'grupo' };
       }
     } catch (error) {
       console.error('Erro ao buscar informações do grupo:', error);
-      return { name: 'Erro ao carregar nome do grupo' };
+      return { name: 'Erro ao carregar nome do grupo', chatType: 'grupo' };
     }
   } else {
     return {
-      name: event.body.pushName || 'Usuário Desconhecido',
+      name: event.data.pushName || 'Usuário Desconhecido',
       chatType: 'individual'
-
     };
   }
 }
