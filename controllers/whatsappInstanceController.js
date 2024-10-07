@@ -13,6 +13,36 @@ const addApiKeyToHeaders = (headers = {}) => {
     return { ...headers, 'apikey': APIKEY };
 };
 
+
+exports.deleteAllInstances = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        
+        // Deletar todas as instâncias da API Evolution
+        for (const instance of user.whatsappInstances) {
+            try {
+                await axios.delete(`${API_BASE_URL}/instance/delete/${instance.name}`, {
+                    headers: { 
+                        'apikey': APIKEY
+                    }
+                });
+            } catch (error) {
+                console.error(`Erro ao deletar instância ${instance.name} da API Evolution:`, error);
+                // Continua para a próxima instância mesmo se houver erro
+            }
+        }
+
+        // Limpar todas as instâncias do usuário no banco de dados
+        user.whatsappInstances = [];
+        await user.save();
+
+        res.json({ message: 'Todas as instâncias foram deletadas com sucesso' });
+    } catch (error) {
+        console.error('Erro ao deletar todas as instâncias:', error);
+        res.status(500).json({ error: 'Erro ao deletar todas as instâncias' });
+    }
+};
+
 exports.createInstance = async (req, res) => {
     try {
         const { name } = req.body;

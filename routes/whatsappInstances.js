@@ -40,6 +40,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
     }
 });
 
+router.delete('/deleteAll', ensureAuthenticated, whatsappInstanceController.deleteAllInstances);
 router.post('/create', ensureAuthenticated, whatsappInstanceController.createInstance);
 router.get('/list', ensureAuthenticated, whatsappInstanceController.listInstances);
 router.get('/checker', ensureAuthenticated, whatsappInstanceController.checkInstanceStatus);
