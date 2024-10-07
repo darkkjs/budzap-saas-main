@@ -156,6 +156,10 @@ async function uploadbase64(base64File, type, github) {
       nomearqv = filename + ".mp3";
     } else if (type === "video") {
       nomearqv = filename + ".mp4";
+    } else if (type === "document") {
+      nomearqv = filename + ".pdf";
+    } else if (type === "sticker") {
+      nomearqv = filename + ".webp";
     } else {
       nomearqv = filename + "." + type;
     }

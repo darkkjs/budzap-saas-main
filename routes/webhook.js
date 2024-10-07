@@ -8,10 +8,10 @@ const fs = require('fs').promises;
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const axios = require("axios")
-const { downloadAndSaveMedia } = require('../Helpers/uploader');
+const { uploadbase64 } = require('../Helpers/uploader');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { getChats, chatExists } = require('../Helpers/redisHelpers');
-
+const github = require('../config/git');
 
 
 async function getChatInfo(event, isGroup) {
@@ -258,23 +258,23 @@ router.post('/:instanceKey', async (req, res) => {
     
             case 'imageMessage':
               dadoschat.mensagem.tipomsg = 'image';
-              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.data.message.imageMessage.base64, 'jpg');
+              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.imageMessage.base64, 'image', github);
               break
             case 'videoMessage':
               dadoschat.mensagem.tipomsg = 'video';
-              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.data.message.videoMessage.base64, "mp4");
+              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.videoMessage.base64, "video", github);
               break
             case 'audioMessage':
               dadoschat.mensagem.tipomsg = 'audio';
-              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.data.message.audioMessage.base64, 'mp3');
+              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.audioMessage.base64, 'audio', github);
               break
             case 'documentMessage':
               dadoschat.mensagem.tipomsg = 'document';
-              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.data.message.documentMessage.base64, "pdf");
+              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.documentMessage.base64, "document", github);
               break;
             case 'stickerMessage':
               dadoschat.mensagem.tipomsg = 'sticker';
-              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.data.message.stickerMessage.base64, 'webp');
+              dadoschat.mensagem.conteudomsg = await uploadbase64(event.data.message.stickerMessage.base64, 'sticker', github);
               break;
 
 
