@@ -1001,7 +1001,7 @@ async function sendTextMessage(instance, content, delay, number) {
     const data = JSON.stringify({
         number: number,
         text: content,
-        delay: delay || 0
+        delay: delay * 1000 || 0
     });
 
     const config = {
@@ -1067,7 +1067,7 @@ async function sendAudioMessage(instanceKey, audioUrl, delay, number) {
     const data = JSON.stringify({
         number: number,
         audio: audioUrl,
-        delay: delay
+        delay: delay * 1000 || 0
     });
 
     const config = {
