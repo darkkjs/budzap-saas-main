@@ -620,6 +620,8 @@ function addNewNode(type) {
         id: nodeId,
         type: type,
         content: data && data.content ? data.content : defaultContent,
+        typeDelay: data && data.delay && (type === 'message' || type === 'input') ? data.delay : 0,
+        recordDelay: data && data.delay && type === 'audio' ? data.delay : 0,
         inputKey: data && data.inputKey ? data.inputKey : '',
         variable: data && data.variable ? data.variable : '',
     conditionType: data && data.conditionType ? data.conditionType : '',
@@ -2062,6 +2064,7 @@ function updateMediaPreview(nodeId, url) {
                 case 'input':
                     nodeData.inputKey = node.inputKey;
                     nodeData.saveResponse = node.saveResponse;
+                  //  nodeData.delay = node.typeDelay
                     break;
                     case 'condition':
                     nodeData.variable = node.variable;
