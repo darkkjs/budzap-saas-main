@@ -157,7 +157,7 @@ router.post('/:instanceKey', async (req, res) => {
 
     while (retries < maxRetries && !success) {
       try {
-        const user = await User.findOne({ 'whatsappInstances.key': req.params.instanceKey });
+        const user = await User.findOne({ 'whatsappInstances.name': req.params.instanceKey });
         if (!user) {
           return res.status(404).json({ error: 'Instância não encontrada' });
         }
@@ -171,9 +171,9 @@ router.post('/:instanceKey', async (req, res) => {
               const groupId = event.body.data.id;
               console.log("Novo membro adicionado: " + newMember);
               try {
-                  const user = await User.findOne({ 'whatsappInstances.key': event.instanceKey });
+                  const user = await User.findOne({ 'whatsappInstances.name': event.instanceKey });
                   if (user) {
-                      const instance = user.whatsappInstances.find(inst => inst.key === event.instanceKey);
+                      const instance = user.whatsappInstances.find(inst => inst.name === event.instanceKey);
                       console.log('Instância encontrada:', instance);
                       if (instance && instance.welcomeMessage && instance.welcomeMessage.isActive) {
                           const { message, mediaType, mediaUrl, caption } = instance.welcomeMessage;
