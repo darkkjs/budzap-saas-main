@@ -161,7 +161,7 @@ async function processJob(job, userId) {
             console.log(`Processando número ${numbers[i]} usando instância ${instance.name}`);
             
             const chatId = `${numbers[i]}@s.whatsapp.net`;
-            const autoResponseKey = `auto_response:${instance.key}:${chatId}`;
+            const autoResponseKey = `auto_response:${instance.name}:${chatId}`;
             
             const initialState = {
                 funnelId: funnel.id,
@@ -173,7 +173,7 @@ async function processJob(job, userId) {
 
             await redisClient.setex(autoResponseKey, 3600, JSON.stringify(initialState));
 
-            await executeFunnel(funnel, chatId, instance.key, initialState);
+            await executeFunnel(funnel, chatId, instance.name, initialState);
 
             report.sent += 1;
             console.log(`Funil iniciado para ${numbers[i]} usando instância ${instance.name}`);

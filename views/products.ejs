@@ -1,0 +1,22 @@
+<!-- views/products.ejs -->
+<%- include('partials/header') %>
+
+<h1>Manage Products</h1>
+
+<form id="addProductForm">
+  <input type="text" name="name" placeholder="Product Name" required>
+  <input type="number" name="price" placeholder="Price" required>
+  <textarea name="description" placeholder="Description"></textarea>
+  <input type="url" name="redirectLink" placeholder="Redirect Link">
+  <input type="url" name="image" placeholder="Image URL">
+  <button type="submit">Add Product</button>
+</form>
+
+<div id="productList"></div>
+
+<script>
+  // JavaScript para gerenciar produtos (adicionar, listar, atualizar, excluir)
+  // Você precisará implementar as chamadas AJAX para as rotas da API
+</script>
+
+<%- include('partials/footer') %>

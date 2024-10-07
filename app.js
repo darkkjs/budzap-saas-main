@@ -169,6 +169,16 @@ passport.deserializeUser(async (id, done) => {
 
 // Rotas
 
+const catalogRoutes = require('./routes/catalogRoutes');
+app.use('/catalog', catalogRoutes);
+
+
+const pageRoutes = require('./routes/pageRoutes');
+
+// ... (outras configurações)
+
+app.use('/pages', pageRoutes);
+
 const subscriptionRoutes = require('./routes/subscription');
 app.use('/subscription', subscriptionRoutes);
 const webhookController = require('./controllers/webhookController');

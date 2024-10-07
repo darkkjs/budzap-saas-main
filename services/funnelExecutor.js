@@ -1,6 +1,6 @@
 // services/funnelExecutor.js
 const axios = require('axios');
-const API_BASE_URL = 'https://budzap.shop';
+const API_BASE_URL = 'https://evolution.hocketzap.com';
 const ADMIN_TOKEN = 'darklindo'; // Substitua pelo seu token admin real
 const redisClient = require('../config/redisConfig');
 const User = require('../models/User');
@@ -13,6 +13,7 @@ const io = require('../app'); // Importe o objeto io do seu arquivo app.js
 const saoPauloTimezone = 'America/Sao_Paulo';
 const eventBus = require('../Helpers/eventBus');
 const moment = require('moment-timezone');
+const APIKEY = 'darkadm';
 
 
 async function saveAutoResponseMessage(instanceKey, chatId, content, type = 'text') {
@@ -97,7 +98,7 @@ async function generatePayment(instanceKey, chatId, node) {
                     const qrCodeUrl = await uploadbase64(qrCodeBase64, 'image', github);
                     
                  //   await sendTextMessage(instanceKey, `Escaneie o QR code abaixo para pagar:`, chatId);
-                    await sendMediaMessage(instanceKey, qrCodeUrl, chatId, 'imageFile', 'qrcode.jpg', 'Escaneie o QR code para pagar!');
+                    await sendMediaMessage(instanceKey, qrCodeUrl, chatId, 'image', 'qrcode.jpg', 'Escaneie o QR code para pagar!');
                     await sendTextMessage(instanceKey, `Ou pague com o pix copia e cola:`, chatId);
                 } catch (uploadError) {
                     console.error('Erro ao fazer upload do QR code:', uploadError);
@@ -362,6 +363,7 @@ const saoPauloTimestamp = await moment().tz(saoPauloTimezone).unix();
                         case 'image':
                         case 'video':
                         case 'audio':
+                          //  await sendAudioMessage(instanceKey, )
                             await sendMediaMessage(instanceKey, messageContent2, targetNumber, currentNode.messageType, `${currentNode.messageType}.${currentNode.messageType === 'image' ? 'jpg' : currentNode.messageType === 'video' ? 'mp4' : 'mp3'}`, currentNode.caption || '');
                             break;
                         default:
@@ -789,7 +791,7 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
                     break;
                     case 'image':
                         case 'video':
-                            await sendMediaMessage(instanceKey, currentNode.content, chatId, currentNode.type === 'image' ? 'imageFile' : 'video', `${currentNode.type}.${currentNode.type === 'image' ? 'jpg' : 'mp4'}`, currentNode.caption);
+                            await sendMediaMessage(instanceKey, currentNode.content, chatId, currentNode.type === 'image' ? 'image' : 'video', `${currentNode.type}.${currentNode.type === 'image' ? 'jpg' : 'mp4'}`, currentNode.caption);
                             await saveAutoResponseMessage(instanceKey, chatId, currentNode.content, currentNode.type);
                             
                                eventBus.emit('newMessage', instanceKey, {
@@ -809,7 +811,8 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
                             break;
                             case 'audio':
                                 console.log('Iniciando envio de áudio');
-                                await sendMediaMessage(instanceKey, currentNode.content, chatId, 'audiofile', 'audio.mp3', '');
+                              //  await sendMediaMessage(instanceKey, currentNode.content, chatId, 'audiofile', 'audio.mp3', '');
+                             await sendAudioMessage(instanceKey, currentNode.content, chatId)
                                 console.log('Áudio enviado com sucesso');
                                 await saveAutoResponseMessage(instanceKey, chatId, currentNode.content, 'audio');
                                 const messageData2 = {
@@ -994,80 +997,108 @@ function evaluateCondition(conditionNode, state) {
 
 
 async function sendTextMessage(instance, content, number) {
-    url = `https://budzap.shop/message/text?key=${instance}`
-    const messagePayload = {
-        id: `${number}`,
-        typeId: "user",
-        message: content,
-        options: {
-            delay: 0,
-            replyFrom: ""
-        },
-        groupOptions: {
-            markUser: "ghostMention"
-        }
-    };
+    const url = `${API_BASE_URL}/message/sendText/${instance}`;
+    const data = JSON.stringify({
+        number: number,
+        text: content
+    });
 
-console.log(messagePayload);
-
-    const requestOptions = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
+    const config = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: url,
+        headers: { 
+            'Content-Type': 'application/json', 
+            'apikey': APIKEY
         },
-        body: JSON.stringify(messagePayload)
+        data: data
     };
 
     try {
-        const response = await fetch(url, requestOptions);
-        const data = await response.json();
-        console.log('Success');
+        const response = await axios.request(config);
+        console.log('Mensagem de texto enviada:', JSON.stringify(response.data));
+        return response.data;
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Erro ao enviar mensagem de texto:', error);
+        throw error;
     }
 }
+
 const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 
-async function sendMediaMessage(instanceKey, mediaUrl, number, filename, final, caption) {
-    //console.log('Iniciando envio de mídia:', { instanceKey, mediaUrl, id, filename, final, caption, type });
-    let url = `https://budzap.shop/message/${filename}?key=${instanceKey}`
-    const mediaBuffer = await downloadMedia(mediaUrl);
-    const data = new FormData();
-    
-    // Salvando o buffer temporariamente como um arquivo
-    const tempFilePath = path.join(__dirname, 'temp_' + final);
-    fs.writeFileSync(tempFilePath, mediaBuffer);
+async function sendMediaMessage(instanceKey, mediaUrl, number, mediaType, fileName, caption) {
+    const url = `${API_BASE_URL}/message/sendMedia/${instanceKey}`;
+    const data = JSON.stringify({
+        number: number,
+        mediatype: mediaType, // 'image', 'video', ou 'document'
+        mimetype: getMimeType(mediaType),
+        caption: caption,
+        media: mediaUrl,
+        fileName: fileName
+    });
 
-    // Anexando o arquivo ao FormData
-    data.append('file', fs.createReadStream(tempFilePath), final);
-    
-    data.append('id', `${number}`);
-
-    if (!final.includes('.mp3')) (
-        data.append('caption', caption)
-    )
-  
-    data.append('userType', "user");
-    data.append('delay', 0);
+    const config = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: url,
+        headers: { 
+            'Content-Type': 'application/json', 
+            'apikey': APIKEY
+        },
+        data: data
+    };
 
     try {
-        const response = await axios.post(url, data, {
-            headers: data.getHeaders()
-        });
-        
-        if (response.data.error) {
-            throw new Error(response.data.message);
-        }
-
-        console.log('Resposta do envio de mídia:', response.data);
-
+        const response = await axios.request(config);
+        console.log('Mídia enviada:', JSON.stringify(response.data));
+        return response.data;
     } catch (error) {
-        console.error('Error sending media message:', error);
-    } finally {
-        // Removendo o arquivo temporário
-        fs.unlinkSync(tempFilePath);
+        console.error('Erro ao enviar mídia:', error);
+        throw error;
+    }
+}
+
+
+async function sendAudioMessage(instanceKey, audioUrl, number) {
+    const url = `${API_BASE_URL}/message/sendWhatsAppAudio/${instanceKey}`;
+    const data = JSON.stringify({
+        number: number,
+        audio: audioUrl
+    });
+
+    const config = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: url,
+        headers: { 
+            'Content-Type': 'application/json', 
+            'apikey': APIKEY
+        },
+        data: data
+    };
+
+    try {
+        const response = await axios.request(config);
+        console.log('Áudio enviado:', JSON.stringify(response.data));
+        return response.data;
+    } catch (error) {
+        console.error('Erro ao enviar áudio:', error);
+        throw error;
+    }
+}
+
+function getMimeType(mediaType) {
+    switch (mediaType) {
+        case 'image':
+            return 'image/jpeg'; // ou 'image/jpeg'
+        case 'video':
+            return 'video/mp4';
+        case 'document':
+            return 'application/pdf'; // ajuste conforme necessário
+        default:
+            return 'application/octet-stream';
     }
 }
 

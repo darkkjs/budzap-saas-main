@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Página Avançado</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <style>
+        [v-cloak] { display: none; }
+        .component-preview { border: 2px dashed #ccc; padding: 10px; margin-bottom: 10px; cursor: move; }
+        .dropzone { min-height: 100px; border: 2px dashed #007bff; padding: 20px; margin-bottom: 20px; }
+        .color-picker { -webkit-appearance: none; -moz-appearance: none; appearance: none; width: 50px; height: 50px; background-color: transparent; border: none; cursor: pointer; }
+        .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+        .color-picker::-webkit-color-swatch { border: none; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div id="app" v-cloak class="container mx-auto p-4">
+        <h1 class="text-4xl font-bold mb-8 text-center">Editor de Página Avançado</h1>
+        
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Suas Páginas</h2>
+            <div v-if="pages.length === 0" class="text-gray-500">Você ainda não criou nenhuma página.</div>
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div v-for="page in pages" :key="page._id" class="bg-white rounded-lg shadow-md p-4">
+                    <h3 class="text-xl font-bold mb-2">{{ page.name }}</h3>
+                    <div class="flex justify-between">
+                        <a :href="'/pages/' + page.customLink" target="_blank" class="text-blue-500 hover:underline">Visualizar</a>
+                        <button @click="editPage(page)" class="text-green-500 hover:underline">Editar</button>
+                        <button @click="deletePage(page._id)" class="text-red-500 hover:underline">Excluir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">{{ editingPage ? 'Editar Página' : 'Criar Nova Página' }}</h2>
+            <div class="mb-4">
+                <label for="pageName" class="block mb-2 font-bold">Nome da Página:</label>
+                <input type="text" id="pageName" v-model="pageName" class="w-full p-2 border rounded" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block mb-2 font-bold">Cor de Fundo da Página:</label>
+                <input type="color" v-model="pageStyle.backgroundColor" class="color-picker">
+            </div>
+            
+            <div class="flex flex-col lg:flex-row mb-4">
+                <div class="w-full lg:w-1/4 pr-4 mb-4 lg:mb-0">
+                    <h3 class="text-xl font-bold mb-2">Componentes</h3>
+                    <div v-for="component in availableComponents" :key="component.type" 
+                         class="component-preview bg-white p-2 mb-2 rounded shadow hover:shadow-md transition-shadow duration-200"
+                         draggable="true" @dragstart="dragStart(component, $event)">
+                        <i :class="component.icon" class="mr-2"></i>{{ component.name }}
+                    </div>
+                </div>
+                
+                <div class="w-full lg:w-2/4 pr-4 mb-4 lg:mb-0">
+                    <h3 class="text-xl font-bold mb-2">Layout da Página</h3>
+                    <div class="dropzone bg-white rounded-lg" @dragover.prevent @drop="drop($event)">
+                        <div v-for="(section, index) in sections" :key="index" 
+                             class="bg-gray-100 p-4 mb-4 rounded shadow">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold">{{ section.name }}</span>
+                                <div>
+                                    <button @click="moveSection(index, -1)" class="text-blue-500 mr-2"><i class="fas fa-arrow-up"></i></button>
+                                    <button @click="moveSection(index, 1)" class="text-blue-500 mr-2"><i class="fas fa-arrow-down"></i></button>
+                                    <button @click="removeSection(index)" class="text-red-500"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            
+                            <!-- Opções comuns de estilo para todas as seções -->
+                            <div class="mb-2">
+                                <label class="block">Alinhamento:</label>
+                                <select v-model="section.style.textAlign" class="p-2 border rounded">
+                                    <option value="left">Esquerda</option>
+                                    <option value="center">Centro</option>
+                                    <option value="right">Direita</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="block">Espaçamento (px):</label>
+                                <input type="number" v-model="section.style.padding" class="p-2 border rounded" min="0" max="100">
+                            </div>
+                            <div class="mb-2">
+                                <label class="block">Cor de Fundo:</label>
+                                <input type="color" v-model="section.style.backgroundColor" class="color-picker">
+                            </div>
+                            
+                            <!-- Opções específicas de cada seção -->
+                            <div v-if="section.type === 'header' || section.type === 'text'">
+                                <textarea v-if="section.type === 'text'" v-model="section.content" class="w-full p-2 border rounded" rows="3"></textarea>
+                                <input v-else v-model="section.content" class="w-full p-2 border rounded mb-2" :placeholder="section.type === 'header' ? 'Texto do Cabeçalho' : 'Texto'">
+                                <div class="mb-2">
+                                    <label class="block">Tamanho da Fonte (px):</label>
+                                    <input type="number" v-model="section.style.fontSize" class="p-2 border rounded" min="10" max="100">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Fonte:</label>
+                                    <select v-model="section.style.fontFamily" class="p-2 border rounded">
+                                        <option value="Arial, sans-serif">Arial</option>
+                                        <option value="'Times New Roman', serif">Times New Roman</option>
+                                        <option value="'Courier New', monospace">Courier New</option>
+                                        <option value="Georgia, serif">Georgia</option>
+                                        <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">Palatino</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Cor do Texto:</label>
+                                    <input type="color" v-model="section.style.color" class="color-picker">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Estilo do Texto:</label>
+                                    <div>
+                                        <label><input type="checkbox" v-model="section.style.fontWeight" :true-value="'bold'" :false-value="'normal'"> Negrito</label>
+                                        <label><input type="checkbox" v-model="section.style.fontStyle" :true-value="'italic'" :false-value="'normal'"> Itálico</label>
+                                        <label><input type="checkbox" v-model="section.style.textDecoration" :true-value="'underline'" :false-value="'none'"> Sublinhado</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div v-if="section.type === 'image'">
+                                <input v-model="section.content" class="w-full p-2 border rounded mb-2" placeholder="URL da Imagem">
+                                <input v-model="section.alt" class="w-full p-2 border rounded" placeholder="Texto Alternativo da Imagem">
+                                <div class="mb-2">
+                                    <label class="block">Largura da Imagem (%):</label>
+                                    <input type="number" v-model="section.style.width" class="p-2 border rounded" min="10" max="100">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Raio da Borda (px):</label>
+                                    <input type="number" v-model="section.style.borderRadius" class="p-2 border rounded" min="0" max="50">
+                                </div>
+                            </div>
+                            
+                            <div v-if="section.type === 'button'">
+                                <input v-model="section.content" class="w-full p-2 border rounded mb-2" placeholder="Texto do Botão">
+                                <input v-model="section.link" class="w-full p-2 border rounded mb-2" placeholder="Link do Botão">
+                                <div class="mb-2">
+                                    <label class="block">Cor do Botão:</label>
+                                    <input type="color" v-model="section.style.backgroundColor" class="color-picker">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Cor do Texto:</label>
+                                    <input type="color" v-model="section.style.color" class="color-picker">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Tamanho da Fonte (px):</label>
+                                    <input type="number" v-model="section.style.fontSize" class="p-2 border rounded" min="10" max="50">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Espaçamento (px):</label>
+                                    <input type="number" v-model="section.style.padding" class="p-2 border rounded" min="0" max="50">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Raio da Borda (px):</label>
+                                    <input type="number" v-model="section.style.borderRadius" class="p-2 border rounded" min="0" max="50">
+                                </div>
+                            </div>
+                            
+                            <div v-if="section.type === 'product-list'">
+                                <div class="mb-2">
+                                    <label class="block">Layout:</label>
+                                    <select v-model="section.style.layout" class="p-2 border rounded">
+                                        <option value="grid">Grade</option>
+                                        <option value="list">Lista</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Produtos por Linha:</label>
+                                    <input type="number" v-model="section.style.productsPerRow" class="p-2 border rounded" min="1" max="6">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Mostrar Preço:</label>
+                                    <input type="checkbox" v-model="section.style.showPrice">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Mostrar Descrição:</label>
+                                    <input type="checkbox" v-model="section.style.showDescription">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Raio da Borda do Produto (px):</label>
+                                    <input type="number" v-model="section.style.productBorderRadius" class="p-2 border rounded" min="0" max="50">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Cor de Fundo do Produto:</label>
+                                    <input type="color" v-model="section.style.productBackgroundColor" class="color-picker">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Cor do Título do Produto:</label>
+                                    <input type="color" v-model="section.style.productTitleColor" class="color-picker">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Cor da Descrição do Produto:</label>
+                                    <input type="color" v-model="section.style.productDescriptionColor" class="color-picker">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Cor do Preço do Produto:</label>
+                                    <input type="color" v-model="section.style.productPriceColor" class="color-picker">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Estilo do Botão do Produto:</label>
+                                    <input type="color" v-model="section.style.productButtonColor" class="color-picker">
+                                    <input type="color" v-model="section.style.productButtonTextColor" class="color-picker">
+                                    <input type="number" v-model="section.style.productButtonBorderRadius" class="p-2 border rounded" min="0" max="50" placeholder="Raio da borda">
+                                </div>
+                            </div>
+                            
+                            <div v-if="section.type === 'video'">
+                                <input v-model="section.content" class="w-full p-2 border rounded mb-2" placeholder="URL do Vídeo (YouTube ou Vimeo)">
+                                <div class="mb-2">
+                                    <label class="block">Largura do Vídeo (%):</label>
+                                    <input type="number" v-model="section.style.width" class="p-2 border rounded" min="10" max="100">
+                                </div>
+                            </div>
+                            
+                            <div v-if="section.type === 'divider'">
+                                <div class="mb-2">
+                                    <label class="block">Cor do Divisor:</label>
+                                    <input type="color" v-model="section.style.borderColor" class="color-picker">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Espessura do Divisor (px):</label>
+                                    <input type="number" v-model="section.style.borderWidth" class="p-2 border rounded" min="1" max="10">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block">Estilo do Divisor:</label>
+                                    <select v-model="section.style.borderStyle" class="p-2 border rounded">
+                                        <option value="solid">Sólido</option>
+                                        <option value="dashed">Tracejado</option>
+                                        <option value="dotted">Pontilhado</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full lg:w-1/4">
+                    <h3 class="text-xl font-bold mb-2">Visualização em Tempo Real</h3>
+                    <div class="bg-white p-4 rounded-lg shadow" style="max-height: 600px; overflow-y: auto;">
+                        <div v-html="livePreview"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <button @click="savePage" class="bg-blue-500 text-white px-6 py-3 rounded-full hover:bg-blue-600 transition-colors duration-200">
+                {{ editingPage ? 'Atualizar Página' : 'Salvar Página' }}
+            </button>
+        </div>
+    </div>
+
+    <script>
+    new Vue({
+        el: '#app',
+        data: {
+            pages: [],
+            editingPage: null,
+            pageName: '',
+            pageStyle: {
+                backgroundColor: '#ffffff'
+            },
+            availableComponents: [
+                { type: 'header', name: 'Cabeçalho', icon: 'fas fa-heading' },
+                { type: 'text', name: 'Texto', icon: 'fas fa-paragraph' },
+                { type: 'image', name: 'Imagem', icon: 'fas fa-image' },
+                { type: 'button', name: 'Botão', icon: 'fas fa-square' },
+                { type: 'product-list', name: 'Lista de Produtos', icon: 'fas fa-list' },
+                { type: 'video', name: 'Vídeo', icon: 'fas fa-video' },
+                { type: 'divider', name: 'Divisor', icon: 'fas fa-minus' }
+            ],
+            sections: [],
+            products: [] // Adicione esta linha para armazenar os produtos
+        },
+        computed: {
+            livePreview() {
+                return this.generatePageHTML();
+            }
+        },
+        mounted() {
+            this.fetchPages();
+            this.fetchProducts(); // Adicione esta linha para buscar os produtos
+        },
+        methods: {
+            async fetchPages() {
+    try {
+        console.log('Solicitando lista de páginas...');
+        const response = await axios.get('/pages/api/list');
+        console.log('Resposta recebida:', response.data);
+        if (Array.isArray(response.data)) {
+            this.pages = response.data;
+        } else {
+            console.error('Resposta inesperada:', response.data);
+            this.pages = [];
+        }
+    } catch (error) {
+        console.error('Erro ao buscar páginas:', error.response ? error.response.data : error.message);
+        this.pages = [];
+    }
+},
+            async fetchProducts() {
+                try {
+                    const response = await axios.get('/catalog/products/list');
+                    this.products = response.data;
+                } catch (error) {
+                    console.error('Erro ao buscar produtos:', error);
+                }
+            },
+            editPage(page) {
+                this.editingPage = page;
+                this.pageName = page.name;
+                this.pageStyle = page.style || { backgroundColor: '#ffffff' };
+                this.sections = page.sections;
+            },
+            async deletePage(pageId) {
+                if (confirm('Tem certeza que deseja excluir esta página?')) {
+                    try {
+                        await axios.delete(`/pages/${pageId}`);
+                        this.fetchPages();
+                    } catch (error) {
+                        console.error('Erro ao excluir página:', error);
+                    }
+                }
+            },
+            dragStart(component, event) {
+                event.dataTransfer.setData('text/plain', JSON.stringify(component));
+            },
+            drop(event) {
+                const componentData = JSON.parse(event.dataTransfer.getData('text'));
+                this.addSection(componentData);
+            },
+            addSection(component) {
+                const newSection = {
+                    type: component.type,
+                    name: component.name,
+                    content: '',
+                    style: {
+                        textAlign: 'left',
+                        padding: 20,
+                        backgroundColor: '#ffffff',
+                        color: '#000000',
+                        fontSize: 16,
+                        fontFamily: 'Arial, sans-serif',
+                        fontWeight: 'normal',
+                        fontStyle: 'normal',
+                        textDecoration: 'none'
+                    }
+                };
+                
+                switch(component.type) {
+                    case 'header':
+                        newSection.style.fontSize = 32;
+                        break;
+                    case 'button':
+                        newSection.style.backgroundColor = '#007bff';
+                        newSection.style.color = '#ffffff';
+                        newSection.style.padding = 10;
+                        newSection.style.borderRadius = 5;
+                        newSection.link = '';
+                        break;
+                    case 'image':
+                        newSection.alt = '';
+                        newSection.style.width = 100;
+                        newSection.style.borderRadius = 0;
+                        break;
+                    case 'product-list':
+                        newSection.style.layout = 'grid';
+                        newSection.style.productsPerRow = 3;
+                        newSection.style.showPrice = true;
+                        newSection.style.showDescription = true;
+                        newSection.style.productBorderRadius = 5;
+                        newSection.style.productBackgroundColor = '#ffffff';
+                        newSection.style.productTitleColor = '#000000';
+                        newSection.style.productDescriptionColor = '#666666';
+                        newSection.style.productPriceColor = '#007bff';
+                        newSection.style.productButtonColor = '#007bff';
+                        newSection.style.productButtonTextColor = '#ffffff';
+                        newSection.style.productButtonBorderRadius = 5;
+                        break;
+                    case 'video':
+                        newSection.style.width = 100;
+                        break;
+                    case 'divider':
+                        newSection.style.borderColor = '#000000';
+                        newSection.style.borderWidth = 1;
+                        newSection.style.borderStyle = 'solid';
+                        break;
+                }
+                
+                this.sections.push(newSection);
+            },
+            removeSection(index) {
+                this.sections.splice(index, 1);
+            },
+            moveSection(index, direction) {
+                if ((index === 0 && direction === -1) || (index === this.sections.length - 1 && direction === 1)) {
+                    return;
+                }
+                const newIndex = index + direction;
+                const [removedSection] = this.sections.splice(index, 1);
+                this.sections.splice(newIndex, 0, removedSection);
+            },
+            async savePage() {
+                if (!this.pageName) {
+                    alert('Por favor, insira um nome para a página');
+                    return;
+                }
+                
+                try {
+                    const pageData = {
+                        name: this.pageName,
+                        style: this.pageStyle,
+                        sections: this.sections
+                    };
+
+                    let response;
+                    if (this.editingPage) {
+                        response = await axios.put(`/pages/${this.editingPage._id}`, pageData);
+                    } else {
+                        response = await axios.post('/pages/create', pageData);
+                    }
+                    
+                    alert(`Página ${this.editingPage ? 'atualizada' : 'salva'} com sucesso! Link personalizado: ` + response.data.customLink);
+                    this.fetchPages();
+                    this.resetForm();
+                } catch (error) {
+                    console.error('Erro ao salvar página:', error);
+                    alert('Erro ao salvar página. Por favor, tente novamente.');
+                }
+            },
+            resetForm() {
+                this.editingPage = null;
+                this.pageName = '';
+                this.pageStyle = { backgroundColor: '#ffffff' };
+                this.sections = [];
+            },
+            generatePageHTML() {
+                let sectionsHTML = this.sections.map(section => {
+                    const commonStyles = `
+                        text-align: ${section.style.textAlign};
+                        padding: ${section.style.padding}px;
+                        background-color: ${section.style.backgroundColor};
+                        color: ${section.style.color};
+                        font-size: ${section.style.fontSize}px;
+                        font-family: ${section.style.fontFamily};
+                        font-weight: ${section.style.fontWeight};
+                        font-style: ${section.style.fontStyle};
+                        text-decoration: ${section.style.textDecoration};
+                    `;
+
+                    switch(section.type) {
+                        case 'header':
+                            return `<h1 style="${commonStyles}">${section.content}</h1>`;
+                        case 'text':
+                            return `<p style="${commonStyles}">${section.content}</p>`;
+                        case 'image':
+                            return `<img src="${section.content}" alt="${section.alt}" style="${commonStyles} width: ${section.style.width}%; border-radius: ${section.style.borderRadius}px;">`;
+                        case 'button':
+                            return `<a href="${section.link}" style="${commonStyles} background-color: ${section.style.backgroundColor}; color: ${section.style.color}; padding: ${section.style.padding}px; border-radius: ${section.style.borderRadius}px; text-decoration: none; display: inline-block;">${section.content}</a>`;
+                        case 'product-list':
+                            return this.generateProductListHTML(section);
+                        case 'video':
+                            return `<div style="${commonStyles} width: ${section.style.width}%;">
+                                <iframe width="100%" height="315" src="${section.content}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                            </div>`;
+                        case 'divider':
+                            return `<hr style="${commonStyles} border: none; border-top: ${section.style.borderWidth}px ${section.style.borderStyle} ${section.style.borderColor};">`;
+                        default:
+                            return '';
+                    }
+                }).join('');
+
+                return `
+                    <div style="background-color: ${this.pageStyle.backgroundColor};">
+                        ${sectionsHTML}
+                    </div>
+                `;
+            },
+            generateProductListHTML(section) {
+                const productHTML = this.products.map(product => `
+                    <div style="
+                        background-color: ${section.style.productBackgroundColor};
+                        border-radius: ${section.style.productBorderRadius}px;
+                        padding: 10px;
+                        margin-bottom: 20px;
+                    ">
+                        <img src="${product.image}" alt="${product.name}" style="width: 100%; height: auto; object-fit: cover;">
+                        <h3 style="color: ${section.style.productTitleColor};">${product.name}</h3>
+                        ${section.style.showDescription ? `<p style="color: ${section.style.productDescriptionColor};">${product.description}</p>` : ''}
+                        ${section.style.showPrice ? `<p style="color: ${section.style.productPriceColor};">Preço: R$ ${product.price.toFixed(2)}</p>` : ''}
+                        <a href="${product.redirectLink}" style="
+                            background-color: ${section.style.productButtonColor};
+                            color: ${section.style.productButtonTextColor};
+                            padding: 10px 15px;
+                            text-decoration: none;
+                            display: inline-block;
+                            border-radius: ${section.style.productButtonBorderRadius}px;
+                        ">Comprar Agora</a>
+                    </div>
+                `).join('');
+
+                return `
+                    <div style="
+                        display: grid;
+                        grid-template-columns: repeat(${section.style.productsPerRow}, 1fr);
+                        gap: 20px;
+                    ">
+                        ${productHTML}
+                    </div>
+                `;
+            }
+        }
+    });
+    </script>
+</body>
+</html>

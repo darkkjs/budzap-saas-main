@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="app" class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-4">Product Management</h1>
+        
+   <!-- Product Form -->
+   <div class="bg-white p-4 rounded shadow mb-4">
+    <h2 class="text-xl font-bold mb-2">{{ editingProduct ? 'Edit Product' : 'Add New Product' }}</h2>
+    <form @submit.prevent="saveProduct">
+        <div class="mb-2">
+            <label class="block">Name:</label>
+            <input v-model="currentProduct.name" required class="w-full p-2 border rounded">
+        </div>
+        <div class="mb-2">
+            <label class="block">Price:</label>
+            <input v-model="currentProduct.price" type="number" step="0.01" required class="w-full p-2 border rounded">
+        </div>
+        <div class="mb-2">
+            <label class="block">Description:</label>
+            <textarea v-model="currentProduct.description" class="w-full p-2 border rounded"></textarea>
+        </div>
+        <div class="mb-2">
+            <label class="block">Image URL:</label>
+            <input v-model="currentProduct.image" type="url" class="w-full p-2 border rounded">
+        </div>
+        <div class="mb-2">
+            <label class="block">Product URL:</label>
+            <input v-model="currentProduct.redirectLink" type="url" class="w-full p-2 border rounded">
+        </div>
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Save Product</button>
+        <button v-if="editingProduct" @click="cancelEdit" type="button" class="bg-gray-500 text-white px-4 py-2 rounded ml-2">Cancel</button>
+    </form>
+</div>
+
+       <!-- Product List -->
+       <div class="bg-white p-4 rounded shadow">
+        <h2 class="text-xl font-bold mb-2">Product List</h2>
+        <div v-for="product in products" :key="product._id" class="border-b py-2">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold">{{ product.name }}</h3>
+                    <p>Price: ${{ product.price }}</p>
+                    <p>{{ product.description }}</p>
+                    <p>Image: <a :href="product.image" target="_blank">{{ product.image }}</a></p>
+                    <p>URL: <a :href="product.redirectLink" target="_blank">{{ product.redirectLink }}</a></p>
+                </div>
+                <div>
+                    <button @click="editProduct(product)" class="bg-yellow-500 text-white px-2 py-1 rounded mr-2">Edit</button>
+                    <button @click="deleteProduct(product._id)" class="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            products: [],
+            currentProduct: {
+                name: '',
+                price: '',
+                description: '',
+                image: '',
+                redirectLink: ''
+            },
+            editingProduct: null
+        },
+        mounted() {
+            this.fetchProducts();
+        },
+        methods: {
+            async fetchProducts() {
+                try {
+                    const response = await axios.get('/catalog/products/list');
+                    this.products = response.data;
+                } catch (error) {
+                    console.error('Error fetching products:', error);
+                    alert('Failed to fetch products');
+                }
+            },
+            async saveProduct() {
+                try {
+                    if (this.editingProduct) {
+                        await axios.put(`/catalog/products/${this.editingProduct._id}`, this.currentProduct);
+                    } else {
+                        await axios.post('/catalog/products', this.currentProduct);
+                    }
+                    this.fetchProducts();
+                    this.resetForm();
+                    alert('Product saved successfully');
+                } catch (error) {
+                    console.error('Error saving product:', error);
+                    alert('Failed to save product');
+                }
+            },
+            editProduct(product) {
+                this.editingProduct = product;
+                this.currentProduct = { ...product };
+            },
+            cancelEdit() {
+                this.editingProduct = null;
+                this.resetForm();
+            },
+            async deleteProduct(id) {
+                if (confirm('Are you sure you want to delete this product?')) {
+                    try {
+                        await axios.delete(`/catalog/products/${id}`);
+                        this.fetchProducts();
+                        alert('Product deleted successfully');
+                    } catch (error) {
+                        console.error('Error deleting product:', error);
+                        alert('Failed to delete product');
+                    }
+                }
+            },
+            resetForm() {
+                this.currentProduct = {
+                    name: '',
+                    price: '',
+                    description: '',
+                    image: '',
+                    redirectLink: ''
+                };
+                this.editingProduct = null;
+            }
+        }
+    });
+</script>
+</body>
+</html>

@@ -3,20 +3,19 @@
 const axios = require('axios');
 const User = require('../models/User');
 
-const API_BASE_URL = 'https://budzap.shop';
-const ADMIN_TOKEN = 'darklindo';
+const API_BASE_URL = 'https://evolution.hocketzap.com';
+const APIKEY = 'darkadm';
 
 const PLAN_LIMITS = require('../config/planLimits');
 
-// Função auxiliar para adicionar o token admin à URL
-const addAdminTokenToUrl = (url) => {
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}admintoken=${ADMIN_TOKEN}`;
+// Função auxiliar para adicionar o apikey ao cabeçalho
+const addApiKeyToHeaders = (headers = {}) => {
+    return { ...headers, 'apikey': APIKEY };
 };
 
 exports.createInstance = async (req, res) => {
     try {
-        const { name, key } = req.body;
+        const { name } = req.body;
         const user = await User.findById(req.user.id);
 
         // Verificar limite de instâncias baseado no plano
@@ -33,60 +32,119 @@ exports.createInstance = async (req, res) => {
             });
         }
 
-        // Chamar API externa para criar instância
-        const response = await axios.post(addAdminTokenToUrl(`${API_BASE_URL}/instance/init`), {
-            key: key,
-            browser: "Ubuntu",
-            webhook: true,
-            base64: true,
-            webhookUrl: `https://hocketzap.com/webhook/${key}`,
-            webhookEvents: ["messages.upsert"],
-            ignoreGroups: false,
-            messagesRead: false
+        let data = JSON.stringify({
+            "instanceName": name,
+            "qrcode": true,
+            "integration": "WHATSAPP-BAILEYS",
+            "webhook": {
+                "url": `https://hocketzap.com/webhook/${name}`,
+                "byEvents": false,
+                "base64": true,
+                "events": [
+                    "APPLICATION_STARTUP",
+                    "QRCODE_UPDATED",
+                    "MESSAGES_SET",
+                    "MESSAGES_UPSERT",
+                    "MESSAGES_UPDATE",
+                    "MESSAGES_DELETE",
+                    "SEND_MESSAGE",
+                    "CONTACTS_SET",
+                    "CONTACTS_UPSERT",
+                    "CONTACTS_UPDATE",
+                    "PRESENCE_UPDATE",
+                    "CHATS_SET",
+                    "CHATS_UPSERT",
+                    "CHATS_UPDATE",
+                    "CHATS_DELETE",
+                    "GROUPS_UPSERT",
+                    "GROUP_UPDATE",
+                    "GROUP_PARTICIPANTS_UPDATE",
+                    "CONNECTION_UPDATE",
+                    "LABELS_EDIT",
+                    "LABELS_ASSOCIATION",
+                    "CALL",
+                    "TYPEBOT_START",
+                    "TYPEBOT_CHANGE_STATUS"
+                ]
+            }
         });
 
-        if (response.data.error === false) {
-            user.whatsappInstances.push({ name, key, user: req.user.id });
+        let config = {
+            method: 'post',
+            maxBodyLength: Infinity,
+            url: `${API_BASE_URL}/instance/create`,
+            headers: { 
+                'Content-Type': 'application/json', 
+                'apikey': APIKEY
+            },
+            data : data
+        };
+
+        const response = await axios.request(config);
+
+        if (response.data && response.data.hash) {
+            user.whatsappInstances.push({ name, key: response.data.hash, user: req.user.id });
             await user.save();
             res.status(201).json({ 
                 message: 'Instância criada com sucesso', 
-                instance: { name, key },
+                instance: { name, key: response.data.hash },
                 currentCount: instanceCount + 1,
                 limit: planLimit
             });
         } else {
-            res.status(400).json({ error: 'Falha ao criar instância', message: response.data.message });
+            res.status(400).json({ error: 'Falha ao criar instância', details: response.data });
         }
     } catch (error) {
-        console.error('Erro ao criar instância:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
+        console.error('Erro ao criar instância:', error.response ? error.response.data : error.message);
+
+        if (error.response && error.response.status === 403) {
+            const errorMessage = error.response.data.response && error.response.data.response.message
+                ? error.response.data.response.message[0]
+                : 'Acesso negado';
+            
+            res.status(403).json({ 
+                error: 'O nome ja está em uso',
+                message: errorMessage
+            });
+        } else {
+            res.status(500).json({ 
+                error: 'Erro interno do servidor', 
+                message: 'Ocorreu um erro ao criar a instância. Por favor, tente novamente.'
+            });
+        }
     }
 };
-
-// controllers/whatsappInstanceController.js
 
 exports.listInstances = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
-        const instancesWithStatus = await Promise.all(user.whatsappInstances.map(async (instance) => {
-            try {
-                const response = await axios.get(addAdminTokenToUrl(`${API_BASE_URL}/instance/info?key=${instance.key}`));
-                const isConnected = response.data.error === false && response.data.instance_data.phone_connected;
-                const whatsappName = isConnected && response.data.instance_data.user ? response.data.instance_data.user.name : null;
-                return {
-                    ...instance.toObject(),
-                    isConnected,
-                    whatsappName
-                };
-            } catch (error) {
-                console.error(`Erro ao verificar status da instância ${instance.key}:`, error);
-                return {
-                    ...instance.toObject(),
-                    isConnected: false,
-                    whatsappName: null
-                };
-            }
-        }));
+        
+        // Chamar a API externa para buscar as instâncias
+        const response = await axios.get(`${API_BASE_URL}/instance/fetchInstances`, {
+            headers: addApiKeyToHeaders()
+        });
+
+        // Mapear as instâncias retornadas pela API para o formato esperado pelo frontend
+        const instancesWithStatus = response.data.map(apiInstance => {
+            const userInstance = user.whatsappInstances.find(i => i.key === apiInstance.token);
+            
+            if (!userInstance) return null; // Ignora instâncias que não pertencem ao usuário
+
+            return {
+                _id: userInstance._id, // Mantém o ID do MongoDB
+                name: apiInstance.name,
+                key: apiInstance.token,
+                isConnected: apiInstance.connectionStatus === 'open',
+                whatsappName: apiInstance.profileName,
+                number: apiInstance.number,
+                createdAt: apiInstance.createdAt,
+                updatedAt: apiInstance.updatedAt,
+                messageCount: apiInstance._count.Message,
+                contactCount: apiInstance._count.Contact,
+                chatCount: apiInstance._count.Chat
+            };
+        }).filter(Boolean); // Remove possíveis valores null
+
         res.json(instancesWithStatus);
     } catch (error) {
         console.error('Erro ao listar instâncias:', error);
@@ -104,19 +162,32 @@ exports.getQRCode = async (req, res) => {
             return res.status(404).json({ error: 'Instância não encontrada' });
         }
 
-        const response = await axios.get(addAdminTokenToUrl(`${API_BASE_URL}/instance/qrbase64?key=${instance.key}`));
-   //     console.log(response.data)
-        if (response.data.error === false && response.data.qrcode) {
-            res.json({ qr: response.data.qrcode });
+        let config = {
+            method: 'get',
+            maxBodyLength: Infinity,
+            url: `${API_BASE_URL}/instance/connect/${instance.name}`,
+            headers: { 
+                'apikey': APIKEY
+            }
+        };
+
+        const response = await axios.request(config);
+
+        if (response.data && response.data.base64) {
+            res.json({ 
+                pairingCode: response.data.pairingCode,
+                code: response.data.code,
+                qr: response.data.base64,
+                count: response.data.count
+            });
         } else {
-            res.status(400).json({ error: 'QR Code não disponível', message: response.data.message });
+            res.status(400).json({ error: 'QR Code não disponível' });
         }
     } catch (error) {
-        console.error('Erro ao obter QR Code:', error);
-        res.status(500).json({ error: 'Erro ao obter QR Code' });
+        console.error('Erro ao obter QR Code:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: 'Erro ao obter QR Code', details: error.response ? error.response.data : error.message });
     }
 };
-
 exports.disconnectInstance = async (req, res) => {
     try {
         const { instanceId } = req.params;
@@ -127,23 +198,22 @@ exports.disconnectInstance = async (req, res) => {
             return res.status(404).json({ error: 'Instância não encontrada' });
         }
 
-        const response = await axios.get(addAdminTokenToUrl(`${API_BASE_URL}/instance/logout?key=${instance.key}`));
+        const response = await axios.delete(`${API_BASE_URL}/instance/logout/${instance.name}`, {
+            headers: { 
+                'apikey': APIKEY
+            }
+        });
         
-        if (response.data.error === false) {
+        if (response.status === 200) {
             res.json({ message: 'Instância desconectada com sucesso' });
         } else {
-            if (response.data.message === "phone isn't connected") {
-                res.status(400).json({ error: 'Instância já desconectada', message: 'Esta instância já não tem um WhatsApp conectado.' });
-            } else {
-                res.status(400).json({ error: 'Falha ao desconectar instância', message: response.data.message });
-            }
+            res.status(400).json({ error: 'Falha ao desconectar instância' });
         }
     } catch (error) {
         console.error('Erro ao desconectar instância:', error);
         res.status(500).json({ error: 'Erro ao desconectar instância' });
     }
 };
-
 
 exports.deleteInstance = async (req, res) => {
     const user = await User.findById(req.user.id);
@@ -152,28 +222,28 @@ exports.deleteInstance = async (req, res) => {
     const instance = user.whatsappInstances.id(instanceId);
 
     try {
-       
         if (!instance) {
             return res.status(404).json({ error: 'Instância não encontrada' });
         }
 
-        const response = await axios.get(addAdminTokenToUrl(`${API_BASE_URL}/instance/delete?key=${instance.key}`));
+        const response = await axios.delete(`${API_BASE_URL}/instance/delete/${instance.name}`, {
+            headers: { 
+                'apikey': APIKEY
+            }
+        });
         
-        if (response.data.error === false) {
+        if (response.status === 200) {
             user.whatsappInstances.pull(instanceId);
             await user.save();
             res.json({ message: 'Instância deletada com sucesso' });
         } else {
-            console.log("Erro ao deletar da api")
-            user.whatsappInstances.pull(instanceId);
-            await user.save();
-            res.json({ message: 'Instância deletada com sucesso' });
+            res.status(400).json({ error: 'Erro ao deletar instância' });
         }
     } catch (error) {
-        console.log("Erro ao deletar da api")
+        console.error('Erro ao deletar instância:', error);
         user.whatsappInstances.pull(instanceId);
         await user.save();
-        res.json({ message: 'Instância deletada com sucesso' });
+        res.json({ message: 'Instância deletada com sucesso localmente, mas houve um erro na API' });
     }
 };
 
@@ -187,12 +257,14 @@ exports.checkInstanceStatus = async (req, res) => {
             return res.status(404).json({ error: 'Instância não encontrada' });
         }
 
-        const response = await axios.get(addAdminTokenToUrl(`${API_BASE_URL}/instance/info?key=${instance.key}`));
+        const response = await axios.get(`${API_BASE_URL}/instance/connectionState/${instance.key}`, {
+            headers: addApiKeyToHeaders()
+        });
         
-        if (response.data.error === false) {
-            res.json({ status: response.data.instance_data.phone_connected ? 'connected' : 'disconnected' });
+        if (response.data && response.data.state) {
+            res.json({ status: response.data.state === 'open' ? 'connected' : 'disconnected' });
         } else {
-            res.status(400).json({ error: 'Falha ao verificar status da instância', message: response.data.message });
+            res.status(400).json({ error: 'Falha ao verificar status da instância' });
         }
     } catch (error) {
         console.error('Erro ao verificar status da instância:', error);
