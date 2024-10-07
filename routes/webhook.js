@@ -237,34 +237,34 @@ router.post('/:instanceKey', async (req, res) => {
           imagemPerfil: null, // Não temos essa informação na nova estrutura
           pushname: event.pushName,
           fromMe: event.data.key.fromMe,
-          messageTimestamp: event.messageTimestamp,
+          messageTimestamp: event.data.messageTimestamp,
           mensagem: {
-            tipomsg: event.messageType,
+            tipomsg: event.data.messageType,
             conteudomsg: null,
           },
           instancia: event.instance
         };
       
-        switch (event.messageType) {
+        switch (event.data.messageType) {
           case 'conversation':
             dadoschat.mensagem.tipomsg = 'texto';
-            dadoschat.mensagem.conteudomsg = event.message.conversation;
+            dadoschat.mensagem.conteudomsg = event.data.message.conversation;
             break;
           case 'imageMessage':
             dadoschat.mensagem.tipomsg = 'image';
-            dadoschat.mensagem.conteudomsg = event.message.imageMessage.url || event.message.imageMessage.base64;
+            dadoschat.mensagem.conteudomsg = event.data.message.imageMessage.url || event.data.message.imageMessage.base64;
             break;
           case 'videoMessage':
             dadoschat.mensagem.tipomsg = 'video';
-            dadoschat.mensagem.conteudomsg = event.message.videoMessage.url || event.message.videoMessage.base64;
+            dadoschat.mensagem.conteudomsg = event.data.message.videoMessage.url || event.data.message.videoMessage.base64;
             break;
           case 'audioMessage':
             dadoschat.mensagem.tipomsg = 'audio';
-            dadoschat.mensagem.conteudomsg = event.message.audioMessage.url || event.message.audioMessage.base64;
+            dadoschat.mensagem.conteudomsg = event.data.message.audioMessage.url || event.data.message.audioMessage.base64;
             break;
           case 'stickerMessage':
             dadoschat.mensagem.tipomsg = 'sticker';
-            dadoschat.mensagem.conteudomsg = event.message.stickerMessage.url || event.message.stickerMessage.base64;
+            dadoschat.mensagem.conteudomsg = event.data.message.stickerMessage.url || event.data.message.stickerMessage.base64;
             break;
           default:
             dadoschat.mensagem.tipomsg = 'desconhecido';
@@ -329,6 +329,10 @@ router.post('/:instanceKey', async (req, res) => {
           }
         });
       
+        // Iniciar a autoresposta
+  const {updateCampaigns, getCampaigns, getAutoResponseReport, getAutoResponseUsage, handleAutoResponse} = require('../controllers/autoResponseController');
+
+
         if (!dadoschat.id.includes("@g.us")) {
           await handleAutoResponse(
             event.instance,
