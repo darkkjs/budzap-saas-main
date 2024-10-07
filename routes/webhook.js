@@ -213,169 +213,142 @@ router.post('/:instanceKey', async (req, res) => {
           }
       }
 
-        if (event.type === 'message') {
-          console.log(`Processando webhook de mensagem para a instancia ${event.instanceKey}`.cyan);
-
-          const isGroup = event.body.key.remoteJid.includes("@g.us");
-          let chatInfo = await getChatInfo(event, isGroup);
-
-          const dadoschat = {
-            tipo: chatInfo.chatType,
-            info: chatInfo,
-            id: event.body.key.remoteJid,
-            imagemPerfil: event.body.imagemPerfil,
-            puhsname: chatInfo.name,
-            fromMe: event.body.key.fromMe,
-            messageTimestamp: event.body.messageTimestamp,
-            mensagem: {
-              tipomsg: null,
-              conteudomsg: null,
-            },
-            instancia: event.instanceKey
-          };
-
-          const messageType = Object.keys(event.body.message)[0];
-
-          switch (messageType) {
-            case 'extendedTextMessage':
-              dadoschat.mensagem.tipomsg = 'texto';
-              dadoschat.mensagem.conteudomsg = event.body.message.extendedTextMessage.text;
-              break
-            case 'conversation':
-              dadoschat.mensagem.tipomsg = 'texto';
-              dadoschat.mensagem.conteudomsg = event.body.message[messageType].text || event.body.message[messageType];
-              break;
-            case 'imageMessage':
-              dadoschat.mensagem.tipomsg = messageType.replace('Message', '');
-              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.body.msgContent, 'jpg');
-              break
-            case 'videoMessage':
-              dadoschat.mensagem.tipomsg = messageType.replace('Message', '');
-              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.body.msgContent, "mp4");
-              break
-            case 'audioMessage':
-              dadoschat.mensagem.tipomsg = messageType.replace('Message', '');
-              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.body.msgContent, 'mp3');
-              break
-            case 'documentMessage':
-              dadoschat.mensagem.tipomsg = messageType.replace('Message', '');
-              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.body.msgContent, "pdf");
-              break;
-            case 'stickerMessage':
-              dadoschat.mensagem.tipomsg = 'sticker';
-              console.log(event.body)
-              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.body.stickerMessage, 'webp');
-              break;
-            default:
-              dadoschat.mensagem.tipomsg = 'texto';
-              dadoschat.mensagem.conteudomsg = 'Abra o app para visualizar essa mensagem!';
-              break;
-          }
-console.log("Mensagem recebida: ", dadoschat.mensagem.conteudomsg);
-          const messageKey = `${dadoschat.id}:${dadoschat.messageTimestamp}`;
-       /*/   const exists = await messageExists(req.params.instanceKey, messageKey);
-          if (exists) {
-            console.log('Mensagem duplicada detectada, ignorando.'.yellow);
-            return res.status(200).send('Mensagem duplicada ignorada');
-          }/*/
-
-          // Verificar se é um novo chat
-          const io = req.app.get('io');
-const isNewChat = await checkIfNewChat(req.params.instanceKey, dadoschat.id);
-if (isNewChat) {
-  console.log(`Novo chat detectado: ${dadoschat.id}`); // Log para depuração
-
-  io.to(req.params.instanceKey).emit('new chat', {
-    id: dadoschat.id,
-    name: chatInfo.name,
-    lastMessage: dadoschat.mensagem.conteudomsg,
-    lastMessageTimestamp: dadoschat.messageTimestamp,
-    lastMessageType: dadoschat.mensagem.tipomsg,
-    chatType: chatInfo.chatType,
-    image: dadoschat.imagemPerfil,
-    unreadCount: 1
-  });
-}
-
-
-          await saveMessage(req.params.instanceKey, dadoschat.id, {
-            key: messageKey,
-            sender: dadoschat.puhsname,
-            info: chatInfo,
-            content: dadoschat.mensagem.conteudomsg,
-            timestamp: dadoschat.messageTimestamp,
-            fromMe: dadoschat.fromMe,
-            type: dadoschat.mensagem.tipomsg,
-            senderImage: dadoschat.imagemPerfil
-          });
-
-          // Atualizar informações do chat
-          await updateChatInfo(req.params.instanceKey, dadoschat.id, chatInfo, {
-            key: messageKey,
-            sender: dadoschat.puhsname,
-            info: chatInfo,
-            content: dadoschat.mensagem.conteudomsg,
-            timestamp: dadoschat.messageTimestamp,
-            fromMe: dadoschat.fromMe,
-            type: dadoschat.mensagem.tipomsg,
-            senderImage: dadoschat.imagemPerfil
-          });
-
-       
-          // Após processar a mensagem recebida
-io.to(req.params.instanceKey).emit('new message', {
-  chatId: dadoschat.id,
-  message: {
-      key: messageKey,
-      sender: dadoschat.puhsname,
-      info: chatInfo,
-      content: dadoschat.mensagem.conteudomsg,
-      timestamp: dadoschat.messageTimestamp,
-      fromMe: dadoschat.fromMe,
-      type: dadoschat.mensagem.tipomsg,
-      senderImage: dadoschat.imagemPerfil
-  }
-});
-
-
-async function checkIfNewChat(instanceKey, chatId) {
-  return !(await chatExists(instanceKey, chatId));
-}
-
-       //   console.log('Mensagem salva:'.green, dadoschat.mensagem.conteudomsg);
-         
-
-          //INICIAR A AUTORESPOSTA AQUI:
-
-          
-          /*/
-          IRA CHAMAR A AUTOREPOSTA COM OS DADOS DO CHAT
-          IRA ARMAZENAR AS INFORMAÇÕES COM O REDIS
-
-          IRA AGUENTAR MULTIPLOS CHATS EM MULTIPLAS INTANCIAS DE FORMA FUNCIONAL
-
-          IRA ENVIAR OS FUNIS NA ORDEM CORRETA
-
-          CASO ESTEJA NO SLEEP DO FUNIL (NO PASSO QUYE UTILIZA O AWAIT) E O CLIENTE MANDAR UMA MENSAGEM, IRA IGNORAR A MENSAGEM DELE POIS O FUNIL JA ESTA EM EXECUÇÃO (PARA NO MANDAR O FUNIL DUPLICADO)
-
-
-          /*/
-  // Iniciar a autoresposta
-  const {updateCampaigns, getCampaigns, getAutoResponseReport, getAutoResponseUsage, handleAutoResponse} = require('../controllers/autoResponseController');
-
-  if (!dadoschat.id.includes("@g.us")) {
-    await handleAutoResponse(
-      req.params.instanceKey,
-      dadoschat.id,
-      dadoschat.mensagem.conteudomsg,
-      "webhook"
-    );
-  
-  }
-    
-
+      if (event.event === 'messages.upsert') {
+        console.log(`Processando webhook de mensagem para a instancia ${event.instance}`.cyan);
+      
+        const isGroup = event.data.key.remoteJid.includes("@g.us");
+        let chatInfo = await getChatInfo(event, isGroup);
+      
+        const dadoschat = {
+          tipo: isGroup ? 'group' : 'individual',
+          info: chatInfo,
+          id: event.data.key.remoteJid,
+          imagemPerfil: null, // Não temos essa informação na nova estrutura
+          pushname: event.data.pushName,
+          fromMe: event.data.key.fromMe,
+          messageTimestamp: event.data.messageTimestamp,
+          mensagem: {
+            tipomsg: event.data.messageType,
+            conteudomsg: null,
+          },
+          instancia: event.instance
+        };
+      
+        switch (event.data.messageType) {
+          case 'conversation':
+            dadoschat.mensagem.tipomsg = 'texto';
+            dadoschat.mensagem.conteudomsg = event.data.message.conversation;
+            break;
+          case 'imageMessage':
+            dadoschat.mensagem.tipomsg = 'image';
+            dadoschat.mensagem.conteudomsg = event.data.message.imageMessage.url || event.data.message.imageMessage.base64;
+            break;
+          case 'videoMessage':
+            dadoschat.mensagem.tipomsg = 'video';
+            dadoschat.mensagem.conteudomsg = event.data.message.videoMessage.url || event.data.message.videoMessage.base64;
+            break;
+          case 'audioMessage':
+            dadoschat.mensagem.tipomsg = 'audio';
+            dadoschat.mensagem.conteudomsg = event.data.message.audioMessage.url || event.data.message.audioMessage.base64;
+            break;
+          case 'stickerMessage':
+            dadoschat.mensagem.tipomsg = 'sticker';
+            dadoschat.mensagem.conteudomsg = event.data.message.stickerMessage.url || event.data.message.stickerMessage.base64;
+            break;
+          default:
+            dadoschat.mensagem.tipomsg = 'desconhecido';
+            dadoschat.mensagem.conteudomsg = 'Tipo de mensagem não suportado';
+            break;
         }
-
+      
+        console.log("Mensagem recebida: ", dadoschat.mensagem.conteudomsg);
+      
+        const messageKey = `${dadoschat.id}:${dadoschat.messageTimestamp}`;
+      
+        const io = req.app.get('io');
+        const isNewChat = await checkIfNewChat(event.instance, dadoschat.id);
+        if (isNewChat) {
+          console.log(`Novo chat detectado: ${dadoschat.id}`);
+      
+          io.to(event.instance).emit('new chat', {
+            id: dadoschat.id,
+            name: chatInfo.name,
+            lastMessage: dadoschat.mensagem.conteudomsg,
+            lastMessageTimestamp: dadoschat.messageTimestamp,
+            lastMessageType: dadoschat.mensagem.tipomsg,
+            chatType: dadoschat.tipo,
+            image: dadoschat.imagemPerfil,
+            unreadCount: 1
+          });
+        }
+      
+        await saveMessage(event.instance, dadoschat.id, {
+          key: messageKey,
+          sender: dadoschat.pushname,
+          info: chatInfo,
+          content: dadoschat.mensagem.conteudomsg,
+          timestamp: dadoschat.messageTimestamp,
+          fromMe: dadoschat.fromMe,
+          type: dadoschat.mensagem.tipomsg,
+          senderImage: dadoschat.imagemPerfil
+        });
+      
+        await updateChatInfo(event.instance, dadoschat.id, chatInfo, {
+          key: messageKey,
+          sender: dadoschat.pushname,
+          info: chatInfo,
+          content: dadoschat.mensagem.conteudomsg,
+          timestamp: dadoschat.messageTimestamp,
+          fromMe: dadoschat.fromMe,
+          type: dadoschat.mensagem.tipomsg,
+          senderImage: dadoschat.imagemPerfil
+        });
+      
+        io.to(event.instance).emit('new message', {
+          chatId: dadoschat.id,
+          message: {
+            key: messageKey,
+            sender: dadoschat.pushname,
+            info: chatInfo,
+            content: dadoschat.mensagem.conteudomsg,
+            timestamp: dadoschat.messageTimestamp,
+            fromMe: dadoschat.fromMe,
+            type: dadoschat.mensagem.tipomsg,
+            senderImage: dadoschat.imagemPerfil
+          }
+        });
+      
+        if (!dadoschat.id.includes("@g.us")) {
+          await handleAutoResponse(
+            event.instance,
+            dadoschat.id,
+            dadoschat.mensagem.conteudomsg,
+            "webhook"
+          );
+        }
+      }
+      
+      async function checkIfNewChat(instanceKey, chatId) {
+        return !(await chatExists(instanceKey, chatId));
+      }
+      
+      // Função auxiliar para lidar com a mídia (imagem, áudio, vídeo, sticker)
+      async function handleMedia(mediaMessage) {
+        // Se a mídia estiver em base64, você pode retorná-la diretamente
+        if (mediaMessage.base64) {
+          return mediaMessage.base64;
+        }
+        
+        // Se a mídia estiver em uma URL, você pode baixá-la aqui
+        if (mediaMessage.url) {
+          // Implemente a lógica para baixar a mídia da URL
+          // Retorne o conteúdo baixado ou a URL, dependendo de como você quer lidar com isso
+          return mediaMessage.url;
+        }
+      
+        // Se não houver base64 nem URL, retorne null ou uma mensagem de erro
+        return null;
+      }
         success = true;
         console.log(`Evento processado com sucesso para a instância ${req.params.instanceKey}`.green);
         res.status(200).send('Evento processado com sucesso');
