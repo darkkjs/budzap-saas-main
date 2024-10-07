@@ -250,22 +250,34 @@ router.post('/:instanceKey', async (req, res) => {
             dadoschat.mensagem.tipomsg = 'texto';
             dadoschat.mensagem.conteudomsg = event.data.message.conversation;
             break;
-          case 'imageMessage':
-            dadoschat.mensagem.tipomsg = 'image';
-            dadoschat.mensagem.conteudomsg = event.data.message.imageMessage.url || event.data.message.imageMessage.base64;
-            break;
-          case 'videoMessage':
-            dadoschat.mensagem.tipomsg = 'video';
-            dadoschat.mensagem.conteudomsg = event.data.message.videoMessage.url || event.data.message.videoMessage.base64;
-            break;
-          case 'audioMessage':
-            dadoschat.mensagem.tipomsg = 'audio';
-            dadoschat.mensagem.conteudomsg = event.data.message.audioMessage.url || event.data.message.audioMessage.base64;
-            break;
-          case 'stickerMessage':
-            dadoschat.mensagem.tipomsg = 'sticker';
-            dadoschat.mensagem.conteudomsg = event.data.message.stickerMessage.url || event.data.message.stickerMessage.base64;
-            break;
+      
+            case 'extendedTextMessage':
+              dadoschat.mensagem.tipomsg = 'texto';
+              dadoschat.mensagem.conteudomsg = event.data.message.extendedTextMessage.text;
+              break
+    
+            case 'imageMessage':
+              dadoschat.mensagem.tipomsg = 'image';
+              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.data.message.imageMessage.base64, 'jpg');
+              break
+            case 'videoMessage':
+              dadoschat.mensagem.tipomsg = 'video';
+              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.data.message.videoMessage.base64, "mp4");
+              break
+            case 'audioMessage':
+              dadoschat.mensagem.tipomsg = 'audio';
+              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.data.message.audioMessage.base64, 'mp3');
+              break
+            case 'documentMessage':
+              dadoschat.mensagem.tipomsg = 'document';
+              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.data.message.documentMessage.base64, "pdf");
+              break;
+            case 'stickerMessage':
+              dadoschat.mensagem.tipomsg = 'sticker';
+              dadoschat.mensagem.conteudomsg = await downloadAndSaveMedia(event.data.message.stickerMessage.base64, 'webp');
+              break;
+
+
           default:
             dadoschat.mensagem.tipomsg = 'desconhecido';
             dadoschat.mensagem.conteudomsg = 'Tipo de mensagem não suportado';
