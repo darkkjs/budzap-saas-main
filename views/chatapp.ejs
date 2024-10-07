@@ -1427,7 +1427,7 @@ searchMessagesButton.addEventListener('click', () => {
                             ${instance.whatsappName ? `<p class="text-sm text-blue-600 font-medium">WhatsApp: ${instance.whatsappName}</p>` : ''}
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <button onclick="selectInstance('${instance.key}')" class="btn btn-primary btn-sm" ${!instance.isConnected ? 'disabled' : ''}>
+                            <button onclick="selectInstance('${instance.name}')" class="btn btn-primary btn-sm" ${!instance.isConnected ? 'disabled' : ''}>
                                 <i class="fas fa-check mr-1"></i> Selecionar
                             </button>
                         </div>
