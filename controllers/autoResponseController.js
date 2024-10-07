@@ -68,7 +68,7 @@ exports.handleAutoResponse = async (instanceKey, chatId, message, source) => {
     try {
         console.log('Processando autoresposta para:'.cyan, { instanceKey, chatId, message });
         
-        const user = await User.findOne({ 'whatsappInstances.key': instanceKey });
+        const user = await User.findOne({ 'whatsappInstances.name': instanceKey });
         if (!user) {
           console.error('Usuário não encontrado para a instância:', instanceKey);
           return;

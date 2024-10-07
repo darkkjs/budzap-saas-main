@@ -203,7 +203,7 @@ paymentMapping: {
 });
 
 
-UserSchema.index({ 'whatsappInstances.key': 1 });
+UserSchema.index({ 'whatsappInstances.name': 1 });
 UserSchema.index({ email: 1 });
 UserSchema.index({ username: 1 });
 

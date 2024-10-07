@@ -45,7 +45,7 @@ const mercadopago = require('mercadopago');
 
 async function generatePayment(instanceKey, chatId, node) {
     try {
-        const user = await User.findOne({ 'whatsappInstances.key': instanceKey });
+        const user = await User.findOne({ 'whatsappInstances.name': instanceKey });
         const accessToken = user.mercadopago.appAccessToken;
 
         if (!accessToken) {
@@ -74,7 +74,7 @@ async function generatePayment(instanceKey, chatId, node) {
 
         // Salvar o mapeamento do ID frontend para o ID real do pagamento
         const updatedUser = await User.findOneAndUpdate(
-            { 'whatsappInstances.key': instanceKey },
+            { 'whatsappInstances.name': instanceKey },
             { $set: { [`paymentMapping.${node.paymentId}`]: payment.id } },
             { new: true, upsert: true }
         );
@@ -127,7 +127,7 @@ async function generatePayment(instanceKey, chatId, node) {
 
 async function checkPayment(instanceKey, frontendPaymentId, chatId) {
     try {
-        const user = await User.findOne({ 'whatsappInstances.key': instanceKey });
+        const user = await User.findOne({ 'whatsappInstances.name': instanceKey });
         console.log('Usuário encontrado:', user);
         console.log('Mapeamento de pagamentos:', user.paymentMapping);
 

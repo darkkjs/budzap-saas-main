@@ -20,7 +20,7 @@ exports.renderGroupManagementPage = async (req, res) => {
 exports.setWelcomeMessage = async (req, res) => {
     const { instanceKey, groupId, isActive, message, mediaType, mediaUrl, caption } = req.body;
     try {
-        const user = await User.findOne({ 'whatsappInstances.key': instanceKey });
+        const user = await User.findOne({ 'whatsappInstances.name': instanceKey });
         if (!user) {
             return res.status(404).json({ error: 'Instância não encontrada' });
         }
@@ -50,7 +50,7 @@ exports.setWelcomeMessage = async (req, res) => {
 exports.getWelcomeMessageSettings = async (req, res) => {
     const { instanceKey, groupId } = req.query;
     try {
-        const user = await User.findOne({ 'whatsappInstances.key': instanceKey });
+        const user = await User.findOne({ 'whatsappInstances.name': instanceKey });
         if (!user) {
             return res.status(404).json({ error: 'Instância não encontrada' });
         }

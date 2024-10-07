@@ -15,7 +15,7 @@ async function cleanupChatsForInstance(instanceKey) {
 
     try {
         // Find the user who owns the instance
-        const user = await User.findOne({ 'whatsappInstances.key': instanceKey }).session(session);
+        const user = await User.findOne({ 'whatsappInstances.name': instanceKey }).session(session);
 
         if (!user) {
             throw new Error('User or instance not found');
