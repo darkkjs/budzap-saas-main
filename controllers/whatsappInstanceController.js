@@ -136,6 +136,7 @@ exports.listInstances = async (req, res) => {
                 key: apiInstance.token,
                 isConnected: apiInstance.connectionStatus === 'open',
                 whatsappName: apiInstance.profileName,
+                foto: apiInstance.profilePicUrl,
                 number: apiInstance.number,
                 createdAt: apiInstance.createdAt,
                 updatedAt: apiInstance.updatedAt,

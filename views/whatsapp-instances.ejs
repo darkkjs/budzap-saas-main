@@ -195,10 +195,10 @@
         instanceElement.innerHTML = `
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
-                    <img src="${instance.profilePicUrl || '/img/default-profile.png'}" alt="Profile" class="w-16 h-16 rounded-full object-cover">
+                    <img src="${instance.foto}" alt="Profile" class="w-16 h-16 rounded-full object-cover">
                     <div>
                         <h3 class="text-xl font-semibold text-white">${instance.name}</h3>
-                        <p class="text-sm text-gray-300">Número: ${instance.number || 'N/A'}</p>
+                        <p class="text-sm text-gray-300">Número: ${instance.number}</p>
                         <p class="text-sm ${instance.isConnected ? 'text-green-400' : 'text-red-400'} font-medium">
                             <i class="fas fa-${instance.isConnected ? 'check-circle' : 'times-circle'} mr-2"></i>
                             ${instance.isConnected ? 'Conectado' : 'Desconectado'}
@@ -226,44 +226,59 @@
         return instanceElement;
     }
 
-        function createInstanceElement(instance) {
-            const instanceElement = document.createElement('div');
-            instanceElement.className = 'bg-gray-100 p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg mb-4 transform hover:scale-102';
-            instanceElement.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <img src="${instance.profilePicUrl || '/img/default-profile.png'}" alt="Profile" class="w-16 h-16 rounded-full object-cover">
-                        <div>
-                            <h3 class="text-xl font-semibold text-purple-700">${instance.name}</h3>
-                            <p class="text-sm text-gray-600">Número: ${instance.number || 'N/A'}</p>
-                            <p class="text-sm ${instance.isConnected ? 'text-green-600' : 'text-red-600'} font-medium">
-                                <i class="fas fa-${instance.isConnected ? 'check-circle' : 'times-circle'} mr-2"></i>
-                                ${instance.isConnected ? 'Conectado' : 'Desconectado'}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex flex-col space-y-2">
-                        <button onclick="getQRCode('${instance._id}')" class="btn btn-info btn-sm" ${instance.isConnected ? 'disabled' : ''}>
-                            <i class="fas fa-qrcode mr-1"></i> QR Code
-                        </button>
-                        <button onclick="disconnectInstance('${instance._id}')" class="btn btn-warning btn-sm" ${!instance.isConnected ? 'disabled' : ''}>
-                            <i class="fas fa-unlink mr-1"></i> Desconectar
-                        </button>
-                        <button onclick="deleteInstance('${instance._id}')" class="btn btn-error btn-sm">
-                            <i class="fas fa-trash mr-1"></i> Deletar
-                        </button>
-                    </div>
+    function createInstanceElement(instance) {
+    const instanceElement = document.createElement('div');
+    instanceElement.className = 'bg-gradient-to-br from-purple-50 to-indigo-100 p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl mb-6 transform hover:scale-103';
+    instanceElement.innerHTML = `
+        <div class="flex flex-col md:flex-row items-center justify-between">
+            <div class="flex items-center space-x-6 mb-4 md:mb-0">
+                <img src="${instance.foto}" alt="Profile" class="w-20 h-20 rounded-full object-cover border-4 border-purple-300 shadow-md">
+                <div>
+                    <h3 class="text-2xl font-bold text-purple-800 font-sans">${instance.name}</h3>
+                    <p class="text-sm text-indigo-600 font-medium mt-1">
+                        <i class="fab fa-whatsapp text-green-500 mr-2"></i>${instance.whatsappName}
+                    </p>
+                    <p class="text-sm ${instance.isConnected ? 'text-emerald-600' : 'text-rose-600'} font-semibold mt-2">
+                        <i class="fas fa-${instance.isConnected ? 'check-circle' : 'times-circle'} mr-2"></i>
+                        ${instance.isConnected ? 'Conectado' : 'Desconectado'}
+                    </p>
                 </div>
-                <div class="mt-4">
-                    <p class="text-sm text-gray-600">Mensagens: ${instance.messageCount}</p>
-                    <p class="text-sm text-gray-600">Contatos: ${instance.contactCount}</p>
-                    <p class="text-sm text-gray-600">Chats: ${instance.chatCount}</p>
+            </div>
+            <div class="flex flex-col space-y-3">
+                <button onclick="getQRCode('${instance._id}')" class="btn bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center" ${instance.isConnected ? 'disabled' : ''}>
+                    <i class="fas fa-qrcode mr-2"></i> QR Code
+                </button>
+                <button onclick="disconnectInstance('${instance._id}')" class="btn bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center" ${!instance.isConnected ? 'disabled' : ''}>
+                    <i class="fas fa-unlink mr-2"></i> Desconectar
+                </button>
+                <button onclick="deleteInstance('${instance._id}')" class="btn bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-trash-alt mr-2"></i> Deletar
+                </button>
+            </div>
+        </div>
+        <div class="mt-6 bg-white bg-opacity-50 p-4 rounded-lg">
+            <div class="grid grid-cols-3 gap-4">
+                <div class="text-center">
+                    <i class="fas fa-envelope text-indigo-500 text-2xl mb-2"></i>
+                    <p class="text-sm font-medium text-gray-700">Mensagens</p>
+                    <p class="text-lg font-bold text-indigo-700">${instance.messageCount}</p>
                 </div>
-                <div id="qrCode-${instance._id}" class="mt-4 hidden"></div>
-            `;
-            return instanceElement;
-        }
-
+                <div class="text-center">
+                    <i class="fas fa-address-book text-indigo-500 text-2xl mb-2"></i>
+                    <p class="text-sm font-medium text-gray-700">Contatos</p>
+                    <p class="text-lg font-bold text-indigo-700">${instance.contactCount}</p>
+                </div>
+                <div class="text-center">
+                    <i class="fas fa-comments text-indigo-500 text-2xl mb-2"></i>
+                    <p class="text-sm font-medium text-gray-700">Chats</p>
+                    <p class="text-lg font-bold text-indigo-700">${instance.chatCount}</p>
+                </div>
+            </div>
+        </div>
+        <div id="qrCode-${instance._id}" class="mt-6 hidden"></div>
+    `;
+    return instanceElement;
+}
         async function getQRCode(instanceId) {
         try {
             const response = await fetch(`/whatsapp/qr/${instanceId}`);
