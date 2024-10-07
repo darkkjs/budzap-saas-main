@@ -194,49 +194,31 @@ function formatPhoneNumber(num) {
   }
 }
 
-async function sendTextMessage(num, msg, instance_key) {
-  const formattedNumber = formatPhoneNumber(num);
-   if (!formattedNumber) {
-     return res.status(400).json({ message: 'Número de telefone inválido.' });
-   }
-
-   const numfinal = formattedNumber.startsWith('55') 
-     ? await formatarNumeroBrasileiro(formattedNumber)
-     : formattedNumber;
-
-
-  const data = {
-    id: numfinal,
-    typeId: "user",
-    message: msg,
-    options: {
-      delay: 0,
-      replyFrom: ""
-    },
-    groupOptions: {
-      markUser: "ghostMention"
-    }
-  };
+async function sendTextMessage(instance, content, number) {
+  const url = `https://evolution.hocketzap.com/message/sendText/${instance}`;
+  const data = JSON.stringify({
+      number: number,
+      text: content
+  });
 
   const config = {
-    method: 'post',
-    maxBodyLength: Infinity,
-    url: `https://budzap.shop/message/text?key=${instance_key}`,
-    headers: { 
-      'Content-Type': 'application/json', 
-      'Authorization': 'Bearer RANDOM_STRING_HERE', 
-      'Cookie': 'connect.sid=s%3A4KArPPcKr6RWbooDdCu7FnXQCCJRhiqw.fW4prAd3ch3o4u2TV%2FFTSaCHsZrjVafDr8FhO5rHawA'
-    },
-    data: data
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: url,
+      headers: { 
+          'Content-Type': 'application/json', 
+          'apikey': 'darkadm'
+      },
+      data: data
   };
 
   try {
-    const response = await axios(config);
-    console.log('Message sent successfully:', JSON.stringify(response.data));
-    return response.data;
+      const response = await axios.request(config);
+      console.log('Mensagem de texto enviada:', JSON.stringify(response.data));
+      return response.data;
   } catch (error) {
-    console.error('Error sending message:', error.message);
-    throw error;
+      console.error('Erro ao enviar mensagem de texto:', error);
+      throw error;
   }
 }
 
@@ -327,7 +309,7 @@ router.post('/send-message', async (req, res) => {
       // using the provided sendTextMessage function or your WhatsApp API
       // For now, we'll just simulate a successful send
       console.log(`Sending message to ${chatId} via instance ${instanceKey}: ${content}`);
-      await sendTextMessage(chatId, content, instanceKey)
+      await sendTextMessage(instanceKey, content, chatId)
 
       const messageData = {
         key: `${chatId}:${Date.now()}`,
