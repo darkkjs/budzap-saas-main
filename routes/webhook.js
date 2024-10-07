@@ -235,7 +235,7 @@ router.post('/:instanceKey', async (req, res) => {
           info: chatInfo,
           id: event.data.key.remoteJid,
           imagemPerfil: null, // Não temos essa informação na nova estrutura
-          pushname: event.pushName,
+          pushname: event.data.pushName,
           fromMe: event.data.key.fromMe,
           messageTimestamp: event.data.messageTimestamp,
           mensagem: {
