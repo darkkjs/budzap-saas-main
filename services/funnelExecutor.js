@@ -628,7 +628,7 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
 
                     let messageContent = currentNode.content;
                     messageContent = replaceVariables(messageContent, state);
-                    await sendTextMessage(instanceKey, messageContent, chatId);
+                    await sendTextMessage(instanceKey, messageContent, currentNode.delay, chatId);
                     await saveAutoResponseMessage(instanceKey, chatId, messageContent, 'text');
 
                     const messageTimestamp = Date.now();
@@ -739,7 +739,7 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
 
                         case 'input':
                             if (state.status !== 'waiting_for_input') {
-                                await sendTextMessage(instanceKey, currentNode.content, chatId);
+                                await sendTextMessage(instanceKey, currentNode.content, currentNode.delay, chatId);
                                 await saveAutoResponseMessage(instanceKey, chatId, currentNode.content, 'text');
 
                                 const messageData = {
@@ -812,7 +812,7 @@ console.log(`Estado após extração:`, JSON.stringify(state, null, 2));
                             case 'audio':
                                 console.log('Iniciando envio de áudio');
                               //  await sendMediaMessage(instanceKey, currentNode.content, chatId, 'audiofile', 'audio.mp3', '');
-                             await sendAudioMessage(instanceKey, currentNode.content, chatId)
+                             await sendAudioMessage(instanceKey, currentNode.content, currentNode.delay, chatId)
                                 console.log('Áudio enviado com sucesso');
                                 await saveAutoResponseMessage(instanceKey, chatId, currentNode.content, 'audio');
                                 const messageData2 = {
@@ -996,11 +996,12 @@ function evaluateCondition(conditionNode, state) {
 
 
 
-async function sendTextMessage(instance, content, number) {
+async function sendTextMessage(instance, content, delay, number) {
     const url = `${API_BASE_URL}/message/sendText/${instance}`;
     const data = JSON.stringify({
         number: number,
-        text: content
+        text: content,
+        delay: delay || 0
     });
 
     const config = {
@@ -1061,11 +1062,12 @@ async function sendMediaMessage(instanceKey, mediaUrl, number, mediaType, fileNa
 }
 
 
-async function sendAudioMessage(instanceKey, audioUrl, number) {
+async function sendAudioMessage(instanceKey, audioUrl, delay, number) {
     const url = `${API_BASE_URL}/message/sendWhatsAppAudio/${instanceKey}`;
     const data = JSON.stringify({
         number: number,
-        audio: audioUrl
+        audio: audioUrl,
+        delay: delay
     });
 
     const config = {
