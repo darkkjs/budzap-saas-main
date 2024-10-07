@@ -37,7 +37,7 @@ exports.createInstance = async (req, res) => {
             "qrcode": true,
             "integration": "WHATSAPP-BAILEYS",
             "webhook": {
-                "url": `https://hocketzap.com/webhook/${name}`,
+                "url": `https://dev.hocketzap.com/webhook/${name}`,
                 "byEvents": false,
                 "base64": true,
                 "events": [
@@ -257,8 +257,10 @@ exports.checkInstanceStatus = async (req, res) => {
             return res.status(404).json({ error: 'Instância não encontrada' });
         }
 
-        const response = await axios.get(`${API_BASE_URL}/instance/connectionState/${instance.key}`, {
-            headers: addApiKeyToHeaders()
+        const response = await axios.get(`${API_BASE_URL}/instance/connectionState/${instance.name}`, {
+            headers: { 
+                'apikey': APIKEY
+            }
         });
         
         if (response.data && response.data.state) {

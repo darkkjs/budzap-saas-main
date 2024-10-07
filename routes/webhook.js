@@ -163,7 +163,7 @@ router.post('/:instanceKey', async (req, res) => {
         }
 
         const event = req.body;
-        
+        console.log(event)
 
         if (event.type === 'group-participants') {
           if (event.body.data.action === "add") {
