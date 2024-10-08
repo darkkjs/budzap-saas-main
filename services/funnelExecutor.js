@@ -998,10 +998,22 @@ function evaluateCondition(conditionNode, state) {
 
 async function sendTextMessage(instance, content, delay, number) {
     const url = `${API_BASE_URL}/message/sendText/${instance}`;
+
+
+
     const data = JSON.stringify({
+
+        
         number: number,
-        text: content,
-        delay: delay * 1000 || 0
+        textMessage: {
+            text: content
+        },
+        options: {
+            delay: delay * 1000 || 0,
+            presence: "composing",
+            linkPreview: true
+        },
+
     });
 
     const config = {
@@ -1032,12 +1044,24 @@ const path = require('path');
 async function sendMediaMessage(instanceKey, mediaUrl, number, mediaType, fileName, caption) {
     const url = `${API_BASE_URL}/message/sendMedia/${instanceKey}`;
     const data = JSON.stringify({
+
+        
+           
+           
+
         number: number,
         mediatype: mediaType, // 'image', 'video', ou 'document'
-        mimetype: getMimeType(mediaType),
-        caption: caption,
-        media: mediaUrl,
-        fileName: fileName
+
+    options: {
+            delay: 1200,
+            presence: "composing"
+        },
+        mediaMessage: {
+            mediatype: getMimeType(mediaType),
+            caption: caption,
+            media: mediaUrl
+        },
+    
     });
 
     const config = {
@@ -1066,9 +1090,20 @@ async function sendAudioMessage(instanceKey, audioUrl, delay, number) {
     const url = `${API_BASE_URL}/message/sendWhatsAppAudio/${instanceKey}`;
     const data = JSON.stringify({
         number: number,
-        audio: audioUrl,
-        delay: delay * 1000 || 0
+   
+        options: {
+            delay: delay * 1000 || 0,
+            presence: "recording",
+            encoding: true
+        },
+        audioMessage: {
+            audio: audioUrl
+        }
+ 
     });
+
+
+ 
 
     const config = {
         method: 'post',
@@ -1094,9 +1129,9 @@ async function sendAudioMessage(instanceKey, audioUrl, delay, number) {
 function getMimeType(mediaType) {
     switch (mediaType) {
         case 'image':
-            return 'image/jpeg'; // ou 'image/jpeg'
+            return 'image'; // ou 'image/jpeg'
         case 'video':
-            return 'video/mp4';
+            return 'video';
         case 'document':
             return 'application/pdf'; // ajuste conforme necessário
         default:

@@ -65,13 +65,9 @@ exports.createInstance = async (req, res) => {
         let data = JSON.stringify({
             "instanceName": name,
             "qrcode": true,
-            "token": "darkadm",
-            "integration": "WHATSAPP-BAILEYS",
-            
-            "webhook": {
-                "url": `https://app.hotboard.online/webhook/${name}`,
-                "byEvents": false,
-                "base64": true,
+            "token": name,
+
+            "webhook": "https://app.hotboard.online/webhook/" + name,
                 "events": [
                     "APPLICATION_STARTUP",
                     "QRCODE_UPDATED",
@@ -98,7 +94,7 @@ exports.createInstance = async (req, res) => {
                     "TYPEBOT_START",
                     "TYPEBOT_CHANGE_STATUS"
                 ]
-            }
+            
         });
 
         let config = {
@@ -114,12 +110,12 @@ exports.createInstance = async (req, res) => {
 
         const response = await axios.request(config);
 
-        if (response.data && response.data.hash) {
-            user.whatsappInstances.push({ name, key: response.data.hash, user: req.user.id });
+        if (response.data && response.data.hash.apikey) {
+            user.whatsappInstances.push({ name, key: response.data.hash.apikey, user: req.user.id });
             await user.save();
             res.status(201).json({ 
                 message: 'Instância criada com sucesso', 
-                instance: { name, key: response.data.hash },
+                instance: { name, key: response.data.hash.apikey },
                 currentCount: instanceCount + 1,
                 limit: planLimit
             });
@@ -151,32 +147,34 @@ exports.listInstances = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
         
-        // Chamar a API externa para buscar as instâncias
+        // Chamar a API Evolution para buscar as instâncias
         const response = await axios.get(`${API_BASE_URL}/instance/fetchInstances`, {
-            headers: addApiKeyToHeaders()
+            headers: {
+                'apikey': APIKEY
+            }
         });
 
         // Mapear as instâncias retornadas pela API para o formato esperado pelo frontend
-        const instancesWithStatus = response.data.map(apiInstance => {
-            const userInstance = user.whatsappInstances.find(i => i.key === apiInstance.token);
-            
-            if (!userInstance) return null; // Ignora instâncias que não pertencem ao usuário
-
-            return {
-                _id: userInstance._id, // Mantém o ID do MongoDB
-                name: apiInstance.name,
-                key: apiInstance.token,
-                isConnected: apiInstance.connectionStatus === 'open',
-                whatsappName: apiInstance.profileName,
-                foto: apiInstance.profilePicUrl,
-                number: apiInstance.number,
-                createdAt: apiInstance.createdAt,
-                updatedAt: apiInstance.updatedAt,
-                messageCount: apiInstance._count.Message,
-                contactCount: apiInstance._count.Contact,
-                chatCount: apiInstance._count.Chat
-            };
-        }).filter(Boolean); // Remove possíveis valores null
+        const instancesWithStatus = response.data
+            .filter(apiInstance => user.whatsappInstances.some(i => i.key === apiInstance.instance.apikey))
+            .map(apiInstance => {
+                const userInstance = user.whatsappInstances.find(i => i.key === apiInstance.instance.apikey);
+                
+                return {
+                    _id: userInstance._id, // Mantém o ID do MongoDB
+                    name: apiInstance.instance.instanceName,
+                    key: apiInstance.instance.apikey,
+                    isConnected: apiInstance.instance.status === 'open',
+                    whatsappName: apiInstance.instance.profileName || '',
+                    foto: apiInstance.instance.profilePictureUrl || '',
+                    number: apiInstance.instance.integration.number || '',
+                    createdAt: userInstance.createdAt, // Mantém a data de criação do MongoDB
+                    updatedAt: userInstance.updatedAt, // Mantém a data de atualização do MongoDB
+                    messageCount: 0, // A API Evolution não fornece essa informação diretamente
+                    contactCount: 0, // A API Evolution não fornece essa informação diretamente
+                    chatCount: 0 // A API Evolution não fornece essa informação diretamente
+                };
+            });
 
         res.json(instancesWithStatus);
     } catch (error) {
