@@ -3,7 +3,7 @@
 const axios = require('axios');
 const User = require('../models/User');
 
-const API_BASE_URL = 'https://evolution.hotboard.online';
+const API_BASE_URL = 'https://api.hocketzap.com';
 const APIKEY = 'darkadm';
 
 const PLAN_LIMITS = require('../config/planLimits');
@@ -45,7 +45,7 @@ exports.deleteAllInstances = async (req, res) => {
 
 exports.createInstance = async (req, res) => {
     try {
-        const { name } = req.body;
+        const { name, phoneNumber, token } = req.body;
         const user = await User.findById(req.user.id);
 
         // Verificar limite de instâncias baseado no plano
@@ -54,7 +54,7 @@ exports.createInstance = async (req, res) => {
         const instanceCount = user.whatsappInstances.length;
 
         if (instanceCount >= planLimit) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 error: 'Limite de instâncias atingido para o seu plano.',
                 currentPlan: userPlan,
                 limit: planLimit,
@@ -64,45 +64,17 @@ exports.createInstance = async (req, res) => {
 
         let data = JSON.stringify({
             "instanceName": name,
-            "qrcode": true,
-            "token": name,
-
-            "webhook": "https://app.hotboard.online/webhook/" + name,
-                "events": [
-                    "APPLICATION_STARTUP",
-                    "QRCODE_UPDATED",
-                    "MESSAGES_SET",
-                    "MESSAGES_UPSERT",
-                    "MESSAGES_UPDATE",
-                    "MESSAGES_DELETE",
-                    "SEND_MESSAGE",
-                    "CONTACTS_SET",
-                    "CONTACTS_UPSERT",
-                    "CONTACTS_UPDATE",
-                    "PRESENCE_UPDATE",
-                    "CHATS_SET",
-                    "CHATS_UPSERT",
-                    "CHATS_UPDATE",
-                    "CHATS_DELETE",
-                    "GROUPS_UPSERT",
-                    "GROUP_UPDATE",
-                    "GROUP_PARTICIPANTS_UPDATE",
-                    "CONNECTION_UPDATE",
-                    "LABELS_EDIT",
-                    "LABELS_ASSOCIATION",
-                    "CALL",
-                    "TYPEBOT_START",
-                    "TYPEBOT_CHANGE_STATUS"
-                ]
-            
+            "integration": "WHATSAPP-BAILEYS",
+            "token": token,
+            "number": phoneNumber
         });
 
         let config = {
             method: 'post',
             maxBodyLength: Infinity,
             url: `${API_BASE_URL}/instance/create`,
-            headers: { 
-                'Content-Type': 'application/json', 
+            headers: {
+                'Content-Type': 'application/json',
                 'apikey': APIKEY
             },
             data : data
@@ -110,12 +82,44 @@ exports.createInstance = async (req, res) => {
 
         const response = await axios.request(config);
 
-        if (response.data && response.data.hash.apikey) {
-            user.whatsappInstances.push({ name, key: response.data.hash.apikey, user: req.user.id });
+        if (response.data && response.data.hash) {
+            user.whatsappInstances.push({ 
+                name, 
+                key: response.data.hash, 
+                user: req.user.id,
+                number: phoneNumber
+            });
             await user.save();
-            res.status(201).json({ 
-                message: 'Instância criada com sucesso', 
-                instance: { name, key: response.data.hash.apikey },
+
+            // Configurar o webhook para a nova instância
+            const webhookData = {
+                webhook: {
+                    enabled: true,
+                    url: "https://dev.hocketzap.com/webhook/evolution",
+                    events: [
+                        "APPLICATION_STARTUP", "CALL", "CHATS_DELETE", "CHATS_SET", "CHATS_UPDATE",
+                        "CHATS_UPSERT", "CONNECTION_UPDATE", "CONTACTS_SET", "CONTACTS_UPDATE",
+                        "CONTACTS_UPSERT", "GROUP_PARTICIPANTS_UPDATE", "GROUP_UPDATE", "GROUPS_UPSERT",
+                        "LABELS_ASSOCIATION", "LABELS_EDIT", "LOGOUT_INSTANCE", "MESSAGES_DELETE",
+                        "MESSAGES_SET", "MESSAGES_UPDATE", "MESSAGES_UPSERT", "PRESENCE_UPDATE",
+                        "QRCODE_UPDATED", "REMOVE_INSTANCE", "SEND_MESSAGE", "TYPEBOT_CHANGE_STATUS",
+                        "TYPEBOT_START"
+                    ],
+                    base64: true,
+                    byEvents: false
+                }
+            };
+
+            await axios.post(`${API_BASE_URL}/webhook/set/${name}`, webhookData, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': APIKEY
+                }
+            });
+
+            res.status(201).json({
+                message: 'Instância criada com sucesso e webhook configurado',
+                instance: { name, key: response.data.hash, number: phoneNumber },
                 currentCount: instanceCount + 1,
                 limit: planLimit
             });
@@ -129,14 +133,14 @@ exports.createInstance = async (req, res) => {
             const errorMessage = error.response.data.response && error.response.data.response.message
                 ? error.response.data.response.message[0]
                 : 'Acesso negado';
-            
-            res.status(403).json({ 
-                error: 'O nome ja está em uso',
+           
+            res.status(403).json({
+                error: 'O nome já está em uso',
                 message: errorMessage
             });
         } else {
-            res.status(500).json({ 
-                error: 'Erro interno do servidor', 
+            res.status(500).json({
+                error: 'Erro interno do servidor',
                 message: 'Ocorreu um erro ao criar a instância. Por favor, tente novamente.'
             });
         }
@@ -156,23 +160,23 @@ exports.listInstances = async (req, res) => {
 
         // Mapear as instâncias retornadas pela API para o formato esperado pelo frontend
         const instancesWithStatus = response.data
-            .filter(apiInstance => user.whatsappInstances.some(i => i.key === apiInstance.instance.apikey))
+            .filter(apiInstance => user.whatsappInstances.some(i => i.key === apiInstance.token))
             .map(apiInstance => {
-                const userInstance = user.whatsappInstances.find(i => i.key === apiInstance.instance.apikey);
+                const userInstance = user.whatsappInstances.find(i => i.key === apiInstance.token);
                 
                 return {
                     _id: userInstance._id, // Mantém o ID do MongoDB
-                    name: apiInstance.instance.instanceName,
-                    key: apiInstance.instance.apikey,
-                    isConnected: apiInstance.instance.status === 'open',
-                    whatsappName: apiInstance.instance.profileName || '',
-                    foto: apiInstance.instance.profilePictureUrl || '',
-                    number: apiInstance.instance.integration.number || '',
-                    createdAt: userInstance.createdAt, // Mantém a data de criação do MongoDB
-                    updatedAt: userInstance.updatedAt, // Mantém a data de atualização do MongoDB
-                    messageCount: 0, // A API Evolution não fornece essa informação diretamente
-                    contactCount: 0, // A API Evolution não fornece essa informação diretamente
-                    chatCount: 0 // A API Evolution não fornece essa informação diretamente
+                    name: apiInstance.name,
+                    key: apiInstance.token,
+                    isConnected: apiInstance.connectionStatus === 'open',
+                    whatsappName: apiInstance.profileName || '',
+                    foto: apiInstance.profilePicUrl || '',
+                    number: apiInstance.number || '',
+                    createdAt: new Date(apiInstance.createdAt),
+                    updatedAt: new Date(apiInstance.updatedAt),
+                    messageCount: apiInstance._count.Message,
+                    contactCount: apiInstance._count.Contact,
+                    chatCount: apiInstance._count.Chat
                 };
             });
 
@@ -182,6 +186,7 @@ exports.listInstances = async (req, res) => {
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 };
+
 
 exports.getQRCode = async (req, res) => {
     try {

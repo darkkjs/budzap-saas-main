@@ -54,21 +54,30 @@
                     </svg>
                     Criar Nova Instância
                 </h2>
-                <form id="createInstanceForm" class="space-y-4">
-                    <div class="form-control">
-                        <label for="instanceName" class="label">
-                            <span class="label-text text-purple-600">Nome da Instância</span>
-                        </label>
-                        <input type="text" id="instanceName" name="name" required 
-                               class="input input-bordered input-primary w-full focus:ring-2 focus:ring-purple-500 transition duration-300">
-                    </div>
-                    <button type="submit" class="btn btn-primary w-full mt-4 bg-purple-600 hover:bg-purple-700 transition duration-300">
-                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        Criar Instância
-                    </button>
-                </form>
+              <!-- Substitua o formulário existente por este -->
+<form id="createInstanceForm" class="space-y-4">
+    <div class="form-control">
+        <label for="instanceName" class="label">
+            <span class="label-text text-purple-600">Nome da Instância</span>
+        </label>
+        <input type="text" id="instanceName" name="name" required 
+               class="input input-bordered input-primary w-full focus:ring-2 focus:ring-purple-500 transition duration-300">
+    </div>
+    <div class="form-control">
+        <label for="phoneNumber" class="label">
+            <span class="label-text text-purple-600">Número de Telefone</span>
+        </label>
+        <input type="tel" id="phoneNumber" name="phoneNumber" required 
+               class="input input-bordered input-primary w-full focus:ring-2 focus:ring-purple-500 transition duration-300"
+               placeholder="Ex: 5511999999999">
+    </div>
+    <button type="submit" class="btn btn-primary w-full mt-4 bg-purple-600 hover:bg-purple-700 transition duration-300">
+        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        Criar Instância
+    </button>
+</form>
                 <div id="loadingIndicator" class="hidden mt-4">
                     <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-700 mx-auto"></div>
                     <p class="text-center mt-2 text-purple-700">Criando instância...</p>
@@ -168,38 +177,56 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadInstances();
 
-            document.getElementById('createInstanceForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const instanceName = formData.get('name');
-                
-                // Mostrar indicador de carregamento
-                document.getElementById('loadingIndicator').classList.remove('hidden');
+          // Adicione esta função para gerar um token aleatório
+function generateRandomToken() {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let token = '';
+    for (let i = 0; i < 36; i++) {
+        if (i === 8 || i === 13 || i === 18 || i === 23) {
+            token += '-';
+        } else {
+            token += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+    }
+    return token;
+}
 
-                try {
-                    const response = await fetch('/whatsapp/create', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name: instanceName })
-                    });
+// Modifique o event listener do formulário
+document.getElementById('createInstanceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const instanceName = formData.get('name');
+    const phoneNumber = formData.get('phoneNumber');
+    
+    document.getElementById('loadingIndicator').classList.remove('hidden');
 
-                    const data = await response.json();
+    try {
+        const response = await fetch('/whatsapp/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                name: instanceName,
+                phoneNumber: phoneNumber,
+                token: generateRandomToken()
+            })
+        });
 
-                    if (response.ok) {
-                        showToast('Instância criada com sucesso!', 'success');
-                        loadInstances();
-                        e.target.reset();
-                    } else {
-                        showToast(`Erro: ${data.error || data.message}`, 'error');
-                    }
-                } catch (error) {
-                    console.error('Erro ao criar instância:', error);
-                    showToast('Erro ao criar instância. Por favor, tente novamente.', 'error');
-                } finally {
-                    // Esconder indicador de carregamento
-                    document.getElementById('loadingIndicator').classList.add('hidden');
-                }
-            });
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast('Instância criada com sucesso!', 'success');
+            loadInstances();
+            e.target.reset();
+        } else {
+            showToast(`Erro: ${data.error || data.message}`, 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao criar instância:', error);
+        showToast('Erro ao criar instância. Por favor, tente novamente.', 'error');
+    } finally {
+        document.getElementById('loadingIndicator').classList.add('hidden');
+    }
+});
         });
 
         async function loadInstances() {

@@ -195,7 +195,7 @@ function formatPhoneNumber(num) {
 }
 
 async function sendTextMessage(instance, content, number) {
-  const url = `https://evolution.hotboard.online/message/sendText/${instance}`;
+  const url = `https://api.hocketzap.com/message/sendText/${instance}`;
   const data = JSON.stringify({
       number: number,
       text: content
