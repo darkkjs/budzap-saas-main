@@ -160,7 +160,7 @@ async function downloadMedia(url) {
 
 const replaceNewLines = (text) => text.replace(/\n/g, ' ');
 
-app.post('/messages-upsert', (req, res) => {
+router.post('/messages-upsert', (req, res) => {
   // Lógica para lidar com as mensagens recebidas
   console.log('Mensagem recebida:', req.body);
   
