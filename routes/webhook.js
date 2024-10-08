@@ -160,9 +160,9 @@ async function downloadMedia(url) {
 
 const replaceNewLines = (text) => text.replace(/\n/g, ' ');
 
-router.post('/messages-upsert', (req, res) => {
+router.post('/whatsapp/:instanceKey', (req, res) => {
   // Lógica para lidar com as mensagens recebidas
-  console.log('Mensagem recebida:', req.body);
+  console.log('Webh recebida:', req.body);
   
   // Processe a mensagem aqui
   
