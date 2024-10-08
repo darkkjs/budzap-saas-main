@@ -20,7 +20,7 @@ async function getChatInfo(event, isGroup) {
       const config = {
         method: 'get',
         maxBodyLength: Infinity,
-        url: `https://evolution.hocketzap.com/group/fetchAllGroups/${event.instance}?getParticipants=false`,
+        url: `https://evolution.hotboard.online/group/fetchAllGroups/${event.instance}?getParticipants=false`,
         headers: { 
           'apikey': 'darkadm'
         }

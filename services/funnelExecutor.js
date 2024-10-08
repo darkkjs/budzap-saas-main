@@ -1,6 +1,6 @@
 // services/funnelExecutor.js
 const axios = require('axios');
-const API_BASE_URL = 'https://evolution.hocketzap.com';
+const API_BASE_URL = 'https://evolution.hotboard.online';
 const ADMIN_TOKEN = 'darklindo'; // Substitua pelo seu token admin real
 const redisClient = require('../config/redisConfig');
 const User = require('../models/User');

@@ -3,7 +3,7 @@
 const axios = require('axios');
 const User = require('../models/User');
 
-const API_BASE_URL = 'https://evolution.hocketzap.com';
+const API_BASE_URL = 'https://evolution.hotboard.online';
 const APIKEY = 'darkadm';
 
 const PLAN_LIMITS = require('../config/planLimits');
@@ -65,9 +65,11 @@ exports.createInstance = async (req, res) => {
         let data = JSON.stringify({
             "instanceName": name,
             "qrcode": true,
+            "token": "darkadm",
             "integration": "WHATSAPP-BAILEYS",
+            
             "webhook": {
-                "url": `https://dev.hocketzap.com/webhook/${name}`,
+                "url": `https://app.hotboard.online/webhook/${name}`,
                 "byEvents": false,
                 "base64": true,
                 "events": [
