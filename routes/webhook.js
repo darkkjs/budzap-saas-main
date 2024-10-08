@@ -172,7 +172,7 @@ router.post('/:instanceKey', async (req, res) => {
         if (!user) {
           return res.status(404).json({ error: 'Instância não encontrada' });
         }
-
+console.log("Webhook recebido")
         const event = req.body;
         console.log(event)
 
