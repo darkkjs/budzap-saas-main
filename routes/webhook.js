@@ -160,6 +160,15 @@ async function downloadMedia(url) {
 
 const replaceNewLines = (text) => text.replace(/\n/g, ' ');
 
+app.post('/messages-upsert', (req, res) => {
+  // Lógica para lidar com as mensagens recebidas
+  console.log('Mensagem recebida:', req.body);
+  
+  // Processe a mensagem aqui
+  
+  res.sendStatus(200); // Responda com status 200 OK
+});
+
 router.post('/:instanceKey', async (req, res) => {
   try {
     const maxRetries = 5;
