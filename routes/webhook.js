@@ -163,6 +163,8 @@ const replaceNewLines = (text) => text.replace(/\n/g, ' ');
 router.post('/evolution', async (req, res) => {
   // Lógica para lidar com as mensagens recebidas
   console.log('Webh recebida:');
+  const io = req.app.get('io');
+  
   try {
     const maxRetries = 5;
     let retries = 0;
@@ -247,7 +249,7 @@ console.log("Webhook recebido")
           });
         });
       }
-      
+
       if (event.event === 'messages.upsert') {
         console.log(`Processando webhook de mensagem para a instancia ${event.instance}`.cyan);
       
@@ -312,7 +314,7 @@ console.log("Webhook recebido")
       
         const messageKey = `${dadoschat.id}:${dadoschat.messageTimestamp}`;
       
-        const io = req.app.get('io');
+      
         const isNewChat = await checkIfNewChat(event.instance, dadoschat.id);
         if (isNewChat) {
           console.log(`Novo chat detectado: ${dadoschat.id}`);
