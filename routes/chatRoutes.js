@@ -32,20 +32,30 @@ router.post('/profile-image', async (req, res) => {
       return res.status(400).json({ error: 'Chave da instância e ID do chat são obrigatórios' });
     }
 
+    const data = JSON.stringify({
+      "number": chatId
+    });
+
     const config = {
       method: 'post',
-      url: `https://budzap.shop/misc/downProfile?key=${instanceKey}`,
+      url: `https://api.hocketzap.com/chat/fetchProfilePictureUrl/${instanceKey}`,
       headers: { 
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json', 
+        'apikey': 'darkadm'
       },
-      data: JSON.stringify({ id: chatId })
+      data : data
     };
 
     const response = await axios(config);
 
-    if (response.data.error === false && response.data.data) {
-      const imageUrl = response.data.data;
+    if (response.data && response.data.profilePictureUrl) {
+      let imageUrl = response.data.profilePictureUrl;
       
+      // Se a profilePictureUrl for null, use uma imagem padrão
+      if (!imageUrl) {
+        imageUrl = 'https://static.vecteezy.com/ti/vetor-gratis/p3/2387693-icone-do-perfil-do-usuario-vetor.jpg'; // Substitua com o URL da sua imagem padrão
+      }
+
       // Fazer uma requisição para obter a imagem
       const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
       const imageBuffer = Buffer.from(imageResponse.data, 'binary');

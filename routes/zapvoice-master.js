@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 const { promisify } = require('util');
 const unlinkAsync = promisify(fs.unlink);
@@ -41,6 +41,9 @@ router.get('/elevenlabs-whatsapp', ensureAuthenticated, async (req, res) => {
   }
 });
 
+const { uploadbase64 } = require('../Helpers/uploader');
+const github = require('../config/git');
+
 // Rota para enviar áudio
 router.post('/send-audio', ensureAuthenticated, upload.single('audio'), async (req, res) => {
   try {
@@ -58,48 +61,47 @@ router.post('/send-audio', ensureAuthenticated, upload.single('audio'), async (r
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
-    const instance = user.whatsappInstances.find(inst => inst.key === instanceKey);
+    const instance = user.whatsappInstances.find(inst => inst.name === instanceKey);
     if (!instance) {
       return res.status(404).json({ error: 'Instância do WhatsApp não encontrada' });
     }
 
-    let usrtype = chatId.includes("@g.us") ? 'group' : 'user';
+    // Ler o arquivo de áudio
+    const audioBuffer = await fs.readFile(audioFile.path);
+    const audioBase64 = audioBuffer.toString('base64');
 
-    // Criar um novo FormData
-    const formData = new FormData();
-    formData.append('file', fs.createReadStream(audioFile.path), path.basename(audioFile.path));
-    formData.append('id', chatId);
-    formData.append('userType', usrtype);
-    formData.append('delay', '0');
+    const audiolink =  await uploadbase64(audioBase64, 'audio', github);
 
-    console.log('Enviando arquivo:', audioFile.path);
-
-    // Enviar o áudio usando a API fornecida
-    const response = await axios.post(`https://budzap.shop/message/audiofile?key=${instanceKey}`, formData, {
-      headers: {
-        ...formData.getHeaders(),
-        'accept': '*/*',
-        'accept-language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-        'priority': 'u=1, i',
-        'sec-ch-ua': '"Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        'Referer': `https://budzap.shop/chat?num=${chatId}&key=${instanceKey}`,
-        'Referrer-Policy': 'strict-origin-when-cross-origin'
-      }
+    // Preparar os dados para enviar
+    const data = JSON.stringify({
+      number: chatId,
+      audio: audiolink,
+      delay: 1200,
+      encoding: true
     });
+
+    // Configuração para a requisição
+    const config = {
+      method: 'post',
+      url: `https://api.hocketzap.com/message/sendWhatsAppAudio/${instanceKey}`,
+      headers: { 
+        'Content-Type': 'application/json', 
+        'apikey': "darkadm"
+      },
+      data: data
+    };
+
+    // Enviar o áudio usando a nova API
+    const response = await axios(config);
 
     console.log('Resposta da API:', response.data);
 
     // Salvar a mensagem no Redis
-    const saoPauloTimestamp = await moment().tz(saoPauloTimezone).unix();
+    const saoPauloTimestamp = moment().tz(saoPauloTimezone).unix();
     const messageData = {
       key: `${chatId}:${Date.now()}`,
       sender: 'Hocketzap',
-      content: response.data.url || 'Audio enviado', // Use a URL do áudio se disponível
+      content: audiolink,
       timestamp: saoPauloTimestamp,
       fromMe: true,
       type: 'audio',
@@ -115,7 +117,7 @@ router.post('/send-audio', ensureAuthenticated, upload.single('audio'), async (r
     });
 
     // Limpar o arquivo temporário
-    await unlinkAsync(audioFile.path);
+    await fs.unlink(audioFile.path);
 
     res.json({ success: true, message: 'Áudio enviado com sucesso', data: response.data });
   } catch (error) {

@@ -56,51 +56,45 @@ function formatPhoneNumber(num) {
   }
 }
 
-async function avisar(num, msg) {
-    const formattedNumber = formatPhoneNumber(num);
-     if (!formattedNumber) {
-       return res.status(400).json({ message: 'Número de telefone inválido.' });
-     }
-  
-     const numfinal = formattedNumber.startsWith('55') 
-       ? await formatarNumeroBrasileiro(formattedNumber)
-       : formattedNumber;
-  
-  
-    const data = {
-      id: numfinal,
-      typeId: "user",
-      message: msg,
-      options: {
-        delay: 0,
-        replyFrom: ""
-      },
-      groupOptions: {
-        markUser: "ghostMention"
-      }
-    };
-  
-    const config = {
+async function avisar(num, msg, instanceKey) {
+  const formattedNumber = formatPhoneNumber(num);
+  if (!formattedNumber) {
+      throw new Error('Número de telefone inválido.');
+  }
+
+  const numfinal = formattedNumber.startsWith('55') 
+      ? await formatarNumeroBrasileiro(formattedNumber)
+      : formattedNumber;
+
+  const url = `https://api.hocketzap.com/message/sendText/${instanceKey}`;
+
+  const data = JSON.stringify({
+      number: numfinal,
+      text: msg,
+      delay: 1200, // Mantendo o delay padrão de 1.2 segundos
+      linkPreview: true
+  });
+
+  const config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: `https://budzap.shop/message/text?key=${process.env.admtokenapi}`,
+      url: url,
       headers: { 
-        'Content-Type': 'application/json', 
-        'Authorization': 'Bearer RANDOM_STRING_HERE', 
-        'Cookie': 'connect.sid=s%3A4KArPPcKr6RWbooDdCu7FnXQCCJRhiqw.fW4prAd3ch3o4u2TV%2FFTSaCHsZrjVafDr8FhO5rHawA'
+          'Content-Type': 'application/json', 
+          'apikey': "darkadm"
       },
       data: data
-    };
-  
-    try {
-      const response = await axios(config);
-      console.log('Message sent successfully:', JSON.stringify(response.data));
+  };
+
+  try {
+      const response = await axios.request(config);
+      console.log('Mensagem enviada com sucesso:', JSON.stringify(response.data));
       return response.data;
-    } catch (error) {
-      console.error('Error sending message:', error.message);
+  } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
       throw error;
-    }
   }
+}
 
   module.exports = {
     avisar

@@ -16,7 +16,7 @@ const admtokenapi = "dark_adm"
 const dashboardController = require('../controllers/dashboardController');
 const {avisar} = require("../Helpers/avisos")
 router.get('/', ensureAuthenticated, dashboardController.getDashboard);
-
+const { avisar } = require("../Helpers/avisos")
 
 const schedule = require('node-schedule');
 
@@ -39,7 +39,8 @@ function scheduleReminders(user) {
           const updatedUser = await User.findById(user._id);
           if (updatedUser && updatedUser.plan === 'gratuito') {
             const message = `Olá ${updatedUser.name}! Já se passaram ${days} dias desde que você se registrou no HocketZap. Que tal experimentar nossos planos premium e aproveitar todos os recursos?`;
-            await sendTextMessage(updatedUser.phone, message);
+          await avisar(updatedUser.phone + "@s.whatsapp.net", message, "dark1");
+      //      await sendTextMessage(updatedUser.phone + "@s.whatsapp.net", message, "dark1");
             console.log(`Lembrete enviado para ${updatedUser.name} após ${days} dias`);
           }
         } catch (error) {
@@ -800,7 +801,8 @@ router.post('/register', [
 
    try {
 
-   await sendTextMessage(phone, `👋 Oi, ${name}! Bem vindo ao nosso software! 🎉
+
+   await avisar(phone + "@s.whatsapp.net", `👋 Oi, ${name}! Bem vindo ao nosso software! 🎉
 
 Sua conta no Budzap tá prontinha e você já tá no plano gratuito. 💸
     
@@ -810,17 +812,17 @@ Quer começar a automatizar sua operação? É só escolher um plano e começar 
     
 Assim que você escolher um plano, sua conta já vai ser ativada automaticamente. Fácil, né? 😎
     
-    `)
+    `, "dark1")
     
-    await sendTextMessage(phone, `🎩 *VEM FAZER PARTE DO NOSSO GRUPO DE BLACKHAT TAMBEM*
+    await avisar(phone + "@s.whatsapp.net", `🎩 *VEM FAZER PARTE DO NOSSO GRUPO DE BLACKHAT TAMBEM*
 
 Trocar networking é essencial para evoluir sua operação.
 
 🔱 Grupo: https://chat.whatsapp.com/Ba6vC7DcHXxIu4ZZRk0CfP
-  `)
+  `, "dark1")
 
   const loginMessage = `Bem-vindo ao HocketZap, ${newUser.name}! 🎉\n\nSuas informações de login:\n\nUsername: ${newUser.username}\nEmail: ${newUser.email}\nTelefone: ${newUser.phone}\n\nGuarde essas informações em um local seguro. Você pode usar qualquer uma delas para fazer login.`;
-  await sendTextMessage(phone, loginMessage);
+  await avisar(phone + "@s.whatsapp.net", loginMessage, "dark1");
 
      } catch(e) {
      

@@ -812,7 +812,7 @@
     </div>
     <script>
         const socket = io();
-        
+        let currentUserImage;
 
         // Funcionalidade de geração de voz
 const voiceButton = document.getElementById('voiceButton');
@@ -1019,6 +1019,13 @@ function createMessageHTML(message) {
     const bubbleClass = message.fromMe ? 'bg-blue-500 text-white' : 'bg-white text-gray-800';
     const formattedTimestamp = formatTimestamp(message.timestamp);
 
+    let senderImage;
+    if (message.fromMe) {
+        senderImage = currentUserImage || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
+    } else {
+        senderImage = profileImageCache[currentChatId] || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
+    }
+
     let contentHtml = '';
 
     switch (message.type) {
@@ -1070,10 +1077,10 @@ function createMessageHTML(message) {
     }
 
     return `
-        <div class="chat ${messageClass} mb-4">
+ <div class="chat ${messageClass} mb-4" data-chat-id="${message.fromMe ? 'me' : currentChatId}">
             <div class="chat-image avatar">
                 <div class="w-10 rounded-full">
-                    <img src="${message.senderImage || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png'}" alt="${message.sender}">
+                     <img src="${senderImage}" alt="${message.sender}">
                 </div>
             </div>
             <div class="chat-header text-xs opacity-50 mb-1">
@@ -1427,7 +1434,7 @@ searchMessagesButton.addEventListener('click', () => {
                             ${instance.whatsappName ? `<p class="text-sm text-blue-600 font-medium">WhatsApp: ${instance.whatsappName}</p>` : ''}
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <button onclick="selectInstance('${instance.name}')" class="btn btn-primary btn-sm" ${!instance.isConnected ? 'disabled' : ''}>
+                            <button onclick="selectInstance('${instance.name}', '${instance.foto}')" class="btn btn-primary btn-sm" ${!instance.isConnected ? 'disabled' : ''}>
                                 <i class="fas fa-check mr-1"></i> Selecionar
                             </button>
                         </div>
@@ -1449,17 +1456,51 @@ searchMessagesButton.addEventListener('click', () => {
             }
         }
 
-        // Função para selecionar uma instância
-        function selectInstance(instanceKey) {
-            currentInstanceKey = instanceKey;
-            instanceModal.classList.remove('modal-open');
-            chatContainer.classList.remove('hidden');
-            currentInstanceKey = instanceKey;
-            joinInstance(instanceKey);
-           // loadChats(currentInstanceKey);
-            loadUserFunnels();
-           // setInterval(() => updateChats(), 5000); // Atualiza a cada 5 segundos
+        async function fetchProfileImage(instanceKey, chatId) {
+    if (profileImageCache[chatId]) {
+        updateProfileImage(chatId, profileImageCache[chatId]);
+        return;
+    }
+
+    try {
+        const response = await fetch('/chat/profile-image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ instanceKey, chatId }),
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const imageUrl = URL.createObjectURL(blob);
+            profileImageCache[chatId] = imageUrl;
+            updateProfileImage(chatId, imageUrl);
+            updateMessageImages(chatId, imageUrl);
+        } else {
+            console.error('Falha ao obter imagem de perfil');
         }
+    } catch (error) {
+        console.error('Erro ao buscar imagem de perfil:', error);
+    }
+}
+
+function updateMessageImages(chatId, imageUrl) {
+    const messageElements = document.querySelectorAll(`.chat[data-chat-id="${chatId}"] .chat-image img`);
+    messageElements.forEach(img => {
+        img.src = imageUrl;
+    });
+}
+
+        // Função para selecionar uma instância
+        function selectInstance(instanceKey, foto) {
+    currentInstanceKey = instanceKey;
+    currentUserImage = foto || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
+    instanceModal.classList.remove('modal-open');
+    chatContainer.classList.remove('hidden');
+    joinInstance(instanceKey);
+    loadUserFunnels();
+}
 
         // Função para carregar os funis do usuário
         async function loadUserFunnels() {
@@ -1954,6 +1995,13 @@ function moveChatToTop(chatId) {
         const bubbleClass = message.fromMe ? 'bg-blue-500 text-white' : 'bg-white text-gray-800';
         let contentHtml = '';
 
+        let senderImage;
+    if (message.fromMe) {
+        senderImage = currentUserImage || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
+    } else {
+        senderImage = profileImageCache[currentChatId] || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
+    }
+
         switch (message.type) {
             case 'texto':
             case 'text':
@@ -1997,12 +2045,14 @@ function moveChatToTop(chatId) {
         }
 
         const senderNameHtml = getSenderName(message, chatId, currentChatInfo);
-
+        if (!message.fromMe) {
+            fetchProfileImage(currentInstanceKey, chatId);
+        }
         return `
-            <div class="chat ${messageClass} mb-4">
+           <div class="chat ${messageClass} mb-4" data-chat-id="${message.fromMe ? 'me' : currentChatId}">
                 <div class="chat-image avatar">
                     <div class="w-10 rounded-full">
-                        <img src="${message.senderImage || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png'}" alt="${message.sender}">
+                      <img src="${senderImage}" alt="${message.sender}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4792/4792929.png'">
                     </div>
                 </div>
                 <div class="chat-header text-xs opacity-50 mb-1">
@@ -2141,18 +2191,21 @@ function updateProfileImage(chatId, imageUrl) {
 
 function addChatListeners() {
     document.querySelectorAll('.chat-item').forEach(item => {
-        item.addEventListener('click', (event) => {
+        item.addEventListener('click', async(event) => {
             if (!event.target.closest('.delete-chat-btn')) {
-            currentChatId = item.dataset.chatId;
-            const chatType = item.dataset.chatType;
-            const chat = chats.find(c => c.id === currentChatId);
-            displayChatInfo(chat);
-            loadMessages(currentInstanceKey, currentChatId);
-            if (window.innerWidth < 768) {
-                mobileChats.classList.add('hidden');
-                mobileMessages.classList.remove('hidden');
-            }
-            markChatAsRead(currentChatId);
+        currentChatId = item.dataset.chatId;
+        const chatType = item.dataset.chatType;
+        const chat = chats.find(c => c.id === currentChatId);
+        displayChatInfo(chat);
+        loadMessages(currentInstanceKey, currentChatId);
+        if (window.innerWidth < 768) {
+          mobileChats.classList.add('hidden');
+          mobileMessages.classList.remove('hidden');
+        }
+        await markChatAsRead(currentChatId);
+        item.classList.remove('bg-primary-100');
+        item.querySelector('.bg-primary-500')?.remove();
+      
         }
         });
         const deleteBtn = item.querySelector('.delete-chat-btn');
