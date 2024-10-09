@@ -16,7 +16,7 @@ const admtokenapi = "dark_adm"
 const dashboardController = require('../controllers/dashboardController');
 const {avisar} = require("../Helpers/avisos")
 router.get('/', ensureAuthenticated, dashboardController.getDashboard);
-const { avisar } = require("../Helpers/avisos")
+
 
 const schedule = require('node-schedule');
 
