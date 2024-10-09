@@ -334,7 +334,9 @@ router.post('/send-message', async (req, res) => {
     // Save message to Redis
     await saveMessage(instanceKey, chatId, messageData);
 
-
+ // Reset unread count in Redis
+ await redisClient.hset(`chat:${instanceKey}:${chatId}`, 'unreadCount', '0');
+ 
       res.json({ success: true, message: 'Message sent successfully' });
   } catch (error) {
       console.error('Error sending message:', error);
