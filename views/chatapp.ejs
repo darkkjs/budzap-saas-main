@@ -43,6 +43,16 @@
             background-color: var(--secondary-color);
         }
 
+        .message-status {
+    margin-left: 5px;
+    display: inline-block;
+  }
+
+  .message-status svg {
+    width: 16px;
+    height: 16px;
+  }
+
         #activeFunnelsList {
             max-height: 300px;
             overflow-y: auto;
@@ -1104,6 +1114,18 @@ function createMessageHTML(message) {
             contentHtml = `<div class="chat-bubble ${bubbleClass}">${formatTextWithLinks(message.content)}</div>`;
     }
 
+
+    let statusIcon = '';
+    if (message.fromMe) {
+        statusIcon = `
+            <span class="message-status">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                </svg>
+            </span>
+        `;
+    }
+
     return `
  <div class="chat ${messageClass} mb-4" data-chat-id="${message.fromMe ? 'me' : currentChatId}">
             <div class="chat-image avatar">
@@ -1117,6 +1139,7 @@ function createMessageHTML(message) {
             </div>
             <div class="chat-bubble-wrapper">
                 ${contentHtml}
+                ${statusIcon}
             </div>
         </div>
     `;
@@ -1181,6 +1204,9 @@ function createChatHTML(chat) {
     const unreadIndicator = unreadCount > 0 ? `<span class="bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full">${unreadCount}</span>` : '';
     const avatarUrl = chat.image || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
 
+      // Adicione esta linha para determinar a cor da última mensagem
+      const lastMessageColor = chat.lastMessageFromMe ? 'text-blue-600' : 'text-gray-600';
+
     return `
         <div class="chat-item p-3 hover:bg-gray-100 cursor-pointer rounded-lg transition duration-200 ease-in-out ${unreadClass}" data-chat-id="${chat.id}" data-chat-type="${chat.chatType}">
             <div class="flex items-center space-x-3">
@@ -1190,7 +1216,7 @@ function createChatHTML(chat) {
                         <h3 class="font-semibold text-gray-900 truncate">${chatTypeIcon} ${chat.name}</h3>
                         <span class="text-xs text-gray-500">${formatTimestamp(chat.lastMessageTimestamp)}</span>
                     </div>
-                    <p class="text-sm text-gray-600 truncate">${lastMessageContent}</p>
+                   <p class="text-sm ${lastMessageColor} truncate">${lastMessageContent}</p>
                 </div>
                 ${unreadIndicator}
                   <button class="delete-chat-btn text-red-500 hover:text-red-700" data-chat-id="${chat.id}">
@@ -1304,6 +1330,8 @@ function deleteChat(chatId) {
             chat.lastMessage = lastMessage.content;
             chat.lastMessageTimestamp = lastMessage.timestamp;
             chat.lastMessageType = lastMessage.type;
+            chat.lastMessageFromMe = lastMessage.fromMe
+            
             if (chatId !== currentChatId) {
                 chat.unreadCount = (chat.unreadCount || 0) + 1;
                 const unreadIndicator = chatElement.querySelector('.bg-primary-500') || document.createElement('span');
@@ -1993,6 +2021,8 @@ if (breadcrumbNav) {
         const unreadIndicator = unreadCount > 0 ? `<span class="bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full">${unreadCount}</span>` : '';
         const avatarUrl = profileImageCache[chat.id] || chat.image || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
         const formattedTime = formatTimestamp(chat.lastMessageTimestamp);
+        const lastMessageColor = chat.lastMessageFromMe ? 'text-blue-600' : 'text-gray-600';
+        
         return `
             <div class="chat-item p-3 hover:bg-gray-100 cursor-pointer rounded-lg transition duration-200 ease-in-out ${unreadClass}" data-chat-id="${chat.id}" data-chat-type="${chat.chatType}">
                 <div class="flex items-center space-x-3">
@@ -2002,12 +2032,12 @@ if (breadcrumbNav) {
                             <h3 class="font-semibold text-gray-900 truncate">${chatTypeIcon} ${chat.name}</h3>
                             <span class="text-xs text-gray-500">${formattedTime}</span>
                         </div>
-                        <p class="text-sm text-gray-600 truncate">${lastMessageContent}</p>
+                        <p class="text-sm ${lastMessageColor} truncate">${lastMessageContent}</p>
                     </div>
                     ${unreadIndicator}
-                      <button class="delete-chat-btn text-red-500 hover:text-red-700" data-chat-id="${chat.id}">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
+                    <button class="delete-chat-btn text-red-500 hover:text-red-700" data-chat-id="${chat.id}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </div>
             </div>
         `;
