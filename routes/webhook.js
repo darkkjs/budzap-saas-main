@@ -226,6 +226,28 @@ console.log("Webhook recebido")
           }
       }
 
+
+      if (event.event === 'presence.update') {
+        const { id, presences } = event.data;
+        const presence = presences[id].lastKnownPresence;
+        const timestamp = new Date(event.date_time).getTime();
+      
+        io.to(event.instance).emit('presence update', {
+          chatId: id,
+          presence: presence,
+          timestamp: timestamp
+        });
+      }
+      
+      if (event.event === 'chats.update') {
+        event.data.forEach(chat => {
+          io.to(event.instance).emit('chat update', {
+            chatId: chat.remoteJid,
+            timestamp: new Date(event.date_time).getTime()
+          });
+        });
+      }
+      
       if (event.event === 'messages.upsert') {
         console.log(`Processando webhook de mensagem para a instancia ${event.instance}`.cyan);
       

@@ -1180,6 +1180,55 @@ socket.on('initial chats', (initialChats) => {
 });
 
 
+socket.on('presence update', (data) => {
+  updatePresence(data.chatId, data.presence, data.timestamp);
+});
+
+socket.on('chat update', (data) => {
+  updateLastSeen(data.chatId, data.timestamp);
+});
+
+function updatePresence(chatId, presence, timestamp) {
+            const chatElement = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+            const chatTypeElement = document.getElementById('chatType');
+            
+            if (chatElement) {
+                const lastMessageElement = chatElement.querySelector('.text-sm.text-gray-600');
+                if (presence === 'composing') {
+                    lastMessageElement.textContent = 'Digitando...';
+                    lastMessageElement.classList.add('text-green-500', 'font-semibold');
+                } else {
+                    // Restaurar a última mensagem
+                    const chat = chats.find(c => c.id === chatId);
+                    if (chat) {
+                        lastMessageElement.textContent = getMediaDescription(chat.lastMessageType, chat.lastMessage);
+                        lastMessageElement.classList.remove('text-green-500', 'font-semibold');
+                    }
+                }
+            }
+
+            if (currentChatId === chatId) {
+                if (presence === 'composing') {
+                    chatTypeElement.textContent = 'Digitando...';
+                    chatTypeElement.classList.add('text-green-500', 'font-semibold');
+                } else {
+                    chatTypeElement.textContent = 'Chat Individual';
+                    chatTypeElement.classList.remove('text-green-500', 'font-semibold');
+                    updateLastSeen(chatId, timestamp);
+                }
+            }
+        }
+
+        function updateLastSeen(chatId, timestamp) {
+            const chatTypeElement = document.getElementById('chatType');
+            if (currentChatId === chatId) {
+                const lastSeen = new Date(timestamp).toLocaleString();
+                chatTypeElement.textContent = `Visto por último: ${lastSeen}`;
+                chatTypeElement.classList.remove('text-green-500', 'font-semibold');
+            }
+        }
+
+
 function deleteChat(chatId) {
     if (confirm('Tem certeza que deseja deletar este chat?')) {
         fetch(`/chat/delete/${currentInstanceKey}/${chatId}`, {
@@ -2112,23 +2161,51 @@ function formatTextWithLinks(text) {
         }
 
         function displayChatInfo(chat) {
-    currentChatInfo = chat;
-    chatName.textContent = chat.name;
-    mobileChatName.textContent = chat.name;
-    chatType.textContent = chat.chatType === 'grupo' ? 'Grupo' : 'Chat Individual';
+            currentChatInfo = chat;
+            chatName.textContent = chat.name;
+            mobileChatName.textContent = chat.name;
+            
+            if (chat.chatType === 'grupo') {
+                chatType.textContent = 'Grupo';
+                groupMembersButton.classList.remove('hidden');
+                mobileGroupMembersButton.classList.remove('hidden');
+            } else {
+                chatType.textContent = chat.lastSeen ? `Visto por último: ${new Date(chat.lastSeen).toLocaleString()}` : 'Chat Individual';
+                groupMembersButton.classList.add('hidden');
+                mobileGroupMembersButton.classList.add('hidden');
+            }
 
-    const imageUrl = profileImageCache[chat.id] || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
-    chatAvatar.src = imageUrl;
-    mobileChatAvatar.src = imageUrl;
+            const imageUrl = profileImageCache[chat.id] || 'https://cdn-icons-png.flaticon.com/512/4792/4792929.png';
+            chatAvatar.src = imageUrl;
+            mobileChatAvatar.src = imageUrl;
+        }
 
-    if (chat.chatType === 'grupo') {
-        groupMembersButton.classList.remove('hidden');
-        mobileGroupMembersButton.classList.remove('hidden');
-    } else {
-        groupMembersButton.classList.add('hidden');
-        mobileGroupMembersButton.classList.add('hidden');
-    }
-}
+        [messageInput, mobileMessageInput].forEach(input => {
+            input.addEventListener('input', () => {
+                clearTimeout(typingTimer);
+                sendTypingStatus('composing');
+
+                typingTimer = setTimeout(() => {
+                    sendTypingStatus('paused');
+                }, typingTimeout);
+            });
+
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    clearTimeout(typingTimer);
+                    sendTypingStatus('paused');
+                    sendMessage(input.value);
+                }
+            });
+        });
+
+        function sendTypingStatus(status) {
+            socket.emit('typing status', {
+                instanceKey: currentInstanceKey,
+                chatId: currentChatId,
+                status: status
+            });
+        }
 
         const profileImageCache = {};
 
@@ -2188,6 +2265,8 @@ function updateProfileImage(chatId, imageUrl) {
     // Forçar uma re-renderização da lista de chats
     renderChats(chats);
 }
+
+
 
 function addChatListeners() {
     document.querySelectorAll('.chat-item').forEach(item => {
