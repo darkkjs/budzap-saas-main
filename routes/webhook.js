@@ -164,7 +164,7 @@ router.post('/evolution', async (req, res) => {
   // Lógica para lidar com as mensagens recebidas
   console.log('Webh recebida:');
   const io = req.app.get('io');
-  
+
   try {
     const maxRetries = 5;
     let retries = 0;
@@ -228,27 +228,27 @@ console.log("Webhook recebido")
           }
       }
 
-
+      const moment = require('moment-timezone');
       if (event.event === 'presence.update') {
-        const { id, presences } = event.data;
-        const presence = presences[id].lastKnownPresence;
-        const timestamp = new Date(event.date_time).getTime();
-      
-        io.to(event.instance).emit('presence update', {
-          chatId: id,
-          presence: presence,
-          timestamp: timestamp
-        });
-      }
-      
-      if (event.event === 'chats.update') {
-        event.data.forEach(chat => {
-          io.to(event.instance).emit('chat update', {
-            chatId: chat.remoteJid,
-            timestamp: new Date(event.date_time).getTime()
-          });
-        });
-      }
+    const { id, presences } = event.data;
+    const presence = presences[id].lastKnownPresence;
+    const timestamp = moment(event.date_time).tz('America/Sao_Paulo').valueOf();
+  
+    io.to(event.instance).emit('presence update', {
+      chatId: id,
+      presence: presence,
+      timestamp: timestamp
+    });
+}
+  
+if (event.event === 'chats.update') {
+    event.data.forEach(chat => {
+      io.to(event.instance).emit('chat update', {
+        chatId: chat.remoteJid,
+        timestamp: moment(event.date_time).tz('America/Sao_Paulo').valueOf()
+      });
+    });
+}
 
       if (event.event === 'messages.upsert') {
         console.log(`Processando webhook de mensagem para a instancia ${event.instance}`.cyan);

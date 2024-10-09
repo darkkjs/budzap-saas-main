@@ -1279,7 +1279,7 @@ function updatePresence(chatId, presence, timestamp) {
     
     const chatTypeElement = document.getElementById('chatType');
     if (currentChatId === chatId) {
-        const lastSeen = new Date(timestamp).toLocaleString();
+        const lastSeen = moment(timestamp).tz('America/Sao_Paulo').format('DD/MM/YYYY HH:mm:ss');
         chatTypeElement.textContent = `Visto por último: ${lastSeen}`;
         chatTypeElement.classList.remove('text-green-500', 'font-semibold');
     }
@@ -1492,18 +1492,7 @@ const lastSeenCache = {};
         let userFunnels = [];
 
 
-        function updateLastSeen(chatId, timestamp) {
-    lastSeenCache[chatId] = timestamp;
-    localStorage.setItem('lastSeenCache', JSON.stringify(lastSeenCache));
-    
-    const chatTypeElement = document.getElementById('chatType');
-    if (currentChatId === chatId) {
-        const lastSeen = new Date(timestamp).toLocaleString();
-        chatTypeElement.textContent = `Visto por último: ${lastSeen}`;
-        chatTypeElement.classList.remove('text-green-500', 'font-semibold');
-    }
-}
-
+ 
         function openSettingsModal() {
             settingsModal.classList.add('modal-open');
             // Prevenir que o modal feche imediatamente em dispositivos móveis
